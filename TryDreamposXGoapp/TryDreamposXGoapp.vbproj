@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{8F52994B-D29E-436A-B6A9-C5E0921EA228}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <StartupObject>TryDreamposXGoapp.My.MyApplication</StartupObject>
+    <StartupObject>TryDreamposXGoapp.Program</StartupObject>
     <RootNamespace>TryDreamposXGoapp</RootNamespace>
     <AssemblyName>TryDreamposXGoapp</AssemblyName>
     <FileAlignment>512</FileAlignment>
@@ -75,6 +75,7 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Program.vb" />
     <Compile Include="FormMain.vb">
       <SubType>Form</SubType>
     </Compile>
@@ -83,10 +84,6 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
-    <Compile Include="My Project\Application.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Application.myapp</DependentUpon>
-    </Compile>
     <Compile Include="My Project\Resources.Designer.vb">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
