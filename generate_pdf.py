@@ -302,16 +302,62 @@ def create_pdf(output_path):
         "- Survey QR Link: https://survey.goapp.co.id/?ref={orderNo}&member_uid={memberUid}&mobile={mobileNo}."
     )
 
+    pdf.section_title("4.8 Pendaftaran Member Baru (Save / Register Member CRM)")
+    pdf.body_p(
+        "Method: POST | Endpoint: https://api.goapp.co.id/channel/v1/member/member/\n"
+        "Payload Input:\n"
+        "- first_name (String, Wajib): Nama depan calon member.\n"
+        "- last_name (String, Opsional): Nama belakang (default '-' jika kosong).\n"
+        "- mobile_no (String, Wajib): Nomor HP unik format 08xx/628xx.\n"
+        "- email (String, Opsional): Alamat email pelanggan.\n"
+        "- scheme.uid (Long) & scheme.name (String): Tier membership (Default Go Member: 138348545946696).\n"
+        "Catatan UU PDP / Privasi: Channel API sengaja tidak menyediakan GET /member/member/ (Bulk List) demi "
+        "keamanan privasi data konsumen, hanya pencarian per nomor HP dan registrasi member baru."
+    )
+
     # 5. PANDUAN PENGUJIAN FORM VISUAL
-    pdf.chapter_title("5", "Panduan Form Pengujian Visual (TryDreamposXGoapp)")
+    pdf.add_page()
+    pdf.chapter_title("5", "Panduan Form Pengujian Visual & Cara Memanggil DLL")
     pdf.body_p(
         "Proyek TryDreamposXGoapp.exe menyediakan antarmuka pengujian komprehensif bagi tim QA & Kasir:\n"
         "- Top Bar: Input API Key, Secret, dan tombol 'Test Koneksi' (Verifikasi channel toko).\n"
-        "- Tab 1: Cek & Validasi Member (Input No HP/ID, tampilkan Nama, Sisa Poin, Nilai Rupiah, dan Raw JSON).\n"
+        "- Tab 1: Cek & Validasi Member (Input No HP/ID, tampilkan Nama, Sisa Poin, Nilai Rp, tombol '+ Daftar Member Baru').\n"
         "- Tab 2: Validasi & Gunakan Voucher (Uji coba validasi dan eksekusi voucher dengan Auto-Retry).\n"
         "- Tab 3: Transaksi POS (Simulasi Burn Point, Void Poin, dan Push Order Earning Point).\n"
         "- Tab 4: Struk POS (Preview teks struk thermal 40-kolom dan URL Survey QR).\n"
+        "- Tab 5: Daftar Member Baru (Form registrasi member CRM langsung dari kasir POS).\n"
         "- Live Logs: Jendela pemantauan respon HTTP dan status payload secara real-time."
+    )
+
+    pdf.section_title("5.1 Contoh Kode VB.NET Memanggil DLL untuk Daftar Member Baru")
+    pdf.code_block(
+"""' Memanggil method RegisterMemberAsync dari Class Library DreamposXGoapp.dll:
+Dim resp As ApiResponse(Of MemberResponse) = Await _client.RegisterMemberAsync(
+    firstName:="Budi",
+    lastName:="Santoso",
+    mobileNo:="081298765432",
+    email:="budi@example.com",
+    schemeUid:=138348545946696,
+    schemeName:="Go Member"
+)
+
+If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
+    Dim member = resp.Data
+    MessageBox.Show("Member Berhasil Didaftarkan! UID: " & member.Uid.ToString())
+Else
+    MessageBox.Show("Gagal Mendaftar: " & resp.Message)
+End If"""
+    )
+
+    pdf.section_title("5.2 Panduan Langkah Pengujian Registrasi Member dari Form TryDreamposXGoapp")
+    pdf.body_p(
+        "1. Buka TryDreamposXGoapp.exe dan pastikan tombol 'Test Koneksi' menunjukkan status hijau (Terkoneksi).\n"
+        "2. Masukkan nomor HP baru pada Tab 1 (misal 08999999992), klik 'Cek Member'. Sistem akan info tidak ditemukan.\n"
+        "3. Klik tombol '+ Daftar Member Baru' di Tab 1 (atau klik Tab 5: '5. Daftar Member Baru'). "
+        "Nomor HP otomatis disalin ke kolom form pendaftaran.\n"
+        "4. Masukkan Nama Depan dan pilih Scheme membership (dropdown otomatis memuat list skema CRM Goapp).\n"
+        "5. Klik tombol 'Simpan / Daftarkan Member (POST)'. Sistem akan mengirim data ke Goapp CRM.\n"
+        "6. Dialog konfirmasi sukses muncul dengan UID resmi. Sistem otomatis kembali ke Tab 1 dan memuat profil serta saldo poin member secara instan."
     )
 
     # 6. SKENARIO PENGUJIAN (QA CHECKLIST)
@@ -335,7 +381,8 @@ def create_pdf(output_path):
         ("6. Burn Point", "Tab 3: Input belanja & 50 poin, klik Burn Point.", "Poin terpotong, muncul PaymentRef transaksi.", "READY"),
         ("7. Void Burn Point", "Tab 3: Klik tombol 'Cancel Burn Point (Void)'.", "Status Payment menjadi CANCEL, poin kembali.", "READY"),
         ("8. Earning Point", "Tab 3: Klik 'Push Transaksi Selesai'.", "Transaksi terkirim, tampil Poin Reward baru.", "READY"),
-        ("9. Cetak Struk", "Tab 4: Klik 'Generate Preview Struk'.", "Teks 40 kolom tercetak rapi dengan link survey.", "READY")
+        ("9. Cetak Struk", "Tab 4: Klik 'Generate Preview Struk'.", "Teks 40 kolom tercetak rapi dengan link survey.", "READY"),
+        ("10. Daftar Member", "Tab 5: Input Nama & HP baru, klik Simpan.", "Tersimpan (HTTP 201), redirect Tab 1 & poin tampil.", "PASSED")
     ]
 
     pdf.set_font("helvetica", "", 7.5)

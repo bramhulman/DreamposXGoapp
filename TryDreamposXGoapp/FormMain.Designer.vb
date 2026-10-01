@@ -28,11 +28,13 @@ Partial Class FormMain
     Friend WithEvents tabVoucher As System.Windows.Forms.TabPage
     Friend WithEvents tabTransaction As System.Windows.Forms.TabPage
     Friend WithEvents tabReceipt As System.Windows.Forms.TabPage
+    Friend WithEvents tabRegister As System.Windows.Forms.TabPage
 
     ' Member Tab
     Friend WithEvents lblInputMember As System.Windows.Forms.Label
     Friend WithEvents txtInputMember As System.Windows.Forms.TextBox
     Friend WithEvents btnSearchMember As System.Windows.Forms.Button
+    Friend WithEvents btnGoToRegister As System.Windows.Forms.Button
     Friend WithEvents grpMemberResult As System.Windows.Forms.GroupBox
     Friend WithEvents lblMemberName As System.Windows.Forms.Label
     Friend WithEvents lblMemberPhone As System.Windows.Forms.Label
@@ -65,6 +67,23 @@ Partial Class FormMain
     Friend WithEvents btnGenerateReceipt As System.Windows.Forms.Button
     Friend WithEvents txtReceiptPreview As System.Windows.Forms.TextBox
 
+    ' Register Tab Controls
+    Friend WithEvents grpRegForm As System.Windows.Forms.GroupBox
+    Friend WithEvents lblRegFirstName As System.Windows.Forms.Label
+    Friend WithEvents txtRegFirstName As System.Windows.Forms.TextBox
+    Friend WithEvents lblRegLastName As System.Windows.Forms.Label
+    Friend WithEvents txtRegLastName As System.Windows.Forms.TextBox
+    Friend WithEvents lblRegMobile As System.Windows.Forms.Label
+    Friend WithEvents txtRegMobile As System.Windows.Forms.TextBox
+    Friend WithEvents lblRegEmail As System.Windows.Forms.Label
+    Friend WithEvents txtRegEmail As System.Windows.Forms.TextBox
+    Friend WithEvents lblRegScheme As System.Windows.Forms.Label
+    Friend WithEvents cmbRegScheme As System.Windows.Forms.ComboBox
+    Friend WithEvents btnSubmitRegister As System.Windows.Forms.Button
+    Friend WithEvents lblRegStatus As System.Windows.Forms.Label
+    Friend WithEvents grpRegInfo As System.Windows.Forms.GroupBox
+    Friend WithEvents txtRegNotes As System.Windows.Forms.TextBox
+
     ' Log Console
     Friend WithEvents grpLogs As System.Windows.Forms.GroupBox
     Friend WithEvents txtLogs As System.Windows.Forms.TextBox
@@ -85,11 +104,13 @@ Partial Class FormMain
         Me.tabVoucher = New System.Windows.Forms.TabPage()
         Me.tabTransaction = New System.Windows.Forms.TabPage()
         Me.tabReceipt = New System.Windows.Forms.TabPage()
+        Me.tabRegister = New System.Windows.Forms.TabPage()
 
         ' Member Controls
         Me.lblInputMember = New System.Windows.Forms.Label()
         Me.txtInputMember = New System.Windows.Forms.TextBox()
         Me.btnSearchMember = New System.Windows.Forms.Button()
+        Me.btnGoToRegister = New System.Windows.Forms.Button()
         Me.grpMemberResult = New System.Windows.Forms.GroupBox()
         Me.lblMemberName = New System.Windows.Forms.Label()
         Me.lblMemberPhone = New System.Windows.Forms.Label()
@@ -121,6 +142,23 @@ Partial Class FormMain
         ' Receipt Controls
         Me.btnGenerateReceipt = New System.Windows.Forms.Button()
         Me.txtReceiptPreview = New System.Windows.Forms.TextBox()
+
+        ' Register Controls
+        Me.grpRegForm = New System.Windows.Forms.GroupBox()
+        Me.lblRegFirstName = New System.Windows.Forms.Label()
+        Me.txtRegFirstName = New System.Windows.Forms.TextBox()
+        Me.lblRegLastName = New System.Windows.Forms.Label()
+        Me.txtRegLastName = New System.Windows.Forms.TextBox()
+        Me.lblRegMobile = New System.Windows.Forms.Label()
+        Me.txtRegMobile = New System.Windows.Forms.TextBox()
+        Me.lblRegEmail = New System.Windows.Forms.Label()
+        Me.txtRegEmail = New System.Windows.Forms.TextBox()
+        Me.lblRegScheme = New System.Windows.Forms.Label()
+        Me.cmbRegScheme = New System.Windows.Forms.ComboBox()
+        Me.btnSubmitRegister = New System.Windows.Forms.Button()
+        Me.lblRegStatus = New System.Windows.Forms.Label()
+        Me.grpRegInfo = New System.Windows.Forms.GroupBox()
+        Me.txtRegNotes = New System.Windows.Forms.TextBox()
 
         ' Logs Controls
         Me.grpLogs = New System.Windows.Forms.GroupBox()
@@ -172,12 +210,14 @@ Partial Class FormMain
         Me.tabControl.Controls.Add(Me.tabVoucher)
         Me.tabControl.Controls.Add(Me.tabTransaction)
         Me.tabControl.Controls.Add(Me.tabReceipt)
+        Me.tabControl.Controls.Add(Me.tabRegister)
 
         ' --- TAB 1: MEMBER ---
         Me.tabMember.Text = "1. Cek & Validasi Member"
         Me.tabMember.Controls.Add(Me.lblInputMember)
         Me.tabMember.Controls.Add(Me.txtInputMember)
         Me.tabMember.Controls.Add(Me.btnSearchMember)
+        Me.tabMember.Controls.Add(Me.btnGoToRegister)
         Me.tabMember.Controls.Add(Me.grpMemberResult)
         Me.tabMember.Controls.Add(Me.txtRawJson)
 
@@ -186,13 +226,18 @@ Partial Class FormMain
         Me.lblInputMember.AutoSize = True
 
         Me.txtInputMember.Location = New System.Drawing.Point(145, 17)
-        Me.txtInputMember.Size = New System.Drawing.Size(200, 23)
+        Me.txtInputMember.Size = New System.Drawing.Size(180, 23)
         Me.txtInputMember.Text = "08159136224"
 
         Me.btnSearchMember.Text = "Cek Member (Async)"
-        Me.btnSearchMember.Location = New System.Drawing.Point(360, 15)
-        Me.btnSearchMember.Size = New System.Drawing.Size(160, 27)
+        Me.btnSearchMember.Location = New System.Drawing.Point(335, 15)
+        Me.btnSearchMember.Size = New System.Drawing.Size(150, 27)
         Me.btnSearchMember.BackColor = System.Drawing.Color.LightSteelBlue
+
+        Me.btnGoToRegister.Text = "+ Daftar Member Baru"
+        Me.btnGoToRegister.Location = New System.Drawing.Point(495, 15)
+        Me.btnGoToRegister.Size = New System.Drawing.Size(160, 27)
+        Me.btnGoToRegister.BackColor = System.Drawing.Color.PaleGreen
 
         Me.grpMemberResult.Location = New System.Drawing.Point(15, 55)
         Me.grpMemberResult.Size = New System.Drawing.Size(430, 260)
@@ -233,8 +278,8 @@ Partial Class FormMain
         Me.lblMemberReferral.Location = New System.Drawing.Point(15, 215)
         Me.lblMemberReferral.AutoSize = True
 
-        Me.txtRawJson.Location = New System.Drawing.Point(460, 15)
-        Me.txtRawJson.Size = New System.Drawing.Size(480, 300)
+        Me.txtRawJson.Location = New System.Drawing.Point(460, 55)
+        Me.txtRawJson.Size = New System.Drawing.Size(480, 260)
         Me.txtRawJson.Multiline = True
         Me.txtRawJson.ScrollBars = System.Windows.Forms.ScrollBars.Both
         Me.txtRawJson.ReadOnly = True
@@ -339,6 +384,94 @@ Partial Class FormMain
         Me.txtReceiptPreview.Multiline = True
         Me.txtReceiptPreview.Font = New System.Drawing.Font("Courier New", 9.0F)
         Me.txtReceiptPreview.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
+
+        ' --- TAB 5: REGISTER MEMBER ---
+        Me.tabRegister.Text = "5. Daftar Member Baru"
+        Me.tabRegister.Controls.Add(Me.grpRegForm)
+        Me.tabRegister.Controls.Add(Me.grpRegInfo)
+
+        ' grpRegForm
+        Me.grpRegForm.Text = "Formulir Registrasi Member Baru (CRM)"
+        Me.grpRegForm.Location = New System.Drawing.Point(20, 15)
+        Me.grpRegForm.Size = New System.Drawing.Size(510, 300)
+        Me.grpRegForm.Controls.Add(Me.lblRegFirstName)
+        Me.grpRegForm.Controls.Add(Me.txtRegFirstName)
+        Me.grpRegForm.Controls.Add(Me.lblRegLastName)
+        Me.grpRegForm.Controls.Add(Me.txtRegLastName)
+        Me.grpRegForm.Controls.Add(Me.lblRegMobile)
+        Me.grpRegForm.Controls.Add(Me.txtRegMobile)
+        Me.grpRegForm.Controls.Add(Me.lblRegEmail)
+        Me.grpRegForm.Controls.Add(Me.txtRegEmail)
+        Me.grpRegForm.Controls.Add(Me.lblRegScheme)
+        Me.grpRegForm.Controls.Add(Me.cmbRegScheme)
+        Me.grpRegForm.Controls.Add(Me.btnSubmitRegister)
+        Me.grpRegForm.Controls.Add(Me.lblRegStatus)
+
+        Me.lblRegFirstName.Text = "Nama Depan (*):"
+        Me.lblRegFirstName.Location = New System.Drawing.Point(20, 30)
+        Me.lblRegFirstName.AutoSize = True
+
+        Me.txtRegFirstName.Location = New System.Drawing.Point(160, 27)
+        Me.txtRegFirstName.Size = New System.Drawing.Size(320, 23)
+
+        Me.lblRegLastName.Text = "Nama Belakang:"
+        Me.lblRegLastName.Location = New System.Drawing.Point(20, 68)
+        Me.lblRegLastName.AutoSize = True
+
+        Me.txtRegLastName.Location = New System.Drawing.Point(160, 65)
+        Me.txtRegLastName.Size = New System.Drawing.Size(320, 23)
+
+        Me.lblRegMobile.Text = "Nomor HP (*):"
+        Me.lblRegMobile.Location = New System.Drawing.Point(20, 106)
+        Me.lblRegMobile.AutoSize = True
+
+        Me.txtRegMobile.Location = New System.Drawing.Point(160, 103)
+        Me.txtRegMobile.Size = New System.Drawing.Size(320, 23)
+
+        Me.lblRegEmail.Text = "Email (Opsional):"
+        Me.lblRegEmail.Location = New System.Drawing.Point(20, 144)
+        Me.lblRegEmail.AutoSize = True
+
+        Me.txtRegEmail.Location = New System.Drawing.Point(160, 141)
+        Me.txtRegEmail.Size = New System.Drawing.Size(320, 23)
+
+        Me.lblRegScheme.Text = "Scheme / Level (*):"
+        Me.lblRegScheme.Location = New System.Drawing.Point(20, 182)
+        Me.lblRegScheme.AutoSize = True
+
+        Me.cmbRegScheme.Location = New System.Drawing.Point(160, 179)
+        Me.cmbRegScheme.Size = New System.Drawing.Size(320, 23)
+        Me.cmbRegScheme.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+
+        Me.btnSubmitRegister.Text = "Simpan / Daftarkan Member (POST)"
+        Me.btnSubmitRegister.Location = New System.Drawing.Point(160, 218)
+        Me.btnSubmitRegister.Size = New System.Drawing.Size(320, 36)
+        Me.btnSubmitRegister.BackColor = System.Drawing.Color.DeepSkyBlue
+        Me.btnSubmitRegister.Font = New System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold)
+
+        Me.lblRegStatus.Text = "Status: Siap mendaftarkan member..."
+        Me.lblRegStatus.Location = New System.Drawing.Point(20, 265)
+        Me.lblRegStatus.Size = New System.Drawing.Size(460, 25)
+        Me.lblRegStatus.ForeColor = System.Drawing.Color.DarkSlateGray
+
+        ' grpRegInfo
+        Me.grpRegInfo.Text = "Petunjuk & Panduan POS"
+        Me.grpRegInfo.Location = New System.Drawing.Point(545, 15)
+        Me.grpRegInfo.Size = New System.Drawing.Size(395, 300)
+        Me.grpRegInfo.Controls.Add(Me.txtRegNotes)
+
+        Me.txtRegNotes.Location = New System.Drawing.Point(15, 25)
+        Me.txtRegNotes.Size = New System.Drawing.Size(365, 260)
+        Me.txtRegNotes.Multiline = True
+        Me.txtRegNotes.ReadOnly = True
+        Me.txtRegNotes.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
+        Me.txtRegNotes.Font = New System.Drawing.Font("Segoe UI", 9.0F)
+        Me.txtRegNotes.Text = "CARA PENDAFTARAN MEMBER BARU:" & vbCrLf & vbCrLf & _
+            "1. Jika kasir mencari nomor HP member di Tab 1 dan tidak ditemukan, klik tombol '+ Daftar Member Baru' atau buka Tab 5 ini." & vbCrLf & vbCrLf & _
+            "2. Masukkan Nama Depan dan Nomor HP (wajib diisi)." & vbCrLf & vbCrLf & _
+            "3. Pilih Tier/Scheme membership (Default: Go Member)." & vbCrLf & vbCrLf & _
+            "4. Klik tombol 'Simpan / Daftarkan Member'." & vbCrLf & vbCrLf & _
+            "5. Setelah berhasil, data member langsung otomatis tersimpan di Goapp CRM dan aplikasi akan berpindah ke Tab 1 untuk memuat profil & saldo poin member secara instan."
 
         ' grpLogs
         Me.grpLogs.Location = New System.Drawing.Point(12, 455)

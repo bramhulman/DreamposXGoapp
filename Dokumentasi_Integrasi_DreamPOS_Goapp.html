@@ -477,13 +477,102 @@ Class <code>ReceiptGenerator.vb</code> menghasilkan format nota thermal standar 
   </li>
 </ul>
 
+<h2>4.8 Pendaftaran Member Baru (Save / Register Member CRM)</h2>
+<ul>
+  <li><strong>Method / URL:</strong> <span class="badge badge-post">POST</span> <code>https://api.goapp.co.id/channel/v1/member/member/</code></li>
+</ul>
+<div class="callout callout-info">
+  <strong>Catatan Privasi & Keamanan Data (UU PDP & GDPR):</strong><br>
+  Goapp Channel API <strong>sengaja menonaktifkan</strong> endpoint bulk list (<code>GET /member/member/</code> &rarr; <code>HTTP 405 Method Not Allowed</code>) untuk mencegah kebocoran data kontak seluruh pelanggan toko. Kasir POS hanya diizinkan:
+  <ol style="margin-bottom: 0;">
+    <li>Mencari satu member secara spesifik berdasarkan Nomor HP / UID (Lookup).</li>
+    <li>Mendaftarkan (<em>Save / Register</em>) member baru saat pertama kali berbelanja di kasir.</li>
+  </ol>
+</div>
+<p><strong>Payload Request (JSON Body):</strong></p>
+<pre>{
+  "first_name": "Budi",
+  "last_name": "Santoso",
+  "mobile_no": "081298765432",
+  "email": "budi.santoso@gmail.com",
+  "scheme": {
+    "uid": 138348545946696,
+    "name": "Go Member"
+  }
+}</pre>
+<table>
+  <thead><tr><th>Field JSON</th><th>Tipe Data</th><th>Keterangan</th></tr></thead>
+  <tbody>
+    <tr><td><code>first_name</code></td><td>String</td><td>Nama depan member (Wajib diisi).</td></tr>
+    <tr><td><code>last_name</code></td><td>String</td><td>Nama belakang member (Opsional, otomatis <code>"-"</code> jika kosong).</td></tr>
+    <tr><td><code>mobile_no</code></td><td>String</td><td>Nomor handphone unik format <code>08xx</code> / <code>628xx</code> (Wajib diisi).</td></tr>
+    <tr><td><code>email</code></td><td>String</td><td>Alamat email konsumen (Opsional, isi <code>null</code> jika tidak diinput).</td></tr>
+    <tr><td><code>scheme.uid</code></td><td>Long</td><td>UID Tier membership (Default Go Member: <code>138348545946696</code>).</td></tr>
+    <tr><td><code>scheme.name</code></td><td>String</td><td>Nama Tier membership (Contoh: <code>"Go Member"</code>).</td></tr>
+  </tbody>
+</table>
+<p><strong>Contoh Respon Server (HTTP 201 Created):</strong></p>
+<pre>{
+  "uid": 157503944659528,
+  "first_name": "Budi",
+  "last_name": "Santoso",
+  "mobile_no": "081298765432",
+  "email": "budi.santoso@gmail.com",
+  "scheme": { "uid": 138348545946696, "name": "Go Member" },
+  "account": { "balance": "0.00", "idr_balance": 0.00 }
+}</pre>
+
 <div class="page-break"></div>
 
 <h1>5. Panduan Pengujian Form Test Harness (TryDreamposXGoapp)</h1>
 
 <p>Aplikasi pengujian <code>TryDreamposXGoapp.exe</code> dirancang untuk memvalidasi seluruh fungsionalitas secara visual sebelum DLL diintegrasikan ke sistem POS produksi.</p>
 
-<p><strong>Contoh Kode VB.NET Pemanggilan Async/Await (Non-Blocking UI Kasir):</strong></p>
+<h2>5.1 Contoh Pemanggilan DLL untuk Registrasi Member Baru (VB.NET)</h2>
+<p>Berikut adalah contoh kode VB.NET untuk memanggil fungsi <code>RegisterMemberAsync</code> dari Class Library <code>DreamposXGoapp.dll</code>:</p>
+<pre>''' &lt;summary&gt;
+''' Mendaftarkan member baru langsung dari kasir POS ke Goapp CRM secara Async/Await
+''' &lt;/summary&gt;
+Private Async Function DaftarkanMemberBaruAsync() As Task
+    Dim firstName As String = "Budi"
+    Dim lastName As String = "Santoso"
+    Dim mobileNo As String = "081298765432"
+    Dim email As String = "budi@gmail.com" ' Opsional, boleh Nothing
+    Dim schemeUid As Long = 138348545946696
+    Dim schemeName As String = "Go Member"
+
+    Try
+        ' 1. Panggil method RegisterMemberAsync dari objek GoappApiClient DLL
+        Dim resp As ApiResponse(Of MemberResponse) = Await _client.RegisterMemberAsync(
+            firstName:=firstName,
+            lastName:=lastName,
+            mobileNo:=mobileNo,
+            email:=email,
+            schemeUid:=schemeUid,
+            schemeName:=schemeName
+        )
+
+        ' 2. Periksa status keberhasilan
+        If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
+            Dim member = resp.Data
+            MessageBox.Show(
+                $"Member berhasil didaftarkan!{Environment.NewLine}" &amp;
+                $"Nama: {member.FullName}{Environment.NewLine}" &amp;
+                $"UID Goapp: {member.Uid}{Environment.NewLine}" &amp;
+                $"No HP: {member.MobileNo}",
+                "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            
+            ' 3. Lanjutkan transaksi POS dengan UID member baru tersebut
+        Else
+            MessageBox.Show($"Pendaftaran gagal: {resp.Message}", "Gagal", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End If
+
+    Catch ex As Exception
+        MessageBox.Show($"Error Exception: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+    End Try
+End Function</pre>
+
+<h2>5.2 Contoh Pemanggilan DLL untuk Pencarian Member (Lookup)</h2>
 <pre>Private Async Sub btnSearchMember_Click(sender As Object, e As EventArgs) Handles btnSearchMember.Click
     Dim queryInput = txtInputMember.Text.Trim()
     If String.IsNullOrEmpty(queryInput) Then Return
@@ -515,6 +604,47 @@ Class <code>ReceiptGenerator.vb</code> menghasilkan format nota thermal standar 
         Cursor = Cursors.Default
     End Try
 End Sub</pre>
+
+<h2>5.3 Panduan Langkah demi Langkah Pengujian pada Form TryDreamposXGoapp</h2>
+<p>Untuk menguji pendaftaran member baru secara visual dari form <code>TryDreamposXGoapp.exe</code>, ikuti alur kerja berikut:</p>
+<ol>
+  <li><strong>Buka Aplikasi:</strong> Jalankan <code>TryDreamposXGoapp.exe</code> dan klik tombol <strong>Test Koneksi</strong> untuk memastikan status channel terhubung hijau.</li>
+  <li><strong>Cari Nomor HP Member di Tab 1:</strong>
+    <ul>
+      <li>Ketik nomor handphone calon member pada kotak <em>No HP / Member ID</em> (contoh: <code>08988776655</code>).</li>
+      <li>Klik tombol <strong>Cek Member (Async)</strong>.</li>
+      <li>Jika member belum pernah terdaftar, sistem menampilkan pesan <em>"Member tidak ditemukan"</em>.</li>
+    </ul>
+  </li>
+  <li><strong>Arahkan ke Formulir Pendaftaran:</strong>
+    <ul>
+      <li>Klik tombol hijau <strong>+ Daftar Member Baru</strong> di sebelah tombol pencarian Tab 1 (atau langsung klik <strong>Tab 5: 5. Daftar Member Baru</strong>).</li>
+      <li>Nomor HP yang tadi diketik kasir akan secara otomatis tersalin ke isian <em>Nomor HP</em> di formulir pendaftaran.</li>
+    </ul>
+  </li>
+  <li><strong>Lengkapi Data Member:</strong>
+    <ul>
+      <li><strong>Nama Depan (*):</strong> Masukkan nama depan calon member (wajib).</li>
+      <li><strong>Nama Belakang:</strong> Masukkan nama belakang (opsional).</li>
+      <li><strong>Nomor HP (*):</strong> Pastikan nomor handphone benar format 08xx.</li>
+      <li><strong>Email:</strong> Masukkan email konsumen (opsional).</li>
+      <li><strong>Scheme / Level:</strong> Pilih tier membership pada dropdown (secara default aplikasi otomatis mengambil daftar scheme aktif dari Goapp, contoh: <code>Go Member (UID: 138348545946696)</code>).</li>
+    </ul>
+  </li>
+  <li><strong>Simpan & Daftarkan:</strong>
+    <ul>
+      <li>Klik tombol biru <strong>Simpan / Daftarkan Member (POST)</strong>.</li>
+      <li>Kasir akan melihat indikator proses pengiriman data ke server Goapp CRM.</li>
+      <li>Saat berhasil, muncul kotak dialog konfirmasi bertuliskan <em>"Pendaftaran Member Baru Berhasil!"</em> disertai UID resmi dari Goapp CRM.</li>
+    </ul>
+  </li>
+  <li><strong>Verifikasi Otomatis pada Tab 1:</strong>
+    <ul>
+      <li>Setelah dialog ditutup, sistem secara cerdas akan otomatis <strong>mengalihkan tampilan kembali ke Tab 1</strong> dan <strong>mengeksekusi pencarian member secara otomatis</strong>.</li>
+      <li>Detail profil member baru, nama lengkap, tier membership, saldo awal (0 Pts), dan raw JSON response akan langsung tampil di layar kasir secara realtime.</li>
+    </ul>
+  </li>
+</ol>
 
 <h1>6. Matriks & Skenario Pengujian (QA Checklist)</h1>
 <table>
@@ -580,6 +710,12 @@ End Sub</pre>
       <td>Buka Tab 4, klik <strong>Generate Preview Struk</strong>.</td>
       <td>Teks struk 40 kolom tercetak lengkap dengan saldo poin dan URL survey QR.</td>
       <td>Siap Diuji di Form</td>
+    </tr>
+    <tr>
+      <td><strong>10. Daftar Member Baru</strong></td>
+      <td>Tab 5: Isi Nama & No HP baru, klik <strong>Simpan / Daftarkan Member</strong>.</td>
+      <td>Member tersimpan di Goapp (HTTP 201 Created), redirect otomatis ke Tab 1 & saldo awal tampil.</td>
+      <td><strong style="color: green;">PASSED (Verified)</strong></td>
     </tr>
   </tbody>
 </table>

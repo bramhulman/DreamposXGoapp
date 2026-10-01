@@ -12,9 +12,54 @@ Public Class FormMain
     Private _currentMember As MemberResponse
     Private _lastPaymentRef As String = String.Empty
 
-    Private Sub FormMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Private Class SchemeComboItem
+        Public Property Uid As Long
+        Public Property Name As String
+
+        Public Sub New(u As Long, n As String)
+            Uid = u
+            Name = n
+        End Sub
+
+        Public Overrides Function ToString() As String
+            Return $"{Name} (UID: {Uid})"
+        End Function
+    End Class
+
+    Private Async Sub FormMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         InitClient()
         AppendLog("Test Harness DreamPOS x Goapp siap digunakan.")
+        Await LoadSchemesAsync()
+    End Sub
+
+    Private Async Function LoadSchemesAsync() As Task
+        cmbRegScheme.Items.Clear()
+        ' Skema default standar jika offline / belum koneksi
+        Dim defaultItem As New SchemeComboItem(138348545946696, "Go Member")
+        cmbRegScheme.Items.Add(defaultItem)
+        cmbRegScheme.SelectedIndex = 0
+
+        Try
+            Dim resp = Await _client.GetMemberSchemesAsync()
+            If resp.IsSuccess AndAlso resp.Data IsNot Nothing AndAlso resp.Data.Count > 0 Then
+                cmbRegScheme.Items.Clear()
+                For Each sc In resp.Data
+                    cmbRegScheme.Items.Add(New SchemeComboItem(sc.Uid, sc.Name))
+                Next
+                cmbRegScheme.SelectedIndex = 0
+                AppendLog($"[SCHEME] Berhasil memuat {resp.Data.Count} tier membership Goapp.")
+            End If
+        Catch ex As Exception
+            AppendLog($"[SCHEME] Info skema membership: {ex.Message}")
+        End Try
+    End Function
+
+    Private Sub btnGoToRegister_Click(sender As Object, e As EventArgs) Handles btnGoToRegister.Click
+        tabControl.SelectedTab = tabRegister
+        If Not String.IsNullOrWhiteSpace(txtInputMember.Text) Then
+            txtRegMobile.Text = txtInputMember.Text.Trim()
+        End If
+        txtRegFirstName.Focus()
     End Sub
 
     Private Sub InitClient()
@@ -65,6 +110,7 @@ Public Class FormMain
             If channelResp.IsSuccess AndAlso channelResp.Data IsNot Nothing Then
                 lblStatusChannel.Text = $"Terkoneksi: {channelResp.Data.Name} ({channelResp.Data.ChannelType})"
                 lblStatusChannel.ForeColor = Color.DarkGreen
+                Await LoadSchemesAsync()
                 MessageBox.Show($"Koneksi Berhasil!{Environment.NewLine}Channel: {channelResp.Data.Name}{Environment.NewLine}UID: {channelResp.Data.Uid}", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
             Else
                 lblStatusChannel.Text = "Status: Gagal Terkoneksi"
@@ -365,6 +411,81 @@ Public Class FormMain
 
         txtReceiptPreview.Text = receiptContent
         AppendLog($"[RECEIPT] Preview struk transaksi {orderNo} berhasil di-generate.")
+    End Sub
+
+#End Region
+
+#Region "6. Pendaftaran Member Baru (Save/Register Member CRM)"
+
+    Private Async Sub btnSubmitRegister_Click(sender As Object, e As EventArgs) Handles btnSubmitRegister.Click
+        Dim firstName = txtRegFirstName.Text.Trim()
+        Dim lastName = txtRegLastName.Text.Trim()
+        Dim mobileNo = txtRegMobile.Text.Trim()
+        Dim email = txtRegEmail.Text.Trim()
+
+        If String.IsNullOrWhiteSpace(firstName) Then
+            MessageBox.Show("Nama depan member wajib diisi!", "Validasi Input", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            txtRegFirstName.Focus()
+            Return
+        End If
+
+        If String.IsNullOrWhiteSpace(mobileNo) Then
+            MessageBox.Show("Nomor Handphone member wajib diisi!", "Validasi Input", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            txtRegMobile.Focus()
+            Return
+        End If
+
+        Dim selectedSchemeUid As Long = 138348545946696
+        Dim selectedSchemeName As String = "Go Member"
+        If cmbRegScheme.SelectedItem IsNot Nothing AndAlso TypeOf cmbRegScheme.SelectedItem Is SchemeComboItem Then
+            Dim sc = DirectCast(cmbRegScheme.SelectedItem, SchemeComboItem)
+            selectedSchemeUid = sc.Uid
+            selectedSchemeName = sc.Name
+        End If
+
+        btnSubmitRegister.Enabled = False
+        lblRegStatus.Text = "Status: Mengirim data member baru ke Goapp..."
+        lblRegStatus.ForeColor = Color.DarkOrange
+        Cursor = Cursors.WaitCursor
+
+        Try
+            Dim emailParam = If(String.IsNullOrWhiteSpace(email), Nothing, email)
+            Dim resp = Await _client.RegisterMemberAsync(firstName, lastName, mobileNo, emailParam, selectedSchemeUid, selectedSchemeName)
+
+            If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
+                lblRegStatus.Text = $"Status: Registrasi BERHASIL! UID: {resp.Data.Uid}"
+                lblRegStatus.ForeColor = Color.DarkGreen
+                AppendLog($"[REGISTER SUCCESS] Member {resp.Data.FullName} ({resp.Data.MobileNo}) terdaftar dengan UID {resp.Data.Uid}")
+
+                MessageBox.Show($"Pendaftaran Member Baru Berhasil!{Environment.NewLine}" & _
+                                $"Nama: {resp.Data.FullName}{Environment.NewLine}" & _
+                                $"No HP: {resp.Data.MobileNo}{Environment.NewLine}" & _
+                                $"UID Goapp: {resp.Data.Uid}", "Registrasi Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+                ' Kosongkan input form registrasi
+                txtRegFirstName.Clear()
+                txtRegLastName.Clear()
+                txtRegEmail.Clear()
+
+                ' Pindahkan input ke Tab 1 dan otomatis trigger pencarian
+                txtInputMember.Text = mobileNo
+                tabControl.SelectedTab = tabMember
+                btnSearchMember.PerformClick()
+            Else
+                lblRegStatus.Text = $"Status: Gagal mendaftarkan member. {resp.Message}"
+                lblRegStatus.ForeColor = Color.Red
+                MessageBox.Show($"Pendaftaran member baru gagal:{Environment.NewLine}{resp.Message}", "Registrasi Gagal", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End If
+
+            txtRawJson.Text = FormatJson(resp.RawJson)
+        Catch ex As Exception
+            lblRegStatus.Text = $"Status: Terjadi exception: {ex.Message}"
+            lblRegStatus.ForeColor = Color.Red
+            MessageBox.Show($"Terjadi kesalahan:{Environment.NewLine}{ex.Message}", "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        Finally
+            btnSubmitRegister.Enabled = True
+            Cursor = Cursors.Default
+        End Try
     End Sub
 
 #End Region
