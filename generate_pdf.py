@@ -360,6 +360,56 @@ End If"""
         "6. Dialog konfirmasi sukses muncul dengan UID resmi. Sistem otomatis kembali ke Tab 1 dan memuat profil serta saldo poin member secara instan."
     )
 
+    pdf.section_title("5.4  Membatalkan Kode Voucher yang Sudah Dipakai (Tab 2 - Cancel Voucher)")
+    pdf.body_p(
+        "Tombol '3. Batalkan Voucher (Void)' (warna merah muda) di Tab 2 digunakan saat kasir membatalkan\n"
+        "struk yang sebelumnya sudah meredeem voucher. Kode voucher dikembalikan ke status available.\n\n"
+        "Prasyarat: kode voucher sudah pernah di-redeem, nomor nota sama persis saat penggunaan,\n"
+        "UID member sudah tersimpan dari pencarian Tab 1.\n\n"
+        "Contoh pemanggilan DLL:\n"
+        "    Dim resp = Await _client.CancelVoucherAsync(dealCode, txRef, memberUid)\n"
+        "    ' Endpoint : POST /member/deal/cancel_code/\n"
+        "    ' Request  : {deal_code, transaction_ref, member:{uid}}\n"
+        "    ' Response : {\"detail\": \"Deal code cancelled successfully.\"}"
+    )
+
+    pdf.section_title("5.5  Panduan Tab 6 - Master & Siklus Voucher")
+    pdf.body_p(
+        "Tab 6 menyediakan antarmuka manajemen master promo/voucher Goapp CRM, terbagi dua panel:\n\n"
+        "PANEL KIRI - Insert Master Voucher Baru (POST /member/deal/):\n"
+        "  - Nama Promo    : Nama deskriptif program promo (contoh: Diskon Hemat 50K)\n"
+        "  - Reward SKU    : SKU produk reward di katalog channel - WAJIB valid (contoh: VOUCHER50K)\n"
+        "  - Tipe Diskon   : Persentase (%), Nominal (Rp), Item Gratis, Diskon Item Spesifik\n"
+        "  - Nilai Diskon  : Besaran diskon sesuai tipe yang dipilih (contoh: 50000)\n"
+        "  - Tanggal Mulai : Format yyyy-MM-dd (contoh: 2024-01-01)\n"
+        "  - Tanggal Akhir : Format yyyy-MM-dd (contoh: 2024-12-31)\n"
+        "  CATATAN: reward_sku WAJIB terdaftar di /catalog/product/. SKU tidak valid = 'Invalid reward_sku'.\n\n"
+        "PANEL KANAN - Load Daftar Promo & Void Kode:\n"
+        "  - Klik 'Load Daftar Promo Aktif' -> listbox terisi dari GET /member/deal/\n"
+        "  - Pilih deal dari list, isi Kode Voucher + Nomor Nota + UID Member\n"
+        "  - Klik 'Submit Void Kode Voucher' -> POST /member/deal/cancel_code/ dijalankan\n"
+        "  DLL: Await _client.GetAvailableDealsAsync()  -> List(Of DirectDealInfo)\n"
+        "  DLL: Await _client.CreateDealAsync(name, rewardSku, startTime, endTime, price, enabled)"
+    )
+
+    pdf.section_title("5.6  Referensi Endpoint API Baru (4.9 / 4.10 / 4.11)")
+    pdf.body_p(
+        "4.9  GET /member/deal/\n"
+        "     Deskripsi : Mengambil daftar seluruh program promo/voucher aktif di channel.\n"
+        "     Response  : Array DirectDealInfo (uid, name, reward_sku, price, enabled, start_time, end_time)\n"
+        "     DLL       : Await _client.GetAvailableDealsAsync()\n\n"
+        "4.10 POST /member/deal/cancel_code/\n"
+        "     Deskripsi : Membatalkan kode voucher yang sudah digunakan, kembali ke status available.\n"
+        "     Request   : {deal_code, transaction_ref, member:{uid}}\n"
+        "     Response  : {\"detail\": \"Deal code cancelled successfully.\"}\n"
+        "     DLL       : Await _client.CancelVoucherAsync(dealCode, txRef, memberUid)\n\n"
+        "4.11 POST /member/deal/\n"
+        "     Deskripsi : Membuat program promo/voucher baru di channel.\n"
+        "     Limitasi  : PUT/PATCH tidak didukung (HTTP 405). reward_sku WAJIB ada di /catalog/product/.\n"
+        "     Request   : {name, reward_sku, price, enabled, start_time, end_time}\n"
+        "     DLL       : Await _client.CreateDealAsync(name, rewardSku, startTime, endTime, price, enabled)"
+    )
+
     # 6. SKENARIO PENGUJIAN (QA CHECKLIST)
     pdf.add_page()
     pdf.chapter_title("6", "Matriks & Skenario Pengujian (QA Checklist)")
@@ -382,7 +432,11 @@ End If"""
         ("7. Void Burn Point", "Tab 3: Klik tombol 'Cancel Burn Point (Void)'.", "Status Payment menjadi CANCEL, poin kembali.", "READY"),
         ("8. Earning Point", "Tab 3: Klik 'Push Transaksi Selesai'.", "Transaksi terkirim, tampil Poin Reward baru.", "READY"),
         ("9. Cetak Struk", "Tab 4: Klik 'Generate Preview Struk'.", "Teks 40 kolom tercetak rapi dengan link survey.", "READY"),
-        ("10. Daftar Member", "Tab 5: Input Nama & HP baru, klik Simpan.", "Tersimpan (HTTP 201), redirect Tab 1 & poin tampil.", "PASSED")
+        ("10. Daftar Member", "Tab 5: Input Nama & HP baru, klik Simpan.", "Tersimpan (HTTP 201), redirect Tab 1 & poin tampil.", "PASSED"),
+        ("11. Cancel Voucher", "Tab 2: Isi kode & nota yg dipakai, klik 'Batalkan'.", "Voucher kembali available. API: code cancelled.", "READY"),
+        ("12. Load Promo List", "Tab 6 Kanan: Klik 'Load Daftar Promo Aktif'.", "Listbox terisi daftar deal dari GET /member/deal/.", "READY"),
+        ("13. Void Deal Code", "Tab 6: Pilih deal, isi Kode+Nota+UID, klik Void.", "Kode di-void via POST /member/deal/cancel_code/.", "READY"),
+        ("14. Insert Voucher", "Tab 6 Kiri: Isi Nama,SKU,Tipe,Nilai,Tgl, klik Insert.", "Promo baru terbuat (201) atau pesan SKU invalid.", "READY"),
     ]
 
     pdf.set_font("helvetica", "", 7.5)

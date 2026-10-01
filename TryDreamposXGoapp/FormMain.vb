@@ -255,6 +255,38 @@ Public Class FormMain
         End Try
     End Sub
 
+    Private Async Sub btnCancelVoucher_Click(sender As Object, e As EventArgs) Handles btnCancelVoucher.Click
+        Dim code = txtVoucherCode.Text.Trim()
+        Dim txRef = txtVoucherTxRef.Text.Trim()
+
+        If String.IsNullOrEmpty(code) OrElse String.IsNullOrEmpty(txRef) Then
+            MessageBox.Show("Kode Voucher dan No Transaksi (Tx Ref) harus diisi untuk membatalkan!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        btnCancelVoucher.Enabled = False
+        lblVoucherStatus.Text = "Status: Membatalkan pemakaian voucher ke Goapp..."
+        lblVoucherStatus.ForeColor = Color.OrangeRed
+
+        Try
+            Dim memberUid As Long? = If(_currentMember IsNot Nothing, _currentMember.Uid, CType(Nothing, Long?))
+            Dim resp = Await _client.CancelVoucherAsync(code, txRef, memberUid)
+
+            If resp.IsSuccess Then
+                lblVoucherStatus.Text = $"Status: Voucher {code} BERHASIL DIBATALKAN (Void)!"
+                lblVoucherStatus.ForeColor = Color.DarkGreen
+                MessageBox.Show("Pembatalan pemakaian voucher berhasil! Kupon kembali aktif.", "Sukses Void Voucher", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Else
+                lblVoucherStatus.Text = $"Status: Gagal membatalkan voucher. {resp.Message}"
+                lblVoucherStatus.ForeColor = Color.Red
+                MessageBox.Show($"Pembatalan voucher gagal:{Environment.NewLine}{resp.Message}", "Gagal Void", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End If
+            txtRawJson.Text = FormatJson(resp.RawJson)
+        Finally
+            btnCancelVoucher.Enabled = True
+        End Try
+    End Sub
+
 #End Region
 
 #Region "4. Burn Point & Push Sales Order"
@@ -484,6 +516,141 @@ Public Class FormMain
             MessageBox.Show($"Terjadi kesalahan:{Environment.NewLine}{ex.Message}", "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Finally
             btnSubmitRegister.Enabled = True
+            Cursor = Cursors.Default
+        End Try
+    End Sub
+
+#End Region
+
+#Region "7. Master & Siklus Voucher (Insert, List Deals, & Void Code)"
+
+    Private Async Sub btnCreateDeal_Click(sender As Object, e As EventArgs) Handles btnCreateDeal.Click
+        Dim name = txtDealName.Text.Trim()
+        Dim sku = txtDealSku.Text.Trim()
+        Dim amountText = txtDealAmount.Text.Trim()
+        Dim discountType = If(cmbDealType.SelectedIndex = 1, "percentage", If(cmbDealType.SelectedIndex = 2, "free_item", "amount"))
+
+        If String.IsNullOrWhiteSpace(name) OrElse String.IsNullOrWhiteSpace(sku) Then
+            MessageBox.Show("Nama Promo dan Reward SKU wajib diisi!", "Validasi", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        Dim amount As Decimal = 0
+        Decimal.TryParse(amountText, amount)
+
+        btnCreateDeal.Enabled = False
+        lblCreateDealStatus.Text = "Status: Mengirim pendaftaran Master Voucher ke Goapp..."
+        lblCreateDealStatus.ForeColor = Color.DarkOrange
+        Cursor = Cursors.WaitCursor
+
+        Try
+            Dim startTime = DateTime.Now
+            Dim endTime = DateTime.Now.AddMonths(3)
+
+            Dim resp = Await _client.CreateDealAsync(
+                name:=name,
+                rewardSku:=sku,
+                startTime:=startTime,
+                endTime:=endTime,
+                discountType:=discountType,
+                discountAmount:=amount
+            )
+
+            If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
+                lblCreateDealStatus.Text = $"Status: Sukses! UID Master Voucher: {resp.Data.Uid}"
+                lblCreateDealStatus.ForeColor = Color.DarkGreen
+                MessageBox.Show($"Master Voucher Berhasil Dibuat!{Environment.NewLine}Nama: {resp.Data.Name}{Environment.NewLine}UID: {resp.Data.Uid}", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                btnLoadDeals.PerformClick()
+            Else
+                lblCreateDealStatus.Text = $"Status: Gagal membuat voucher. {resp.Message}"
+                lblCreateDealStatus.ForeColor = Color.Red
+                MessageBox.Show($"Pembuatan voucher via API gagal:{Environment.NewLine}{resp.Message}{Environment.NewLine}{Environment.NewLine}Catatan Arsitektur Goapp:{Environment.NewLine}- Master deal promosi umumnya dibuat melalui CRM Admin Dashboard.{Environment.NewLine}- Jika via API, field 'reward_sku' harus terdaftar di master catalog toko.", "Info Goapp CRM", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            End If
+
+            txtRawJson.Text = FormatJson(resp.RawJson)
+        Catch ex As Exception
+            lblCreateDealStatus.Text = $"Status: Exception: {ex.Message}"
+            lblCreateDealStatus.ForeColor = Color.Red
+            MessageBox.Show($"Terjadi kesalahan: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        Finally
+            btnCreateDeal.Enabled = True
+            Cursor = Cursors.Default
+        End Try
+    End Sub
+
+    Private Async Sub btnLoadDeals_Click(sender As Object, e As EventArgs) Handles btnLoadDeals.Click
+        btnLoadDeals.Enabled = False
+        btnLoadDeals.Text = "Memuat Promo..."
+        lstDeals.Items.Clear()
+
+        Try
+            Dim resp = Await _client.GetAvailableDealsAsync()
+            If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
+                For Each d In resp.Data
+                    Dim desc = $"[UID: {d.Uid}] {d.Name} | SKU: {d.RewardSku}"
+                    lstDeals.Items.Add(desc)
+                Next
+                AppendLog($"[DEALS] Berhasil memuat {resp.Data.Count} promo deal aktif dari Goapp.")
+                txtRawJson.Text = FormatJson(resp.RawJson)
+                If resp.Data.Count = 0 Then
+                    lstDeals.Items.Add("(Tidak ada promo aktif di channel ini)")
+                End If
+            Else
+                MessageBox.Show($"Gagal memuat daftar deal: {resp.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End If
+        Finally
+            btnLoadDeals.Enabled = True
+            btnLoadDeals.Text = "Muat Promo Aktif Toko (GET /deal/)"
+        End Try
+    End Sub
+
+    Private Sub lstDeals_SelectedIndexChanged(sender As Object, e As EventArgs) Handles lstDeals.SelectedIndexChanged
+        If lstDeals.SelectedItem IsNot Nothing Then
+            Dim selected = lstDeals.SelectedItem.ToString()
+            Dim match = System.Text.RegularExpressions.Regex.Match(selected, "UID:\s*(\d+)")
+            If match.Success Then
+                Dim dealUid = match.Groups(1).Value
+                txtCancelVoucherCode.Text = dealUid
+                txtVoucherCode.Text = dealUid
+            End If
+        End If
+    End Sub
+
+    Private Async Sub btnSubmitCancelVoucher_Click(sender As Object, e As EventArgs) Handles btnSubmitCancelVoucher.Click
+        Dim code = txtCancelVoucherCode.Text.Trim()
+        Dim txRef = txtCancelTxRef.Text.Trim()
+
+        If String.IsNullOrWhiteSpace(code) OrElse String.IsNullOrWhiteSpace(txRef) Then
+            MessageBox.Show("Kode Voucher dan Transaction Ref POS wajib diisi!", "Validasi Input", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        btnSubmitCancelVoucher.Enabled = False
+        lblCancelVoucherStatus.Text = "Status: Mengirim pembatalan voucher (cancel_code)..."
+        lblCancelVoucherStatus.ForeColor = Color.DarkOrange
+        Cursor = Cursors.WaitCursor
+
+        Try
+            Dim memberUid As Long? = If(_currentMember IsNot Nothing, _currentMember.Uid, CType(Nothing, Long?))
+            Dim resp = Await _client.CancelVoucherAsync(code, txRef, memberUid)
+
+            If resp.IsSuccess Then
+                lblCancelVoucherStatus.Text = $"Status: Voucher {code} BERHASIL DIBATALKAN (Void)!"
+                lblCancelVoucherStatus.ForeColor = Color.DarkGreen
+                MessageBox.Show($"Pembatalan Voucher Berhasil!{Environment.NewLine}Voucher {code} pada transaksi {txRef} kini telah dibatalkan dan dapat digunakan kembali.", "Void Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Else
+                lblCancelVoucherStatus.Text = $"Status: Gagal membatalkan voucher. {resp.Message}"
+                lblCancelVoucherStatus.ForeColor = Color.Red
+                MessageBox.Show($"Pembatalan voucher gagal:{Environment.NewLine}{resp.Message}", "Gagal", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End If
+
+            txtRawJson.Text = FormatJson(resp.RawJson)
+        Catch ex As Exception
+            lblCancelVoucherStatus.Text = $"Status: Exception: {ex.Message}"
+            lblCancelVoucherStatus.ForeColor = Color.Red
+            MessageBox.Show($"Terjadi kesalahan: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        Finally
+            btnSubmitCancelVoucher.Enabled = True
             Cursor = Cursors.Default
         End Try
     End Sub

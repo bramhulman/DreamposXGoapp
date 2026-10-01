@@ -29,6 +29,7 @@ Partial Class FormMain
     Friend WithEvents tabTransaction As System.Windows.Forms.TabPage
     Friend WithEvents tabReceipt As System.Windows.Forms.TabPage
     Friend WithEvents tabRegister As System.Windows.Forms.TabPage
+    Friend WithEvents tabMasterVoucher As System.Windows.Forms.TabPage
 
     ' Member Tab
     Friend WithEvents lblInputMember As System.Windows.Forms.Label
@@ -49,6 +50,7 @@ Partial Class FormMain
     Friend WithEvents txtVoucherCode As System.Windows.Forms.TextBox
     Friend WithEvents btnValidateVoucher As System.Windows.Forms.Button
     Friend WithEvents btnUseVoucher As System.Windows.Forms.Button
+    Friend WithEvents btnCancelVoucher As System.Windows.Forms.Button
     Friend WithEvents txtVoucherTxRef As System.Windows.Forms.TextBox
     Friend WithEvents lblVoucherTxRef As System.Windows.Forms.Label
     Friend WithEvents lblVoucherStatus As System.Windows.Forms.Label
@@ -84,6 +86,30 @@ Partial Class FormMain
     Friend WithEvents grpRegInfo As System.Windows.Forms.GroupBox
     Friend WithEvents txtRegNotes As System.Windows.Forms.TextBox
 
+    ' Master Voucher & Void Tab Controls
+    Friend WithEvents grpCreateDeal As System.Windows.Forms.GroupBox
+    Friend WithEvents lblDealName As System.Windows.Forms.Label
+    Friend WithEvents txtDealName As System.Windows.Forms.TextBox
+    Friend WithEvents lblDealSku As System.Windows.Forms.Label
+    Friend WithEvents txtDealSku As System.Windows.Forms.TextBox
+    Friend WithEvents lblDealType As System.Windows.Forms.Label
+    Friend WithEvents cmbDealType As System.Windows.Forms.ComboBox
+    Friend WithEvents lblDealAmount As System.Windows.Forms.Label
+    Friend WithEvents txtDealAmount As System.Windows.Forms.TextBox
+    Friend WithEvents btnCreateDeal As System.Windows.Forms.Button
+    Friend WithEvents lblCreateDealStatus As System.Windows.Forms.Label
+
+    Friend WithEvents grpManageDeals As System.Windows.Forms.GroupBox
+    Friend WithEvents btnLoadDeals As System.Windows.Forms.Button
+    Friend WithEvents lstDeals As System.Windows.Forms.ListBox
+    Friend WithEvents lblCancelVoucherTitle As System.Windows.Forms.Label
+    Friend WithEvents lblCancelVoucherCode As System.Windows.Forms.Label
+    Friend WithEvents txtCancelVoucherCode As System.Windows.Forms.TextBox
+    Friend WithEvents lblCancelTxRef As System.Windows.Forms.Label
+    Friend WithEvents txtCancelTxRef As System.Windows.Forms.TextBox
+    Friend WithEvents btnSubmitCancelVoucher As System.Windows.Forms.Button
+    Friend WithEvents lblCancelVoucherStatus As System.Windows.Forms.Label
+
     ' Log Console
     Friend WithEvents grpLogs As System.Windows.Forms.GroupBox
     Friend WithEvents txtLogs As System.Windows.Forms.TextBox
@@ -105,6 +131,7 @@ Partial Class FormMain
         Me.tabTransaction = New System.Windows.Forms.TabPage()
         Me.tabReceipt = New System.Windows.Forms.TabPage()
         Me.tabRegister = New System.Windows.Forms.TabPage()
+        Me.tabMasterVoucher = New System.Windows.Forms.TabPage()
 
         ' Member Controls
         Me.lblInputMember = New System.Windows.Forms.Label()
@@ -127,6 +154,7 @@ Partial Class FormMain
         Me.lblVoucherTxRef = New System.Windows.Forms.Label()
         Me.txtVoucherTxRef = New System.Windows.Forms.TextBox()
         Me.btnUseVoucher = New System.Windows.Forms.Button()
+        Me.btnCancelVoucher = New System.Windows.Forms.Button()
         Me.lblVoucherStatus = New System.Windows.Forms.Label()
 
         ' Transaction Controls
@@ -159,6 +187,30 @@ Partial Class FormMain
         Me.lblRegStatus = New System.Windows.Forms.Label()
         Me.grpRegInfo = New System.Windows.Forms.GroupBox()
         Me.txtRegNotes = New System.Windows.Forms.TextBox()
+
+        ' Master Voucher & Void Controls
+        Me.grpCreateDeal = New System.Windows.Forms.GroupBox()
+        Me.lblDealName = New System.Windows.Forms.Label()
+        Me.txtDealName = New System.Windows.Forms.TextBox()
+        Me.lblDealSku = New System.Windows.Forms.Label()
+        Me.txtDealSku = New System.Windows.Forms.TextBox()
+        Me.lblDealType = New System.Windows.Forms.Label()
+        Me.cmbDealType = New System.Windows.Forms.ComboBox()
+        Me.lblDealAmount = New System.Windows.Forms.Label()
+        Me.txtDealAmount = New System.Windows.Forms.TextBox()
+        Me.btnCreateDeal = New System.Windows.Forms.Button()
+        Me.lblCreateDealStatus = New System.Windows.Forms.Label()
+
+        Me.grpManageDeals = New System.Windows.Forms.GroupBox()
+        Me.btnLoadDeals = New System.Windows.Forms.Button()
+        Me.lstDeals = New System.Windows.Forms.ListBox()
+        Me.lblCancelVoucherTitle = New System.Windows.Forms.Label()
+        Me.lblCancelVoucherCode = New System.Windows.Forms.Label()
+        Me.txtCancelVoucherCode = New System.Windows.Forms.TextBox()
+        Me.lblCancelTxRef = New System.Windows.Forms.Label()
+        Me.txtCancelTxRef = New System.Windows.Forms.TextBox()
+        Me.btnSubmitCancelVoucher = New System.Windows.Forms.Button()
+        Me.lblCancelVoucherStatus = New System.Windows.Forms.Label()
 
         ' Logs Controls
         Me.grpLogs = New System.Windows.Forms.GroupBox()
@@ -211,6 +263,7 @@ Partial Class FormMain
         Me.tabControl.Controls.Add(Me.tabTransaction)
         Me.tabControl.Controls.Add(Me.tabReceipt)
         Me.tabControl.Controls.Add(Me.tabRegister)
+        Me.tabControl.Controls.Add(Me.tabMasterVoucher)
 
         ' --- TAB 1: MEMBER ---
         Me.tabMember.Text = "1. Cek & Validasi Member"
@@ -293,6 +346,7 @@ Partial Class FormMain
         Me.tabVoucher.Controls.Add(Me.lblVoucherTxRef)
         Me.tabVoucher.Controls.Add(Me.txtVoucherTxRef)
         Me.tabVoucher.Controls.Add(Me.btnUseVoucher)
+        Me.tabVoucher.Controls.Add(Me.btnCancelVoucher)
         Me.tabVoucher.Controls.Add(Me.lblVoucherStatus)
 
         Me.lblVoucherCode.Text = "Kode Voucher / Deal:"
@@ -319,6 +373,11 @@ Partial Class FormMain
         Me.btnUseVoucher.Location = New System.Drawing.Point(395, 65)
         Me.btnUseVoucher.Size = New System.Drawing.Size(220, 27)
         Me.btnUseVoucher.BackColor = System.Drawing.Color.PaleGreen
+
+        Me.btnCancelVoucher.Text = "3. Batalkan Voucher (Void)"
+        Me.btnCancelVoucher.Location = New System.Drawing.Point(625, 65)
+        Me.btnCancelVoucher.Size = New System.Drawing.Size(180, 27)
+        Me.btnCancelVoucher.BackColor = System.Drawing.Color.LightPink
 
         Me.lblVoucherStatus.Location = New System.Drawing.Point(20, 115)
         Me.lblVoucherStatus.Size = New System.Drawing.Size(700, 60)
@@ -472,6 +531,121 @@ Partial Class FormMain
             "3. Pilih Tier/Scheme membership (Default: Go Member)." & vbCrLf & vbCrLf & _
             "4. Klik tombol 'Simpan / Daftarkan Member'." & vbCrLf & vbCrLf & _
             "5. Setelah berhasil, data member langsung otomatis tersimpan di Goapp CRM dan aplikasi akan berpindah ke Tab 1 untuk memuat profil & saldo poin member secara instan."
+
+        ' --- TAB 6: MASTER & SIKLUS VOUCHER ---
+        Me.tabMasterVoucher.Text = "6. Master & Siklus Voucher"
+        Me.tabMasterVoucher.Controls.Add(Me.grpCreateDeal)
+        Me.tabMasterVoucher.Controls.Add(Me.grpManageDeals)
+
+        ' grpCreateDeal
+        Me.grpCreateDeal.Text = "Insert Master Promo / Voucher (POST /member/deal/)"
+        Me.grpCreateDeal.Location = New System.Drawing.Point(15, 15)
+        Me.grpCreateDeal.Size = New System.Drawing.Size(460, 300)
+        Me.grpCreateDeal.Controls.Add(Me.lblDealName)
+        Me.grpCreateDeal.Controls.Add(Me.txtDealName)
+        Me.grpCreateDeal.Controls.Add(Me.lblDealSku)
+        Me.grpCreateDeal.Controls.Add(Me.txtDealSku)
+        Me.grpCreateDeal.Controls.Add(Me.lblDealType)
+        Me.grpCreateDeal.Controls.Add(Me.cmbDealType)
+        Me.grpCreateDeal.Controls.Add(Me.lblDealAmount)
+        Me.grpCreateDeal.Controls.Add(Me.txtDealAmount)
+        Me.grpCreateDeal.Controls.Add(Me.btnCreateDeal)
+        Me.grpCreateDeal.Controls.Add(Me.lblCreateDealStatus)
+
+        Me.lblDealName.Text = "Nama Promo / Voucher:"
+        Me.lblDealName.Location = New System.Drawing.Point(15, 30)
+        Me.lblDealName.AutoSize = True
+
+        Me.txtDealName.Location = New System.Drawing.Point(170, 27)
+        Me.txtDealName.Size = New System.Drawing.Size(265, 23)
+        Me.txtDealName.Text = "Voucher Diskon Kasir POS"
+
+        Me.lblDealSku.Text = "Reward SKU (Catalog):"
+        Me.lblDealSku.Location = New System.Drawing.Point(15, 68)
+        Me.lblDealSku.AutoSize = True
+
+        Me.txtDealSku.Location = New System.Drawing.Point(170, 65)
+        Me.txtDealSku.Size = New System.Drawing.Size(265, 23)
+        Me.txtDealSku.Text = "NEWITEM100K"
+
+        Me.lblDealType.Text = "Tipe Diskon:"
+        Me.lblDealType.Location = New System.Drawing.Point(15, 106)
+        Me.lblDealType.AutoSize = True
+
+        Me.cmbDealType.Location = New System.Drawing.Point(170, 103)
+        Me.cmbDealType.Size = New System.Drawing.Size(265, 23)
+        Me.cmbDealType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmbDealType.Items.AddRange(New Object() {"amount (Potongan Rp)", "percentage (Diskon %)", "free_item (Gratis Barang)"})
+        Me.cmbDealType.SelectedIndex = 0
+
+        Me.lblDealAmount.Text = "Nilai Diskon (Rp / %):"
+        Me.lblDealAmount.Location = New System.Drawing.Point(15, 144)
+        Me.lblDealAmount.AutoSize = True
+
+        Me.txtDealAmount.Location = New System.Drawing.Point(170, 141)
+        Me.txtDealAmount.Size = New System.Drawing.Size(265, 23)
+        Me.txtDealAmount.Text = "15000"
+
+        Me.btnCreateDeal.Text = "Insert Master Voucher (POST)"
+        Me.btnCreateDeal.Location = New System.Drawing.Point(170, 185)
+        Me.btnCreateDeal.Size = New System.Drawing.Size(265, 35)
+        Me.btnCreateDeal.BackColor = System.Drawing.Color.LightSkyBlue
+        Me.btnCreateDeal.Font = New System.Drawing.Font("Segoe UI", 9.0F, System.Drawing.FontStyle.Bold)
+
+        Me.lblCreateDealStatus.Text = "Catatan: Master promo dibuat di CRM Admin. Via API mewajibkan reward_sku valid di catalog."
+        Me.lblCreateDealStatus.Location = New System.Drawing.Point(15, 235)
+        Me.lblCreateDealStatus.Size = New System.Drawing.Size(425, 45)
+        Me.lblCreateDealStatus.ForeColor = System.Drawing.Color.DarkSlateGray
+
+        ' grpManageDeals
+        Me.grpManageDeals.Text = "Daftar Promo Aktif & Void Voucher (cancel_code)"
+        Me.grpManageDeals.Location = New System.Drawing.Point(490, 15)
+        Me.grpManageDeals.Size = New System.Drawing.Size(450, 300)
+        Me.grpManageDeals.Controls.Add(Me.btnLoadDeals)
+        Me.grpManageDeals.Controls.Add(Me.lstDeals)
+        Me.grpManageDeals.Controls.Add(Me.lblCancelVoucherTitle)
+        Me.grpManageDeals.Controls.Add(Me.lblCancelVoucherCode)
+        Me.grpManageDeals.Controls.Add(Me.txtCancelVoucherCode)
+        Me.grpManageDeals.Controls.Add(Me.lblCancelTxRef)
+        Me.grpManageDeals.Controls.Add(Me.txtCancelTxRef)
+        Me.grpManageDeals.Controls.Add(Me.btnSubmitCancelVoucher)
+        Me.grpManageDeals.Controls.Add(Me.lblCancelVoucherStatus)
+
+        Me.btnLoadDeals.Text = "Muat Promo Aktif Toko (GET /deal/)"
+        Me.btnLoadDeals.Location = New System.Drawing.Point(15, 22)
+        Me.btnLoadDeals.Size = New System.Drawing.Size(420, 27)
+
+        Me.lstDeals.Location = New System.Drawing.Point(15, 55)
+        Me.lstDeals.Size = New System.Drawing.Size(420, 95)
+        Me.lstDeals.Font = New System.Drawing.Font("Segoe UI", 8.5F)
+
+        Me.lblCancelVoucherTitle.Text = "Batalkan Voucher yang Terpakai (Void Kupon):"
+        Me.lblCancelVoucherTitle.Location = New System.Drawing.Point(15, 158)
+        Me.lblCancelVoucherTitle.AutoSize = True
+        Me.lblCancelVoucherTitle.Font = New System.Drawing.Font("Segoe UI", 9.0F, System.Drawing.FontStyle.Bold)
+
+        Me.lblCancelVoucherCode.Text = "Kode Voucher:"
+        Me.lblCancelVoucherCode.Location = New System.Drawing.Point(15, 185)
+        Me.lblCancelVoucherCode.AutoSize = True
+
+        Me.txtCancelVoucherCode.Location = New System.Drawing.Point(110, 182)
+        Me.txtCancelVoucherCode.Size = New System.Drawing.Size(150, 23)
+
+        Me.lblCancelTxRef.Text = "Tx Ref:"
+        Me.lblCancelTxRef.Location = New System.Drawing.Point(265, 185)
+        Me.lblCancelTxRef.AutoSize = True
+
+        Me.txtCancelTxRef.Location = New System.Drawing.Point(310, 182)
+        Me.txtCancelTxRef.Size = New System.Drawing.Size(125, 23)
+
+        Me.btnSubmitCancelVoucher.Text = "Batalkan / Void Voucher (POST /cancel_code/)"
+        Me.btnSubmitCancelVoucher.Location = New System.Drawing.Point(110, 215)
+        Me.btnSubmitCancelVoucher.Size = New System.Drawing.Size(325, 30)
+        Me.btnSubmitCancelVoucher.BackColor = System.Drawing.Color.LightPink
+
+        Me.lblCancelVoucherStatus.Text = "Status: Siap membatalkan voucher terpakai..."
+        Me.lblCancelVoucherStatus.Location = New System.Drawing.Point(15, 255)
+        Me.lblCancelVoucherStatus.Size = New System.Drawing.Size(420, 30)
 
         ' grpLogs
         Me.grpLogs.Location = New System.Drawing.Point(12, 455)

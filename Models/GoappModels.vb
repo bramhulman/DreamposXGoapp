@@ -194,6 +194,21 @@ Namespace Models
         <JsonProperty("redeem_code")>
         Public Property RedeemCode As String
 
+        <JsonProperty("reward_sku")>
+        Public Property RewardSku As String
+
+        <JsonProperty("price")>
+        Public Property Price As Decimal
+
+        <JsonProperty("enabled")>
+        Public Property Enabled As Boolean
+
+        <JsonProperty("start_time")>
+        Public Property StartTime As String
+
+        <JsonProperty("end_time")>
+        Public Property EndTime As String
+
         <JsonProperty("reward_data")>
         Public Property RewardData As RewardDataInfo
     End Class
@@ -266,6 +281,45 @@ Namespace Models
 
         <JsonProperty("detail")>
         Public Property Detail As String
+    End Class
+
+    Public Class VoucherCancelRequest
+        <JsonProperty("deal_code")>
+        Public Property DealCode As String
+
+        <JsonProperty("transaction_ref")>
+        Public Property TransactionRef As String
+
+        <JsonProperty("member", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property Member As VoucherMemberRef
+    End Class
+
+    Public Class CreateDealRequest
+        <JsonProperty("name")>
+        Public Property Name As String
+
+        <JsonProperty("description", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property Description As String
+
+        <JsonProperty("reward_sku")>
+        Public Property RewardSku As String
+
+        <JsonProperty("start_time")>
+        Public Property StartTime As String
+
+        <JsonProperty("end_time")>
+        Public Property EndTime As String
+
+        <JsonProperty("reward_channel")>
+        Public Property RewardChannel As ChannelRef
+
+        <JsonProperty("reward_data")>
+        Public Property RewardData As RewardDataInfo
+    End Class
+
+    Public Class ChannelRef
+        <JsonProperty("uid")>
+        Public Property Uid As Long
     End Class
 
     ''' <summary>

@@ -249,6 +249,62 @@ Namespace Services
             Return lastResult
         End Function
 
+        ''' <summary>
+        ''' Membatalkan penggunaan voucher pada suatu transaksi POS (Void / Cancel Voucher)
+        ''' </summary>
+        Public Async Function CancelVoucherAsync(dealCode As String, transactionRef As String, Optional memberUid As Long? = Nothing) As Task(Of ApiResponse(Of VoucherResult))
+            If String.IsNullOrWhiteSpace(dealCode) OrElse String.IsNullOrWhiteSpace(transactionRef) Then
+                Return New ApiResponse(Of VoucherResult) With {.IsSuccess = False, .Message = "Kode voucher dan transaction_ref harus diisi."}
+            End If
+
+            Dim url = $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/member/deal/cancel_code/"
+            Dim payload = New VoucherCancelRequest With {
+                .DealCode = dealCode.Trim(),
+                .TransactionRef = transactionRef.Trim(),
+                .Member = If(memberUid.HasValue AndAlso memberUid.Value > 0, New VoucherMemberRef With {.Uid = memberUid.Value}, Nothing)
+            }
+
+            Log($"Membatalkan pemakaian voucher '{dealCode}' pada transaksi {transactionRef}...")
+            Dim result = Await SendAuthorizedRequestAsync(Of VoucherResult)(HttpMethod.Post, url, payload)
+            If result.IsSuccess Then
+                Log($"Pembatalan voucher '{dealCode}' berhasil.")
+            Else
+                Log($"Gagal membatalkan voucher: {result.Message}")
+            End If
+            Return result
+        End Function
+
+        ''' <summary>
+        ''' Mencoba membuat Master Voucher / Promo Deal baru via API
+        ''' Catatan: Master deal umumnya dikonfigurasi melalui Web Dashboard CRM.
+        ''' Bila melalui API, reward_sku harus merupakan SKU yang valid di master catalog.
+        ''' </summary>
+        Public Async Function CreateDealAsync(name As String, rewardSku As String, startTime As DateTime, endTime As DateTime, Optional discountType As String = "amount", Optional discountAmount As Decimal = 0, Optional minPurchase As Decimal = 0) As Task(Of ApiResponse(Of DirectDealInfo))
+            Dim url = $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/member/deal/"
+            Dim payload As New CreateDealRequest With {
+                .Name = name.Trim(),
+                .RewardSku = rewardSku.Trim(),
+                .StartTime = startTime.ToString("yyyy-MM-ddTHH:mm:sszzz"),
+                .EndTime = endTime.ToString("yyyy-MM-ddTHH:mm:sszzz"),
+                .RewardChannel = New ChannelRef With {.Uid = 138350315235400},
+                .RewardData = New RewardDataInfo With {
+                    .Name = name.Trim(),
+                    .DiscountType = discountType,
+                    .DiscountAmount = discountAmount,
+                    .MinPurchase = minPurchase
+                }
+            }
+
+            Log($"Mengirim pendaftaran Master Voucher '{name}' (SKU: {rewardSku})...")
+            Dim result = Await SendAuthorizedRequestAsync(Of DirectDealInfo)(HttpMethod.Post, url, payload)
+            If result.IsSuccess Then
+                Log($"Master Voucher '{name}' berhasil dibuat! UID: {result.Data?.Uid}")
+            Else
+                Log($"Gagal membuat Master Voucher: {result.Message}")
+            End If
+            Return result
+        End Function
+
 #End Region
 
 #Region "Point Payment (Burn Point)"

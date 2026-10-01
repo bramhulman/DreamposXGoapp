@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
@@ -646,6 +646,77 @@ End Sub</pre>
   </li>
 </ol>
 
+<h2>5.4 Membatalkan Kode Voucher yang Sudah Dipakai (Tombol Cancel Voucher di Tab 2)</h2>
+<p>Fitur ini berguna saat kasir membatalkan struk yang sebelumnya sudah memakai voucher. Kode dikembalikan ke status <em>available</em> dan dapat digunakan lagi oleh member.</p>
+<p><strong>Lokasi:</strong> Tab 2 &#8594; tombol merah muda <strong>3. Batalkan Voucher (Void)</strong>.</p>
+<p><strong>Prasyarat:</strong> Kode voucher sudah pernah di-redeem, nomor nota sama persis dengan saat penggunaan, UID member sudah tersimpan dari pencarian Tab 1.</p>
+<pre>Dim resp = Await _client.CancelVoucherAsync(dealCode, txRef, memberUid)
+If resp.IsSuccess Then
+    MessageBox.Show("Voucher berhasil dibatalkan!", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
+End If</pre>
+
+<h2>5.5 Panduan Tab 6 &#8212; Master &amp; Siklus Voucher</h2>
+<p>Tab 6 menyediakan antarmuka manajemen master promo/voucher Goapp CRM, terbagi dua panel:</p>
+<ul>
+  <li><strong>Panel Kiri &#8212; Insert Master Voucher (POST):</strong> Membuat program promo baru.</li>
+  <li><strong>Panel Kanan &#8212; Kelola Daftar Promo Aktif:</strong> Muat daftar deal aktif dan void kode terpakai.</li>
+</ul>
+<h3>5.5.1 Panel Kiri: Insert Master Voucher Baru (POST /member/deal/)</h3>
+<table>
+  <thead><tr><th>Field Form</th><th>Keterangan</th><th>Contoh Nilai</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Nama Promo</strong></td><td>Nama deskriptif program promo</td><td><code>Diskon Hemat 50K</code></td></tr>
+    <tr><td><strong>Reward SKU</strong></td><td>SKU produk reward di katalog channel (WAJIB valid)</td><td><code>VOUCHER50K</code></td></tr>
+    <tr><td><strong>Tipe Diskon</strong></td><td>Persentase (%), Nominal (Rp), Item Gratis, Diskon Item Spesifik</td><td><code>Nominal (Rp)</code></td></tr>
+    <tr><td><strong>Nilai Diskon</strong></td><td>Besaran diskon sesuai tipe yang dipilih</td><td><code>50000</code></td></tr>
+    <tr><td><strong>Tanggal Mulai</strong></td><td>Format yyyy-MM-dd</td><td><code>2024-01-01</code></td></tr>
+    <tr><td><strong>Tanggal Berakhir</strong></td><td>Format yyyy-MM-dd</td><td><code>2024-12-31</code></td></tr>
+  </tbody>
+</table>
+<p><strong>&#9888; Catatan Penting:</strong> <code>reward_sku</code> WAJIB terdaftar di katalog produk channel Goapp (<code>GET /catalog/product/</code>). Jika SKU tidak valid, API mengembalikan <code>{"detail": "Invalid reward_sku"}</code>. Master promo umumnya dibuat via dashboard admin Goapp CRM; fitur API ini untuk otomasi lanjutan.</p>
+<h3>5.5.2 Panel Kanan: Load Daftar Promo &amp; Void Kode</h3>
+<p>Klik <strong>Load Daftar Promo Aktif</strong> &#8594; daftar deal muncul di listbox. Pilih deal, isi Kode Voucher + Nomor Nota + UID Member, klik <strong>Submit Void Kode Voucher</strong>.</p>
+<pre>Dim resp = Await _client.GetAvailableDealsAsync()
+For Each deal In resp.Data
+    lstDeals.Items.Add($"[{deal.Uid}] {deal.Name} | SKU: {deal.RewardSku}")
+Next</pre>
+
+<h2>5.6 Referensi Endpoint API Baru (Tab 6 &amp; Cancel Voucher)</h2>
+<h3>4.9 &#8212; GET Daftar Master Promo Aktif</h3>
+<table>
+  <thead><tr><th>Atribut</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Endpoint</strong></td><td><code>GET /member/deal/</code></td></tr>
+    <tr><td><strong>Allow</strong></td><td>GET, POST, HEAD, OPTIONS</td></tr>
+    <tr><td><strong>Deskripsi</strong></td><td>Mengambil daftar seluruh program promo/voucher aktif di channel.</td></tr>
+    <tr><td><strong>Response (200 OK)</strong></td><td>Array of DirectDealInfo: uid, name, reward_sku, price, enabled, start_time, end_time</td></tr>
+    <tr><td><strong>Method DLL</strong></td><td><code>Await _client.GetAvailableDealsAsync()</code></td></tr>
+  </tbody>
+</table>
+<pre>[{"uid":"138520112453192","name":"Voucher Hemat","reward_sku":"VOUCHERHEMAT","price":50000,"enabled":true,"start_time":"2024-01-01T00:00:00Z","end_time":"2024-12-31T23:59:59Z"}]</pre>
+<h3>4.10 &#8212; POST Batalkan Kode Voucher Terpakai (cancel_code)</h3>
+<table>
+  <thead><tr><th>Atribut</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Endpoint</strong></td><td><code>POST /member/deal/cancel_code/</code></td></tr>
+    <tr><td><strong>Deskripsi</strong></td><td>Membatalkan kode voucher yang sudah digunakan. Voucher kembali ke status available. Digunakan saat kasir membatalkan struk.</td></tr>
+    <tr><td><strong>Method DLL</strong></td><td><code>Await _client.CancelVoucherAsync(dealCode, txRef, memberUid)</code></td></tr>
+  </tbody>
+</table>
+<pre>Request : {"deal_code":"KODE-VOUCHER-123","transaction_ref":"NOTA-2024-001","member":{"uid":"123456789"}}
+Response: {"detail":"Deal code cancelled successfully."}</pre>
+<h3>4.11 &#8212; POST Insert Master Voucher / Program Promo Baru</h3>
+<table>
+  <thead><tr><th>Atribut</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Endpoint</strong></td><td><code>POST /member/deal/</code></td></tr>
+    <tr><td><strong>Deskripsi</strong></td><td>Membuat program promo/voucher baru di channel.</td></tr>
+    <tr><td><strong>Limitasi</strong></td><td>PUT/PATCH tidak didukung (HTTP 405). reward_sku WAJIB ada di /catalog/product/.</td></tr>
+    <tr><td><strong>Method DLL</strong></td><td><code>Await _client.CreateDealAsync(name, rewardSku, startTime, endTime, price, enabled)</code></td></tr>
+  </tbody>
+</table>
+<pre>Request: {"name":"Diskon Hemat 50K","reward_sku":"VOUCHER50K","price":50000,"enabled":true,"start_time":"2024-01-01T00:00:00Z","end_time":"2024-12-31T23:59:59Z"}
+Error SKU invalid: {"detail":"Invalid reward_sku"}</pre>
 <h1>6. Matriks & Skenario Pengujian (QA Checklist)</h1>
 <table>
   <thead>
@@ -717,7 +788,30 @@ End Sub</pre>
       <td>Member tersimpan di Goapp (HTTP 201 Created), redirect otomatis ke Tab 1 & saldo awal tampil.</td>
       <td><strong style="color: green;">PASSED (Verified)</strong></td>
     </tr>
-  </tbody>
+      <tr>
+      <td><strong>11. Cancel Voucher (Void)</strong></td>
+      <td>Tab 2: Isi kode voucher &amp; nomor nota yang sudah dipakai, klik <strong>3. Batalkan Voucher (Void)</strong>.</td>
+      <td>Voucher kembali ke status available. API: <code>{"detail": "Deal code cancelled successfully."}</code></td>
+      <td>Siap Diuji di Form</td>
+    </tr>
+    <tr>
+      <td><strong>12. Load Daftar Promo</strong></td>
+      <td>Tab 6 Panel Kanan: Klik <strong>Load Daftar Promo Aktif</strong>.</td>
+      <td>Listbox terisi daftar deal aktif dari <code>GET /member/deal/</code> beserta UID, nama, SKU.</td>
+      <td>Siap Diuji di Form</td>
+    </tr>
+    <tr>
+      <td><strong>13. Void Deal Code (Tab 6)</strong></td>
+      <td>Tab 6 Panel Kanan: Pilih deal, isi Kode + Nota + UID Member, klik <strong>Submit Void Kode Voucher</strong>.</td>
+      <td>Kode di-void via <code>POST /member/deal/cancel_code/</code>. Status kembali available.</td>
+      <td>Siap Diuji di Form</td>
+    </tr>
+    <tr>
+      <td><strong>14. Insert Master Voucher</strong></td>
+      <td>Tab 6 Panel Kiri: Isi Nama, SKU, Tipe, Nilai, Tanggal, klik <strong>Insert Voucher Baru</strong>.</td>
+      <td>Promo baru terbuat di Goapp CRM (HTTP 201). SKU tidak valid = pesan informatif ditampilkan.</td>
+      <td>Siap Diuji di Form</td>
+    </tr></tbody>
 </table>
 
 <div class="footer">
