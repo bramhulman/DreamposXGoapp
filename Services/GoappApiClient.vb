@@ -145,6 +145,47 @@ Namespace Services
             Return result
         End Function
 
+        ''' <summary>
+        ''' Mendaftarkan (Save/Set) data member baru langsung dari kasir POS ke Goapp CRM
+        ''' </summary>
+        Public Async Function RegisterMemberAsync(firstName As String, lastName As String, mobileNo As String, Optional email As String = Nothing, Optional schemeUid As Long = 138348545946696, Optional schemeName As String = "Go Member") As Task(Of ApiResponse(Of MemberResponse))
+            Dim url = $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/member/member/"
+            Dim payload As New CreateMemberRequest With {
+                .FirstName = firstName.Trim(),
+                .LastName = If(String.IsNullOrEmpty(lastName), "-", lastName.Trim()),
+                .MobileNo = mobileNo.Trim(),
+                .Email = email,
+                .Scheme = New MemberScheme With {.Uid = schemeUid, .Name = schemeName}
+            }
+
+            Log($"Mendaftarkan member baru: {firstName} ({mobileNo}) ke Scheme '{schemeName}'...")
+            Dim result = Await SendAuthorizedRequestAsync(Of MemberResponse)(HttpMethod.Post, url, payload)
+
+            If result.IsSuccess AndAlso result.Data IsNot Nothing Then
+                Log($"Registrasi member berhasil! UID: {result.Data.Uid}, Nama: {result.Data.FullName}")
+            Else
+                Log($"Registrasi member gagal: {result.Message}")
+            End If
+
+            Return result
+        End Function
+
+        ''' <summary>
+        ''' Mengambil daftar Tier/Scheme Member CRM yang aktif
+        ''' </summary>
+        Public Async Function GetMemberSchemesAsync() As Task(Of ApiResponse(Of List(Of MemberScheme)))
+            Dim url = $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/member/scheme/"
+            Return Await SendAuthorizedRequestAsync(Of List(Of MemberScheme))(HttpMethod.Get, url)
+        End Function
+
+        ''' <summary>
+        ''' Menampilkan daftar seluruh voucher promo (Deals) yang sedang aktif di channel toko ini
+        ''' </summary>
+        Public Async Function GetAvailableDealsAsync() As Task(Of ApiResponse(Of List(Of DirectDealInfo)))
+            Dim url = $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/member/deal/"
+            Return Await SendAuthorizedRequestAsync(Of List(Of DirectDealInfo))(HttpMethod.Get, url)
+        End Function
+
 #End Region
 
 #Region "Vouchers with Auto-Retry"

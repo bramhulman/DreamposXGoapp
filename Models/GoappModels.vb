@@ -125,6 +125,26 @@ Namespace Models
         Public Property Name As String
     End Class
 
+    ''' <summary>
+    ''' Model untuk pendaftaran / simpan member baru dari POS
+    ''' </summary>
+    Public Class CreateMemberRequest
+        <JsonProperty("first_name")>
+        Public Property FirstName As String
+
+        <JsonProperty("last_name")>
+        Public Property LastName As String
+
+        <JsonProperty("mobile_no")>
+        Public Property MobileNo As String
+
+        <JsonProperty("email", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property Email As String
+
+        <JsonProperty("scheme")>
+        Public Property Scheme As MemberScheme
+    End Class
+
     Public Class MemberLevel
         <JsonProperty("id")>
         Public Property Id As Integer
@@ -300,53 +320,93 @@ Namespace Models
     ''' Sales Order Push (Earning Point) Models
     ''' </summary>
     Public Class PushOrderRequest
-        <JsonProperty("order_no")>
+        <JsonProperty("order_no", NullValueHandling:=NullValueHandling.Ignore)>
         Public Property OrderNo As String
 
-        <JsonProperty("store")>
-        Public Property Store As StoreRef
+        <JsonProperty("provider_ref", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property ProviderRef As String
 
-        <JsonProperty("contact", NullValueHandling:=NullValueHandling.Ignore)>
-        Public Property Contact As ContactRef
+        <JsonProperty("order_date", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property OrderDate As String
+
+        <JsonProperty("member", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property Member As OrderMemberRef
+
+        <JsonProperty("store", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property Store As OrderStoreRef
 
         <JsonProperty("lines")>
-        Public Property Lines As List(Of OrderLineItem)
+        Public Property Lines As List(Of OrderLineItem) = New List(Of OrderLineItem)()
 
-        <JsonProperty("payment_method")>
-        Public Property PaymentMethod As String = "Cash"
+        <JsonProperty("lines_total")>
+        Public Property LinesTotal As Decimal
 
-        <JsonProperty("grand_total")>
-        Public Property GrandTotal As Decimal
+        <JsonProperty("lines_tax")>
+        Public Property LinesTax As Decimal = 0D
+
+        <JsonProperty("total_incl_tax")>
+        Public Property TotalInclTax As Decimal
+
+        <JsonProperty("total_paid")>
+        Public Property TotalPaid As Decimal
+
+        <JsonProperty("payments")>
+        Public Property Payments As List(Of OrderPaymentItem) = New List(Of OrderPaymentItem)()
+
+        <JsonProperty("completed_at", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property CompletedAt As String
     End Class
 
-    Public Class StoreRef
-        <JsonProperty("uid")>
-        Public Property Uid As Long
-    End Class
-
-    Public Class ContactRef
+    Public Class OrderMemberRef
         <JsonProperty("uid", NullValueHandling:=NullValueHandling.Ignore)>
-        Public Property Uid As Long?
+        Public Property Uid As Object ' bisa String atau Long
 
         <JsonProperty("mobile_no", NullValueHandling:=NullValueHandling.Ignore)>
         Public Property MobileNo As String
     End Class
 
+    Public Class OrderStoreRef
+        <JsonProperty("uid", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property Uid As Long?
+
+        <JsonProperty("name", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property Name As String
+
+        <JsonProperty("store_code", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property StoreCode As String
+    End Class
+
     Public Class OrderLineItem
+        <JsonProperty("product")>
+        Public Property Product As OrderProductInfo
+
+        <JsonProperty("quantity")>
+        Public Property Quantity As Integer
+
+        <JsonProperty("price_before_discount")>
+        Public Property PriceBeforeDiscount As Decimal
+
+        <JsonProperty("price")>
+        Public Property Price As Decimal
+    End Class
+
+    Public Class OrderProductInfo
         <JsonProperty("sku")>
         Public Property Sku As String
 
         <JsonProperty("name")>
         Public Property Name As String
+    End Class
 
-        <JsonProperty("quantity")>
-        Public Property Quantity As Integer
+    Public Class OrderPaymentItem
+        <JsonProperty("payment_method_name")>
+        Public Property PaymentMethodName As String
 
-        <JsonProperty("price")>
-        Public Property Price As Decimal
+        <JsonProperty("payment_type")>
+        Public Property PaymentType As String ' CASH, EDC, EWALLET, POINT
 
-        <JsonProperty("discount")>
-        Public Property Discount As Decimal = 0D
+        <JsonProperty("amount")>
+        Public Property Amount As Decimal
     End Class
 
     Public Class PushOrderResponse
@@ -364,5 +424,16 @@ Namespace Models
 
         <JsonProperty("detail")>
         Public Property Detail As String
+
+        <JsonProperty("reward")>
+        Public Property Reward As List(Of OrderRewardItem)
+    End Class
+
+    Public Class OrderRewardItem
+        <JsonProperty("amount")>
+        Public Property Amount As Decimal ' Poin yang diperoleh (Earned Points)
+
+        <JsonProperty("est_new_balance")>
+        Public Property EstNewBalance As Decimal ' Estimasi saldo poin baru
     End Class
 End Namespace

@@ -286,20 +286,38 @@ Public Class FormMain
 
             Dim orderReq As New PushOrderRequest With {
                 .OrderNo = orderNo,
-                .Store = New StoreRef With {.Uid = 138350315235400},
-                .GrandTotal = billTotal,
+                .ProviderRef = orderNo,
+                .OrderDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
+                .LinesTotal = billTotal,
+                .TotalInclTax = billTotal,
+                .TotalPaid = billTotal,
+                .CompletedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
+                .Store = New OrderStoreRef With {
+                    .Uid = 138350315235400,
+                    .Name = "Dream POS Store"
+                },
                 .Lines = New List(Of OrderLineItem) From {
                     New OrderLineItem With {
-                        .Sku = "SKU-DEMO-01",
-                        .Name = "Produk Demo POS",
+                        .Product = New OrderProductInfo With {
+                            .Sku = "SKU-DEMO-01",
+                            .Name = "Produk Demo POS"
+                        },
                         .Quantity = 1,
+                        .PriceBeforeDiscount = billTotal,
                         .Price = billTotal
+                    }
+                },
+                .Payments = New List(Of OrderPaymentItem) From {
+                    New OrderPaymentItem With {
+                        .PaymentMethodName = "Cash",
+                        .PaymentType = "CASH",
+                        .Amount = billTotal
                     }
                 }
             }
 
             If _currentMember IsNot Nothing Then
-                orderReq.Contact = New ContactRef With {
+                orderReq.Member = New OrderMemberRef With {
                     .Uid = _currentMember.Uid,
                     .MobileNo = _currentMember.MobileNo
                 }
@@ -307,7 +325,8 @@ Public Class FormMain
 
             Dim resp = Await _client.PushSalesOrderAsync(orderReq)
             If resp.IsSuccess Then
-                MessageBox.Show($"Transaksi {orderNo} berhasil dikirim ke Goapp untuk Earning Poin!{Environment.NewLine}Order UID: {resp.Data?.Uid}", "Earning Berhasil", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                Dim earnedPts = If(resp.Data?.Reward IsNot Nothing AndAlso resp.Data.Reward.Count > 0, resp.Data.Reward(0).Amount, 0)
+                MessageBox.Show($"Transaksi {orderNo} berhasil dikirim ke Goapp!{Environment.NewLine}Order UID: {resp.Data?.Uid}{Environment.NewLine}Poin Diperoleh: {earnedPts} Pts", "Earning Berhasil", MessageBoxButtons.OK, MessageBoxIcon.Information)
             Else
                 MessageBox.Show($"Gagal mengirim transaksi:{Environment.NewLine}{resp.Message}", "Gagal Push Order", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End If

@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Dokumentasi Integrasi POS DreamPOS x Goapp CRM</title>
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 18mm 20mm 18mm;
+  }
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    color: #24292e;
+    line-height: 1.6;
+    font-size: 11pt;
+    margin: 0;
+    padding: 0;
+  }
+  .header-cover {
+    border-bottom: 3px solid #1a56db;
+    padding-bottom: 20px;
+    margin-bottom: 25px;
+  }
+  .title {
+    font-size: 24pt;
+    font-weight: 800;
+    color: #1e3a8a;
+    margin: 0 0 8px 0;
+  }
+  .subtitle {
+    font-size: 13pt;
+    font-weight: 500;
+    color: #4b5563;
+    margin: 0 0 15px 0;
+  }
+  .meta-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 9.5pt;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+  .meta-col { flex: 1; }
+  h1 {
+    font-size: 16pt;
+    color: #1e40af;
+    border-bottom: 1.5px solid #cbd5e1;
+    padding-bottom: 6px;
+    margin-top: 30px;
+    margin-bottom: 12px;
+    page-break-after: avoid;
+  }
+  h2 {
+    font-size: 13pt;
+    color: #0f766e;
+    margin-top: 22px;
+    margin-bottom: 8px;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 11.5pt;
+    color: #334155;
+    margin-top: 16px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
+  }
+  p, ul, ol {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  th, td {
+    border: 1px solid #cbd5e1;
+    padding: 7px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background-color: #f1f5f9;
+    font-weight: 600;
+    color: #1e293b;
+  }
+  tr:nth-child(even) { background-color: #f8fafc; }
+  code {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 9pt;
+    background-color: #f1f5f9;
+    padding: 2px 5px;
+    border-radius: 4px;
+    color: #b91c1c;
+  }
+  pre {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 12px;
+    border-radius: 6px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 8.5pt;
+    overflow-x: auto;
+    line-height: 1.45;
+    margin: 10px 0;
+    page-break-inside: avoid;
+  }
+  .callout {
+    border-left: 4px solid #3b82f6;
+    background-color: #eff6ff;
+    padding: 10px 14px;
+    margin: 14px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 10pt;
+    page-break-inside: avoid;
+  }
+  .callout-success {
+    border-left-color: #10b981;
+    background-color: #ecfdf5;
+  }
+  .callout-warning {
+    border-left-color: #f59e0b;
+    background-color: #fffbeb;
+  }
+  .callout-title {
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: #1e3a8a;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 7px;
+    font-size: 8pt;
+    font-weight: bold;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .badge-get { background: #dcfce7; color: #15803d; }
+  .badge-post { background: #dbeafe; color: #1d4ed8; }
+  .page-break { page-break-before: always; }
+  .footer {
+    text-align: right;
+    font-size: 8.5pt;
+    color: #94a3b8;
+    margin-top: 30px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header-cover">
+  <div class="title">DOKUMENTASI INTEGRASI POS X GOAPP CRM</div>
+  <div class="subtitle">Panduan Teknis, Arsitektur Multi-Project VB.NET, Spesifikasi API & Skenario Pengujian</div>
+  <div class="meta-box">
+    <div class="meta-col">
+      <strong>Aplikasi POS:</strong> DreamPOS (Visual Basic .NET)<br>
+      <strong>Sistem CRM:</strong> Goapp Cloud CRM (Channel API)
+    </div>
+    <div class="meta-col">
+      <strong>Solusi Target:</strong> Visual Studio 2022 (.NET 4.7.2)<br>
+      <strong>Tanggal Terbit:</strong> 1 Oktober 2026 | Versi Dokumen: 1.0
+    </div>
+  </div>
+</div>
+
+<h1>1. Ringkasan Eksekutif & Arsitektur Solusi</h1>
+<p>
+Dokumentasi ini disusun untuk memandu tim engineering dalam membangun, menguji, dan memelihara jembatan integrasi antara sistem Point of Sale (<strong>DreamPOS</strong>) dengan sistem Customer Relationship Management (<strong>Goapp CRM</strong>).
+</p>
+<p>
+Untuk memastikan kode bersih, modular, dan mudah di-embed ke dalam sistem utama DreamPOS yang sudah ada, arsitektur dibangun menggunakan <strong>Multi-Project dalam 1 Solution</strong>:
+</p>
+<ol>
+  <li><strong>DreamposXGoapp (.dll)</strong>: Class Library independen yang bertindak sebagai modul SDK/Driver integrasi. Seluruh logika protokol HTTP, token auth caching, auto-retry voucher, manajemen point balance, dan pembuatan format struk berada di sini. Modul ini tidak memiliki dependensi antarmuka (UI-free), sehingga siap di-reference oleh aplikasi POS kasir mana pun.</li>
+  <li><strong>TryDreamposXGoapp (.exe)</strong>: Aplikasi Windows Forms desktop yang berfungsi sebagai <em>Test Harness</em> (alat uji coba visual-manual). Pengembang dan tim QA dapat menguji setiap fungsi (Cek Member, Potong Poin, Validasi Voucher, Push Transaksi, Cetak Struk) secara terisolasi tanpa perlu menjalankan keseluruhan sistem POS utama.</li>
+</ol>
+
+<div class="callout callout-success">
+  <div class="callout-title">Hasil Verifikasi Kredensial Langsung ke Server Goapp:</div>
+  Autentikasi dengan kredensial API Key <code>138350315235400</code> telah diverifikasi aktif dan terhubung ke Channel <strong>"Dream POS"</strong> (Offline Channel) di server produksi Goapp.
+</div>
+
+<h1>2. Struktur Proyek & Panduan Visual Studio 2022</h1>
+
+<h2>2.1 Struktur Folder & File Workspace</h2>
+<pre>
+D:\PCL\DreamposXGoapp\
+├── DreamposXGoapp.sln                  &lt;-- Solution Multi-Project
+├── DreamposXGoapp.vbproj               &lt;-- [PROYEK 1] Class Library (.dll)
+│   ├── Models\
+│   │   ├── GoappConfig.vb              (Konfigurasi Key, Secret, Endpoint, Retry)
+│   │   └── GoappModels.vb              (DTO: Member, Account, Voucher, Order, Payment)
+│   └── Services\
+│       ├── GoappApiClient.vb           (HTTP Client, Auth Caching, Member, Voucher, Burn/Earn)
+│       └── ReceiptGenerator.vb         (Format Struk Thermal 40-Kolom, Saldo Poin & Survey QR)
+│
+└── TryDreamposXGoapp\                  &lt;-- [PROYEK 2] Windows Forms App (.exe)
+    ├── TryDreamposXGoapp.vbproj        (Memiliki Project Reference ke DreamposXGoapp)
+    ├── Program.vb                      (Entry Point STAThread)
+    ├── FormMain.vb                     (Event Handlers UI Async/Await)
+    └── FormMain.Designer.vb            (Desain UI Tabbed Form)
+</pre>
+
+<h2>2.2 Cara Konfigurasi Project Reference di Visual Studio 2022</h2>
+<ol>
+  <li>Buka solution file <code>D:\PCL\DreamposXGoapp\DreamposXGoapp.sln</code> di Visual Studio 2022.</li>
+  <li>Pada panel <strong>Solution Explorer</strong>, klik kanan node <strong>References</strong> pada proyek <code>TryDreamposXGoapp</code>.</li>
+  <li>Pilih <strong>Add Reference...</strong> &rarr; pilih tab <strong>Projects</strong> &rarr; centang proyek <strong>DreamposXGoapp</strong> &rarr; klik <strong>OK</strong>.</li>
+  <li>Visual Studio akan mereferensikan DLL secara otomatis pada saat build dilakukan.</li>
+</ol>
+
+<h2>2.3 Catatan Penting Target Framework (.NET Framework 4.7.2)</h2>
+<div class="callout callout-warning">
+  <div class="callout-title">Rasional Pemilihan Target Framework:</div>
+  Project awalnya dibuat dengan .NET Framework 4.0. Namun, API Goapp menggunakan protokol HTTPS modern dengan enkripsi <strong>TLS 1.2</strong> serta membutuhkan pemanggilan non-blocking via <strong>Async / Await</strong> dan <strong>HttpClient</strong>. Mengupgrade target ke <strong>.NET Framework 4.7.2</strong> (atau 4.8) memberikan dukungan native TLS 1.2 out-of-the-box tanpa dependensi eksternal yang rentan konflik (*DLL Hell*).
+</div>
+
+<div class="page-break"></div>
+
+<h1>3. Pemetaan & Analisis Koleksi API Goapp</h1>
+<p>Folder koleksi <code>D:\Downloads\APIGoapp</code> berisi 8 file Postman. Berikut peruntukannya:</p>
+<table>
+  <thead>
+    <tr>
+      <th style="width: 32%;">File Postman</th>
+      <th style="width: 25%;">Area CRM</th>
+      <th>Peruntukan bagi POS (DreamPOS)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Channel API.postman_collection.json</strong></td>
+      <td><strong>Offline Store & POS</strong></td>
+      <td><strong>CORE ENGINE POS</strong>. Berisi semua endpoint kasir: Member Lookup, Push Order (Earn), Burn Point, dan Voucher Deal.</td>
+    </tr>
+    <tr>
+      <td>ERP Integration API.postman_collection.json</td>
+      <td>Inventory & Master Catalog</td>
+      <td>Opsional: Dipakai jika POS bertugas melakukan push Master SKU katalog barang dan update stok opname ke Goapp.</td>
+    </tr>
+    <tr>
+      <td>Commerce Client API.postman_collection.json</td>
+      <td>Customer Mobile/Web App</td>
+      <td>Client front-end untuk customer berbelanja mandiri dari HP (bukan untuk kasir toko fisik).</td>
+    </tr>
+    <tr>
+      <td>CDP API.postman_collection.json</td>
+      <td>Customer Data Platform</td>
+      <td>Batch synchronization untuk database kontak dan pencatatan aktivitas konsumen.</td>
+    </tr>
+    <tr>
+      <td>Core API & Operator API</td>
+      <td>Omnichannel Ticketing/Chat</td>
+      <td>Manajemen antrian pesan WhatsApp/Livechat agen CS customer care.</td>
+    </tr>
+    <tr>
+      <td>WhatsApp API.postman_collection.json</td>
+      <td>WhatsApp Business API</td>
+      <td>Pengiriman template notifikasi otomatis nota belanja/e-receipt ke nomor WhatsApp pembeli.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1>4. Spesifikasi Endpoint Integrasi & Tipe Data Input/Output</h1>
+
+<h2>4.1 Autentikasi & Manajemen Token</h2>
+<ul>
+  <li><strong>Method / URL:</strong> <span class="badge badge-post">POST</span> <code>https://account.goapp.co.id/auth/token-auth/</code></li>
+  <li><strong>Fungsi:</strong> Mendapatkan temporary Bearer token untuk otorisasi seluruh panggilan Channel API berikutnya.</li>
+</ul>
+<table>
+  <thead>
+    <tr><th>Field Input</th><th>Tipe Data</th><th>Wajib?</th><th>Keterangan</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>username</code></td><td>String</td><td>Ya</td><td>Diisi dengan <strong>API Key</strong> (contoh: <code>"138350315235400"</code>).</td></tr>
+    <tr><td><code>password</code></td><td>String</td><td>Ya</td><td>Diisi dengan <strong>API Secret</strong> (contoh: <code>"cbf5b1c921b36bfb06ca988c6d98f608482c40f1"</code>).</td></tr>
+  </tbody>
+</table>
+<p><strong>Contoh Respon Server (HTTP 200):</strong></p>
+<pre>{
+  "token": "e022a053f00443e929daab2085ae8870fdb51739",
+  "refresh_token": "ad19344ab61bcb5965695745e667bc742e071ec1",
+  "expired_at": 1790828712.482598
+}</pre>
+<p><em>*Catatan Engineering:* Class <code>GoappApiClient</code> telah dilengkapi Thread-Safe Token Caching (menggunakan <code>SemaphoreSlim</code>) dan auto-refresh otomatis jika menerima respon HTTP 401.</em></p>
+
+<h2>4.2 Pencarian & Validasi Member (No HP atau Member ID)</h2>
+<ul>
+  <li><strong>Method / URL:</strong> <span class="badge badge-get">GET</span> <code>https://api.goapp.co.id/channel/v1/member/member/{mobile_no_or_member_id}/</code></li>
+  <li><strong>Header:</strong> <code>Authorization: Bearer &lt;token&gt;</code></li>
+</ul>
+<table>
+  <thead>
+    <tr><th>Path Variable</th><th>Tipe Data</th><th>Keterangan</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>mobile_no_or_member_id</code></td><td>String</td><td>Dapat berupa nomor HP (misal: <code>"08159136224"</code>) atau Member ID (misal: <code>"110270830028872"</code>).</td></tr>
+  </tbody>
+</table>
+<p><strong>Contoh Respon Server (HTTP 200):</strong></p>
+<pre>{
+  "uid": 110270830028872,
+  "first_name": "Ellen",
+  "last_name": "Euromedica",
+  "mobile_no": "08159136224",
+  "referral_code": "AGVALJ",
+  "level": { "id": 22, "name": "Gold Tier", "level": 10 },
+  "account": {
+    "uid": 110270830017096,
+    "balance": "633.00",
+    "idr_balance": 633000.00,
+    "account_type": { "name": "Loyalty Account", "currency": "Point", "currency_label": "Pts" }
+  },
+  "direct_deal": { ... }
+}</pre>
+<p><strong>Nilai Penting untuk Layar Kasir:</strong></p>
+<ul>
+  <li><code>FullName</code>: <code>first_name + " " + last_name</code> (Nama konsumen).</li>
+  <li><code>AvailablePoints</code>: <code>account.balance</code> (Jumlah poin tersedia yang bisa dibakar).</li>
+  <li><code>PointsInRupiah</code>: <code>account.idr_balance</code> (Nilai rupiah saldo poin, misal: 633 Pts = Rp 633.000).</li>
+  <li><code>direct_deal</code>: Daftar voucher otomatis yang sedang aktif untuk member tersebut (*Show Available Voucher*).</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>4.3 Push Transaksi Selesai ke Goapp (Earning Point)</h2>
+<ul>
+  <li><strong>Method / URL:</strong> <span class="badge badge-post">POST</span> <code>https://api.goapp.co.id/channel/v1/sales/order/</code></li>
+  <li><strong>Fungsi:</strong> Mengirimkan rincian keranjang belanja kasir setelah transaksi dibayar lunas untuk mengkalkulasi penambahan poin reward member.</li>
+</ul>
+<p><strong>Payload Request (JSON Body):</strong></p>
+<pre>{
+  "order_no": "POS-261001-0001",
+  "provider_ref": "POS-261001-0001",
+  "order_date": "2026-10-01 12:30:00+07:00",
+  "member": { "uid": 110270830028872 },
+  "store": { "uid": 138350315235400, "name": "Dream POS Store" },
+  "lines_total": 100000.00,
+  "lines_tax": 10000.00,
+  "total_incl_tax": 110000.00,
+  "total_paid": 110000.00,
+  "lines": [
+    {
+      "product": { "sku": "SKU-BAJU-01", "name": "Baju Kemeja Katun" },
+      "quantity": 1,
+      "price_before_discount": 100000.00,
+      "price": 100000.00
+    }
+  ],
+  "payments": [
+    { "payment_method_name": "Cash", "payment_type": "CASH", "amount": 90000.00 },
+    { "payment_method_name": "Poin Goapp", "payment_type": "POINT", "amount": 20000.00 }
+  ],
+  "completed_at": "2026-10-01 12:32:00+07:00"
+}</pre>
+<table>
+  <thead>
+    <tr><th>Field JSON</th><th>Tipe Data</th><th>Keterangan</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>order_no</code> / <code>provider_ref</code></td><td>String</td><td>Nomor faktur / struk unik dari POS.</td></tr>
+    <tr><td><code>order_date</code> / <code>completed_at</code></td><td>String (ISO 8601)</td><td>Format waktu <code>yyyy-MM-dd HH:mm:sszzz</code>.</td></tr>
+    <tr><td><code>member.uid</code></td><td>Long / String</td><td>UID member yang menerima poin.</td></tr>
+    <tr><td><code>store.uid</code></td><td>Long</td><td>UID channel toko Dream POS (<code>138350315235400</code>).</td></tr>
+    <tr><td><code>lines[].product.sku</code></td><td>String</td><td>Kode SKU / Barcode barang POS.</td></tr>
+    <tr><td><code>lines[].quantity</code></td><td>Integer</td><td>Jumlah barang terjual.</td></tr>
+    <tr><td><code>lines[].price</code></td><td>Decimal</td><td>Harga jual satuan netto.</td></tr>
+    <tr><td><code>payments[].payment_type</code></td><td>String</td><td><code>"CASH"</code>, <code>"EDC"</code>, <code>"EWALLET"</code>, atau <code>"POINT"</code>.</td></tr>
+  </tbody>
+</table>
+<p><strong>Contoh Respon Server:</strong></p>
+<pre>{
+  "id": 3499,
+  "uid": 111978958999112,
+  "status": "Completed",
+  "reward": [
+    { "amount": 10, "est_new_balance": 643 }
+  ]
+}</pre>
+<p><em>*Output:* <code>reward[0].amount</code> adalah poin reward yang berhasil diperoleh konsumen dari transaksi ini.</em></p>
+
+<h2>4.4 Burn Point (Pembayaran Transaksi Menggunakan Poin)</h2>
+<ul>
+  <li><strong>Method / URL:</strong> <span class="badge badge-post">POST</span> <code>https://api.goapp.co.id/channel/v1/member/payment/</code></li>
+</ul>
+<p><strong>Payload Request (JSON Body):</strong></p>
+<pre>{
+  "member": { "uid": 110270830028872 },
+  "amount": 50.00,
+  "order_amount": 50000.00,
+  "order_currency": "idr",
+  "provider_ref": "TRX-261001-0001"
+}</pre>
+<table>
+  <thead><tr><th>Field</th><th>Tipe Data</th><th>Keterangan</th></tr></thead>
+  <tbody>
+    <tr><td><code>member.uid</code></td><td>Long</td><td>UID member pemilik poin.</td></tr>
+    <tr><td><code>amount</code></td><td>Decimal</td><td>Jumlah nominal poin yang dipotong (misal: 50 poin).</td></tr>
+    <tr><td><code>order_amount</code></td><td>Decimal</td><td>Nilai rupiah ekuivalen dari poin (misal: Rp 50.000).</td></tr>
+    <tr><td><code>order_currency</code></td><td>String</td><td>Nilai konstan <code>"idr"</code>.</td></tr>
+    <tr><td><code>provider_ref</code></td><td>String</td><td>Nomor referensi tagihan POS (mencegah pemotongan ganda).</td></tr>
+  </tbody>
+</table>
+<p><strong>Pembatalan Poin (Void Kasir):</strong></p>
+<p>Jika kasir menekan tombol Void struk, panggil: <span class="badge badge-post">POST</span> <code>https://api.goapp.co.id/channel/v1/member/payment/{payment_ref}/cancel/</code> dengan body <code>{"cancel_reason": "Void Kasir"}</code>.</p>
+
+<div class="page-break"></div>
+
+<h2>4.5 Validasi & Penggunaan Voucher (Diskon %, Diskon Rp, Free Item, Specific Item)</h2>
+<ul>
+  <li><strong>Validasi Voucher:</strong> <span class="badge badge-post">POST</span> <code>https://api.goapp.co.id/channel/v1/member/deal/validate/</code></li>
+  <li><strong>Gunakan Voucher:</strong> <span class="badge badge-post">POST</span> <code>https://api.goapp.co.id/channel/v1/member/deal/use/</code></li>
+</ul>
+<p><strong>Payload Gunakan Voucher:</strong></p>
+<pre>{
+  "deal_code": "ARKAIS-100-6DR6",
+  "transaction_ref": "POS-261001-0001",
+  "member": { "uid": 110270830028872 }
+}</pre>
+
+<p><strong>Logika Penerapan Berdasarkan Tipe Voucher:</strong></p>
+<table>
+  <thead>
+    <tr><th>Tipe Diskon</th><th>Field JSON dari Goapp</th><th>Logika Perhitungan di POS</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Diskon Persen (%)</strong></td>
+      <td><code>discount_type = "percentage"</code><br><code>discount_amount = 0.20</code></td>
+      <td>Potongan harga sebesar 20% dari total belanja yang memenuhi syarat <code>min_purchase</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>Diskon Nominal (Rp)</strong></td>
+      <td><code>discount_type = "amount"</code><br><code>discount_amount = 25000</code></td>
+      <td>Potongan langsung sebesar Rp 25.000 dari total belanja keranjang.</td>
+    </tr>
+    <tr>
+      <td><strong>Free Item (Gratis Barang)</strong></td>
+      <td><code>discount_type = "free_item"</code><br><code>reward_sku = "SKU-PROMO-01"</code></td>
+      <td>Kasir menggratiskan 1 qty barang yang memiliki kode SKU tersebut.</td>
+    </tr>
+    <tr>
+      <td><strong>Diskon Spesifik Item</strong></td>
+      <td><code>products = ["SKU-A", "SKU-B"]</code></td>
+      <td>Potongan diskon hanya dikalkulasikan pada baris item belanja yang memiliki SKU di dalam daftar tersebut.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>4.6 Mekanisme Auto-Retry Menggunakan Voucher</h2>
+<p>
+Untuk melindungi transaksi kasir dari kendala koneksi internet yang tidak stabil (<em>micro-drop</em>), fungsi <code>UseVoucherWithRetryAsync</code> pada DLL menerapkan algoritma cerdas:
+</p>
+<ul>
+  <li><strong>Error 400 (Bad Request):</strong> Berarti voucher memang tidak valid, kedaluwarsa, atau sudah terpakai. Sistem <strong>langsung berhenti</strong> dan tidak melakukan retry.</li>
+  <li><strong>Error Jaringan / Timeout / 5xx Server Busy:</strong> Sistem otomatis mencoba ulang hingga <strong>3 kali</strong> dengan jeda waktu bertingkat (<em>Exponential Backoff</em>: 1.5 detik &rarr; 3.0 detik).</li>
+</ul>
+
+<h2>4.7 Saldo Poin & QR Code Survey pada Struk POS</h2>
+<p>
+Class <code>ReceiptGenerator.vb</code> menghasilkan format nota thermal standar 40 karakter per baris yang memuat:
+</p>
+<ul>
+  <li>Poin Diperoleh pada transaksi ini (<em>Earn</em>) dan Poin yang digunakan (<em>Burn</em>).</li>
+  <li>Sisa Saldo Poin Akhir dan Konversi Nilai Rupiah.</li>
+  <li>Link Survey Kepuasan Pelanggan berbasis parameter dinamis:
+    <br><code>https://survey.goapp.co.id/?ref={orderNo}&member_uid={memberUid}&mobile={mobileNo}</code>
+    <br><em>(Link ini dapat dikonversi menjadi gambar QR Code 2D menggunakan library printer kasir POS ESC/POS atau ZXing).</em>
+  </li>
+</ul>
+
+<div class="page-break"></div>
+
+<h1>5. Panduan Pengujian Form Test Harness (TryDreamposXGoapp)</h1>
+
+<p>Aplikasi pengujian <code>TryDreamposXGoapp.exe</code> dirancang untuk memvalidasi seluruh fungsionalitas secara visual sebelum DLL diintegrasikan ke sistem POS produksi.</p>
+
+<p><strong>Contoh Kode VB.NET Pemanggilan Async/Await (Non-Blocking UI Kasir):</strong></p>
+<pre>Private Async Sub btnSearchMember_Click(sender As Object, e As EventArgs) Handles btnSearchMember.Click
+    Dim queryInput = txtInputMember.Text.Trim()
+    If String.IsNullOrEmpty(queryInput) Then Return
+
+    ' Disable tombol sementara agar kasir tidak melakukan double-click
+    btnSearchMember.Enabled = False
+    btnSearchMember.Text = "Mencari..."
+    Cursor = Cursors.WaitCursor
+
+    Try
+        ' Panggil method Async dari DLL DreamposXGoapp
+        Dim resp As ApiResponse(Of MemberResponse) = Await _client.GetMemberAsync(queryInput)
+
+        If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
+            Dim member = resp.Data
+            lblMemberName.Text   = "Nama Member  : " & member.FullName
+            lblMemberPhone.Text  = "No Handphone : " & member.MobileNo
+            lblMemberPoints.Text = "Sisa Poin    : " & member.AvailablePoints.ToString("N0") & " Pts"
+            lblMemberRupiah.Text = "Nilai Rupiah : Rp " & member.PointsInRupiah.ToString("N0")
+            MessageBox.Show("Member ditemukan: " & member.FullName, "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        Else
+            MessageBox.Show("Member tidak ditemukan: " & resp.Message, "Info", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        End If
+    Catch ex As Exception
+        MessageBox.Show("Kesalahan: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+    Finally
+        btnSearchMember.Enabled = True
+        btnSearchMember.Text = "Cek Member (Async)"
+        Cursor = Cursors.Default
+    End Try
+End Sub</pre>
+
+<h1>6. Matriks & Skenario Pengujian (QA Checklist)</h1>
+<table>
+  <thead>
+    <tr>
+      <th style="width: 15%;">Skenario</th>
+      <th style="width: 35%;">Langkah Pengujian</th>
+      <th style="width: 30%;">Ekspektasi Hasil</th>
+      <th style="width: 20%;">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>1. Uji Autentikasi</strong></td>
+      <td>Buka <code>TryDreamposXGoapp.exe</code>, klik <strong>Test Koneksi</strong>.</td>
+      <td>Label hijau: <code>Terkoneksi: Dream POS (offline)</code>, UID: 138350315235400.</td>
+      <td><strong style="color: green;">PASSED (Verified)</strong></td>
+    </tr>
+    <tr>
+      <td><strong>2. Cek Member (HP)</strong></td>
+      <td>Buka Tab 1, masukkan nomor HP member aktif, klik <strong>Cek Member</strong>.</td>
+      <td>Nama, Tier Level, Sisa Poin, dan Nilai Rupiah tampil akurat.</td>
+      <td>Siap Diuji di Form</td>
+    </tr>
+    <tr>
+      <td><strong>3. Cek Member (ID)</strong></td>
+      <td>Buka Tab 1, masukkan UID Member (angka), klik <strong>Cek Member</strong>.</td>
+      <td>Respon sama persis dengan pencarian nomor HP.</td>
+      <td>Siap Diuji di Form</td>
+    </tr>
+    <tr>
+      <td><strong>4. Validasi Voucher</strong></td>
+      <td>Buka Tab 2, ketik kode voucher, klik <strong>1. Validasi Voucher</strong>.</td>
+      <td>Tampil status valid/tidaknya voucher beserta deskripsi promo.</td>
+      <td>Siap Diuji di Form</td>
+    </tr>
+    <tr>
+      <td><strong>5. Pakai Voucher</strong></td>
+      <td>Ketik kode voucher dan nomor nota POS, klik <strong>2. Gunakan Voucher</strong>.</td>
+      <td>Voucher terkunci ke transaksi. Auto-retry berjalan jika koneksi terganggu.</td>
+      <td>Siap Diuji di Form</td>
+    </tr>
+    <tr>
+      <td><strong>6. Burn Point</strong></td>
+      <td>Buka Tab 3, masukkan jumlah poin yang akan dibakar, klik <strong>Burn Point</strong>.</td>
+      <td>Muncul <code>PaymentRef</code>, saldo poin member langsung berkurang.</td>
+      <td>Siap Diuji di Form</td>
+    </tr>
+    <tr>
+      <td><strong>7. Void Poin</strong></td>
+      <td>Klik tombol <strong>Cancel Burn Point (Void)</strong>.</td>
+      <td>Status transaksi poin menjadi CANCEL, saldo poin konsumen kembali pulih.</td>
+      <td>Siap Diuji di Form</td>
+    </tr>
+    <tr>
+      <td><strong>8. Earning Point</strong></td>
+      <td>Buka Tab 3, klik <strong>Push Transaksi Selesai</strong>.</td>
+      <td>Order terkirim ke Goapp, tampil jumlah penambahan poin baru (Reward).</td>
+      <td>Siap Diuji di Form</td>
+    </tr>
+    <tr>
+      <td><strong>9. Preview Struk</strong></td>
+      <td>Buka Tab 4, klik <strong>Generate Preview Struk</strong>.</td>
+      <td>Teks struk 40 kolom tercetak lengkap dengan saldo poin dan URL survey QR.</td>
+      <td>Siap Diuji di Form</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="footer">
+  Dokumen Teknis Integrasi DreamPOS x Goapp CRM &bull; Versi 1.0 &bull; Dibuat untuk Tim Engineering POS
+</div>
+
+</body>
+</html>
