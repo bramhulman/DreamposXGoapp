@@ -1,0 +1,363 @@
+Imports System
+Imports System.Collections.Generic
+Imports System.Drawing
+Imports System.Threading.Tasks
+Imports System.Windows.Forms
+Imports DreamposXGoapp.Models
+Imports DreamposXGoapp.Services
+Imports Newtonsoft.Json
+
+Public Class FormMain
+    Private _client As GoappApiClient
+    Private _currentMember As MemberResponse
+    Private _lastPaymentRef As String = String.Empty
+
+    Private Sub FormMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        InitClient()
+        AppendLog("Test Harness DreamPOS x Goapp siap digunakan.")
+    End Sub
+
+    Private Sub InitClient()
+        Dim config As New GoappConfig With {
+            .ApiKey = txtApiKey.Text.Trim(),
+            .ApiSecret = txtApiSecret.Text.Trim(),
+            .AuthBaseUrl = "https://account.goapp.co.id/auth",
+            .ChannelBaseUrl = "https://api.goapp.co.id/channel/v1",
+            .TimeoutSeconds = 30,
+            .MaxRetryAttempts = 3,
+            .RetryDelayMilliseconds = 1500
+        }
+
+        _client = New GoappApiClient(config)
+        AddHandler _client.OnLog, AddressOf OnClientLog
+    End Sub
+
+    Private Sub OnClientLog(msg As String)
+        If Me.InvokeRequired Then
+            Me.Invoke(Sub() AppendLog(msg))
+        Else
+            AppendLog(msg)
+        End If
+    End Sub
+
+    Private Sub AppendLog(msg As String)
+        txtLogs.AppendText(msg & Environment.NewLine)
+        txtLogs.SelectionStart = txtLogs.TextLength
+        txtLogs.ScrollToCaret()
+    End Sub
+
+    Private Sub btnClearLogs_Click(sender As Object, e As EventArgs) Handles btnClearLogs.Click
+        txtLogs.Clear()
+    End Sub
+
+#Region "1. Test Authentication & Channel Info"
+
+    Private Async Sub btnTestAuth_Click(sender As Object, e As EventArgs) Handles btnTestAuth.Click
+        btnTestAuth.Enabled = False
+        lblStatusChannel.Text = "Status: Menguji koneksi..."
+        lblStatusChannel.ForeColor = Color.OrangeRed
+
+        Try
+            InitClient()
+            ' Cek token dan info channel toko
+            Dim channelResp = Await _client.GetChannelInfoAsync()
+
+            If channelResp.IsSuccess AndAlso channelResp.Data IsNot Nothing Then
+                lblStatusChannel.Text = $"Terkoneksi: {channelResp.Data.Name} ({channelResp.Data.ChannelType})"
+                lblStatusChannel.ForeColor = Color.DarkGreen
+                MessageBox.Show($"Koneksi Berhasil!{Environment.NewLine}Channel: {channelResp.Data.Name}{Environment.NewLine}UID: {channelResp.Data.Uid}", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Else
+                lblStatusChannel.Text = "Status: Gagal Terkoneksi"
+                lblStatusChannel.ForeColor = Color.Red
+                MessageBox.Show($"Gagal terkoneksi ke Goapp:{Environment.NewLine}{channelResp.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End If
+        Catch ex As Exception
+            lblStatusChannel.Text = "Status: Terjadi Kesalahan"
+            lblStatusChannel.ForeColor = Color.Red
+            MessageBox.Show($"Error: {ex.Message}", "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        Finally
+            btnTestAuth.Enabled = True
+        End Try
+    End Sub
+
+#End Region
+
+#Region "2. Pencarian & Validasi Member (Async/Await)"
+
+    ''' <summary>
+    ''' Contoh implementasi pencarian member secara Asynchronous (Non-Blocking UI)
+    ''' Memvalidasi member melalui No HP atau Member ID
+    ''' </summary>
+    Private Async Sub btnSearchMember_Click(sender As Object, e As EventArgs) Handles btnSearchMember.Click
+        Dim inputQuery = txtInputMember.Text.Trim()
+        If String.IsNullOrWhiteSpace(inputQuery) Then
+            MessageBox.Show("Silakan masukkan Nomor HP atau Member ID!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            txtInputMember.Focus()
+            Return
+        End If
+
+        ' Disable UI selama proses pencarian agar kasir tidak klik berulang kali
+        btnSearchMember.Enabled = False
+        btnSearchMember.Text = "Mencari..."
+        Cursor = Cursors.WaitCursor
+
+        Try
+            ' Panggil fungsi Async dari DLL DreamposXGoapp
+            Dim response As ApiResponse(Of MemberResponse) = Await _client.GetMemberAsync(inputQuery)
+
+            If response.IsSuccess AndAlso response.Data IsNot Nothing Then
+                _currentMember = response.Data
+
+                ' Tampilkan detail member ke UI Form
+                lblMemberName.Text = $"Nama Member : {_currentMember.FullName}"
+                lblMemberPhone.Text = $"No Handphone : {_currentMember.MobileNo}"
+                lblMemberLevel.Text = $"Level / Scheme : {If(_currentMember.Level IsNot Nothing, _currentMember.Level.Name, "-")} / {If(_currentMember.Scheme IsNot Nothing, _currentMember.Scheme.Name, "-")}"
+                lblMemberPoints.Text = $"Sisa Poin : {_currentMember.AvailablePoints:N0} Pts"
+                lblMemberRupiah.Text = $"Nilai Rupiah Poin : Rp {_currentMember.PointsInRupiah:N0}"
+                lblMemberReferral.Text = $"Referral Code : {If(String.IsNullOrEmpty(_currentMember.ReferralCode), "-", _currentMember.ReferralCode)}"
+
+                ' Tampilkan raw JSON response di box sebelah kanan
+                txtRawJson.Text = FormatJson(response.RawJson)
+
+                AppendLog($"[SUCCESS] Member {_currentMember.FullName} berhasil divalidasi. Poin aktif: {_currentMember.AvailablePoints}")
+            Else
+                _currentMember = Nothing
+                ResetMemberLabels()
+                txtRawJson.Text = response.RawJson
+                MessageBox.Show($"Member tidak ditemukan atau terjadi kesalahan:{Environment.NewLine}{response.Message}", "Hasil Pencarian", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            End If
+        Catch ex As Exception
+            MessageBox.Show($"Terjadi kesalahan saat memanggil Goapp API:{Environment.NewLine}{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        Finally
+            btnSearchMember.Enabled = True
+            btnSearchMember.Text = "Cek Member (Async)"
+            Cursor = Cursors.Default
+        End Try
+    End Sub
+
+    Private Sub ResetMemberLabels()
+        lblMemberName.Text = "Nama Member : -"
+        lblMemberPhone.Text = "No Handphone : -"
+        lblMemberLevel.Text = "Level / Scheme : -"
+        lblMemberPoints.Text = "Sisa Poin : 0 Pts"
+        lblMemberRupiah.Text = "Nilai Rupiah Poin : Rp 0"
+        lblMemberReferral.Text = "Referral Code : -"
+    End Sub
+
+#End Region
+
+#Region "3. Voucher (Validasi & Use dengan Auto-Retry)"
+
+    Private Async Sub btnValidateVoucher_Click(sender As Object, e As EventArgs) Handles btnValidateVoucher.Click
+        Dim code = txtVoucherCode.Text.Trim()
+        If String.IsNullOrEmpty(code) Then
+            MessageBox.Show("Masukkan kode voucher terlebih dahulu!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        btnValidateVoucher.Enabled = False
+        lblVoucherStatus.Text = "Status: Memvalidasi voucher ke Goapp..."
+        lblVoucherStatus.ForeColor = Color.OrangeRed
+
+        Try
+            Dim memberUid As Long? = If(_currentMember IsNot Nothing, _currentMember.Uid, CType(Nothing, Long?))
+            Dim resp = Await _client.ValidateVoucherAsync(code, memberUid)
+
+            If resp.IsSuccess Then
+                lblVoucherStatus.Text = $"Status: Voucher VALID! {resp.Message}"
+                lblVoucherStatus.ForeColor = Color.DarkGreen
+                txtRawJson.Text = FormatJson(resp.RawJson)
+            Else
+                lblVoucherStatus.Text = $"Status: Voucher TIDAK VALID! ({resp.Message})"
+                lblVoucherStatus.ForeColor = Color.Red
+            End If
+        Finally
+            btnValidateVoucher.Enabled = True
+        End Try
+    End Sub
+
+    Private Async Sub btnUseVoucher_Click(sender As Object, e As EventArgs) Handles btnUseVoucher.Click
+        Dim code = txtVoucherCode.Text.Trim()
+        Dim txRef = txtVoucherTxRef.Text.Trim()
+
+        If String.IsNullOrEmpty(code) OrElse String.IsNullOrEmpty(txRef) Then
+            MessageBox.Show("Kode Voucher dan No Transaksi (Tx Ref) harus diisi!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        btnUseVoucher.Enabled = False
+        lblVoucherStatus.Text = "Status: Memproses voucher dengan Auto-Retry..."
+        lblVoucherStatus.ForeColor = Color.DarkBlue
+
+        Try
+            Dim memberUid As Long? = If(_currentMember IsNot Nothing, _currentMember.Uid, CType(Nothing, Long?))
+            ' Panggil fungsi Auto-Retry dari DLL
+            Dim resp = Await _client.UseVoucherWithRetryAsync(code, txRef, memberUid, customMaxRetry:=3)
+
+            If resp.IsSuccess Then
+                lblVoucherStatus.Text = $"Status: Voucher BERHASIL DIGUNAKAN pada transaksi {txRef}!"
+                lblVoucherStatus.ForeColor = Color.DarkGreen
+                MessageBox.Show("Voucher sukses diterapkan!", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Else
+                lblVoucherStatus.Text = $"Status: Gagal menggunakan voucher! ({resp.Message})"
+                lblVoucherStatus.ForeColor = Color.Red
+                MessageBox.Show($"Voucher gagal diterapkan:{Environment.NewLine}{resp.Message}", "Gagal", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End If
+            txtRawJson.Text = FormatJson(resp.RawJson)
+        Finally
+            btnUseVoucher.Enabled = True
+        End Try
+    End Sub
+
+#End Region
+
+#Region "4. Burn Point & Push Sales Order"
+
+    Private Async Sub btnBurnPoint_Click(sender As Object, e As EventArgs) Handles btnBurnPoint.Click
+        If _currentMember Is Nothing Then
+            MessageBox.Show("Silakan cari dan pilih member terlebih dahulu!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        Dim burnPt As Decimal
+        Dim billTotal As Decimal
+        If Not Decimal.TryParse(txtBurnPoint.Text, burnPt) OrElse burnPt <= 0 Then
+            MessageBox.Show("Jumlah poin yang dibakar tidak valid!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+        Decimal.TryParse(txtBillTotal.Text, billTotal)
+
+        ' Cek saldo poin member
+        If burnPt > _currentMember.AvailablePoints Then
+            MessageBox.Show($"Poin member ({_currentMember.AvailablePoints:N0}) tidak cukup untuk membakar {burnPt:N0} poin!", "Saldo Kurang", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        btnBurnPoint.Enabled = False
+        Try
+            Dim txRef = "TRX-" & DateTime.Now.ToString("yyMMddHHmmss")
+            Dim orderAmountIdr = burnPt * 1000D ' Estimasi rasio 1 poin = Rp 1.000
+
+            Dim resp = Await _client.CreatePointPaymentAsync(_currentMember.Uid, burnPt, orderAmountIdr, txRef)
+            If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
+                _lastPaymentRef = resp.Data.PaymentRef
+                lblLastPaymentRef.Text = $"Last Payment Ref: {_lastPaymentRef} (Status: {resp.Data.Status})"
+                MessageBox.Show($"Burn Point Berhasil!{Environment.NewLine}Ref: {_lastPaymentRef}{Environment.NewLine}Status: {resp.Data.Status}", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                ' Refresh data member
+                btnSearchMember.PerformClick()
+            Else
+                MessageBox.Show($"Burn Point Gagal:{Environment.NewLine}{resp.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End If
+            txtRawJson.Text = FormatJson(resp.RawJson)
+        Finally
+            btnBurnPoint.Enabled = True
+        End Try
+    End Sub
+
+    Private Async Sub btnCancelBurnPoint_Click(sender As Object, e As EventArgs) Handles btnCancelBurnPoint.Click
+        If String.IsNullOrEmpty(_lastPaymentRef) Then
+            MessageBox.Show("Belum ada Payment Ref transaksi poin yang bisa dibatalkan!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        btnCancelBurnPoint.Enabled = False
+        Try
+            Dim resp = Await _client.CancelPointPaymentAsync(_lastPaymentRef, "Pembatalan oleh Kasir POS")
+            If resp.IsSuccess Then
+                lblLastPaymentRef.Text = $"Last Payment Ref: {_lastPaymentRef} (Status: VOID/CANCEL)"
+                MessageBox.Show("Pembatalan poin berhasil!", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                btnSearchMember.PerformClick()
+            Else
+                MessageBox.Show($"Gagal membatalkan poin:{Environment.NewLine}{resp.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End If
+            txtRawJson.Text = FormatJson(resp.RawJson)
+        Finally
+            btnCancelBurnPoint.Enabled = True
+        End Try
+    End Sub
+
+    Private Async Sub btnPushSalesOrder_Click(sender As Object, e As EventArgs) Handles btnPushSalesOrder.Click
+        btnPushSalesOrder.Enabled = False
+        Try
+            Dim orderNo = "POS-" & DateTime.Now.ToString("yyMMdd-HHmmss")
+            Dim billTotal As Decimal
+            Decimal.TryParse(txtBillTotal.Text, billTotal)
+            If billTotal <= 0 Then billTotal = 50000D
+
+            Dim orderReq As New PushOrderRequest With {
+                .OrderNo = orderNo,
+                .Store = New StoreRef With {.Uid = 138350315235400},
+                .GrandTotal = billTotal,
+                .Lines = New List(Of OrderLineItem) From {
+                    New OrderLineItem With {
+                        .Sku = "SKU-DEMO-01",
+                        .Name = "Produk Demo POS",
+                        .Quantity = 1,
+                        .Price = billTotal
+                    }
+                }
+            }
+
+            If _currentMember IsNot Nothing Then
+                orderReq.Contact = New ContactRef With {
+                    .Uid = _currentMember.Uid,
+                    .MobileNo = _currentMember.MobileNo
+                }
+            End If
+
+            Dim resp = Await _client.PushSalesOrderAsync(orderReq)
+            If resp.IsSuccess Then
+                MessageBox.Show($"Transaksi {orderNo} berhasil dikirim ke Goapp untuk Earning Poin!{Environment.NewLine}Order UID: {resp.Data?.Uid}", "Earning Berhasil", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Else
+                MessageBox.Show($"Gagal mengirim transaksi:{Environment.NewLine}{resp.Message}", "Gagal Push Order", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End If
+            txtRawJson.Text = FormatJson(resp.RawJson)
+        Finally
+            btnPushSalesOrder.Enabled = True
+        End Try
+    End Sub
+
+#End Region
+
+#Region "5. Struk POS & Survey QR Preview"
+
+    Private Sub btnGenerateReceipt_Click(sender As Object, e As EventArgs) Handles btnGenerateReceipt.Click
+        Dim orderNo = "STRUK-" & DateTime.Now.ToString("yyMMdd-HHmmss")
+        Dim billTotal As Decimal
+        Dim burnPt As Decimal
+        Decimal.TryParse(txtBillTotal.Text, billTotal)
+        Decimal.TryParse(txtBurnPoint.Text, burnPt)
+        If billTotal <= 0 Then billTotal = 50000D
+
+        Dim paidTotal = billTotal - (burnPt * 1000D)
+        If paidTotal < 0 Then paidTotal = 0
+
+        Dim receiptContent = ReceiptGenerator.GenerateReceiptText(
+            storeName:="DREAMPOS STORE JAKARTA",
+            orderNo:=orderNo,
+            cashierName:="Kasir 01",
+            member:=_currentMember,
+            earnedPoints:=Math.Floor(billTotal / 10000D),
+            burnedPoints:=burnPt,
+            orderTotal:=billTotal,
+            paidTotal:=paidTotal,
+            surveyUrlBase:="https://survey.goapp.co.id"
+        )
+
+        txtReceiptPreview.Text = receiptContent
+        AppendLog($"[RECEIPT] Preview struk transaksi {orderNo} berhasil di-generate.")
+    End Sub
+
+#End Region
+
+    Private Function FormatJson(raw As String) As String
+        If String.IsNullOrWhiteSpace(raw) Then Return String.Empty
+        Try
+            Dim parsed = JsonConvert.DeserializeObject(raw)
+            Return JsonConvert.SerializeObject(parsed, Formatting.Indented)
+        Catch
+            Return raw
+        End Try
+    End Function
+
+End Class
