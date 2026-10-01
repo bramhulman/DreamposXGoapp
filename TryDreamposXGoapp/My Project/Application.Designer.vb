@@ -7,6 +7,7 @@
 Namespace My
     
     Partial Friend Class MyApplication
+        Inherits Global.Microsoft.VisualBasic.ApplicationServices.WindowsFormsApplicationBase
         
         <Global.System.Diagnostics.DebuggerStepThroughAttribute()>  _
         Public Sub New()
