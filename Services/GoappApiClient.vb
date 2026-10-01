@@ -286,7 +286,7 @@ Namespace Services
                 .RewardSku = rewardSku.Trim(),
                 .StartTime = startTime.ToString("yyyy-MM-ddTHH:mm:sszzz"),
                 .EndTime = endTime.ToString("yyyy-MM-ddTHH:mm:sszzz"),
-                .RewardChannel = New ChannelRef With {.Uid = 138350315235400},
+                .RewardChannel = New ChannelRef With {.Uid = _config.ChannelUid},
                 .RewardData = New RewardDataInfo With {
                     .Name = name.Trim(),
                     .DiscountType = discountType,

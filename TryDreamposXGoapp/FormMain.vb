@@ -27,6 +27,8 @@ Public Class FormMain
     End Class
 
     Private Async Sub FormMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        txtApiKey.Text = System.Configuration.ConfigurationManager.AppSettings("Goapp.ApiKey")
+        txtApiSecret.Text = System.Configuration.ConfigurationManager.AppSettings("Goapp.ApiSecret")
         InitClient()
         AppendLog("Test Harness DreamPOS x Goapp siap digunakan.")
         Await LoadSchemesAsync()
@@ -63,11 +65,33 @@ Public Class FormMain
     End Sub
 
     Private Sub InitClient()
+        Dim apiKey As String = txtApiKey.Text.Trim()
+        If String.IsNullOrEmpty(apiKey) Then
+            apiKey = System.Configuration.ConfigurationManager.AppSettings("Goapp.ApiKey")
+        End If
+        Dim apiSecret As String = txtApiSecret.Text.Trim()
+        If String.IsNullOrEmpty(apiSecret) Then
+            apiSecret = System.Configuration.ConfigurationManager.AppSettings("Goapp.ApiSecret")
+        End If
+
+        Dim channelUidStr As String = System.Configuration.ConfigurationManager.AppSettings("Goapp.ChannelUid")
+        Dim channelUid As Long = 0
+        If Not String.IsNullOrEmpty(channelUidStr) Then
+            Long.TryParse(channelUidStr, channelUid)
+        End If
+
+        Dim authUrl As String = System.Configuration.ConfigurationManager.AppSettings("Goapp.AuthBaseUrl")
+        If String.IsNullOrEmpty(authUrl) Then authUrl = "https://account.goapp.co.id/auth"
+
+        Dim channelUrl As String = System.Configuration.ConfigurationManager.AppSettings("Goapp.ChannelBaseUrl")
+        If String.IsNullOrEmpty(channelUrl) Then channelUrl = "https://api.goapp.co.id/channel/v1"
+
         Dim config As New GoappConfig With {
-            .ApiKey = txtApiKey.Text.Trim(),
-            .ApiSecret = txtApiSecret.Text.Trim(),
-            .AuthBaseUrl = "https://account.goapp.co.id/auth",
-            .ChannelBaseUrl = "https://api.goapp.co.id/channel/v1",
+            .ApiKey = apiKey,
+            .ApiSecret = apiSecret,
+            .ChannelUid = channelUid,
+            .AuthBaseUrl = authUrl,
+            .ChannelBaseUrl = channelUrl,
             .TimeoutSeconds = 30,
             .MaxRetryAttempts = 3,
             .RetryDelayMilliseconds = 1500

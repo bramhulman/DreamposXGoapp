@@ -236,7 +236,7 @@ Partial Class FormMain
 
         Me.txtApiKey.Location = New System.Drawing.Point(65, 22)
         Me.txtApiKey.Size = New System.Drawing.Size(140, 23)
-        Me.txtApiKey.Text = "138350315235400"
+        Me.txtApiKey.Text = ""
 
         Me.lblApiSecret.Text = "API Secret:"
         Me.lblApiSecret.Location = New System.Drawing.Point(215, 25)
@@ -244,7 +244,7 @@ Partial Class FormMain
 
         Me.txtApiSecret.Location = New System.Drawing.Point(280, 22)
         Me.txtApiSecret.Size = New System.Drawing.Size(260, 23)
-        Me.txtApiSecret.Text = "cbf5b1c921b36bfb06ca988c6d98f608482c40f1"
+        Me.txtApiSecret.Text = ""
 
         Me.btnTestAuth.Location = New System.Drawing.Point(550, 20)
         Me.btnTestAuth.Size = New System.Drawing.Size(120, 26)
