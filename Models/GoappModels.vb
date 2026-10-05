@@ -409,6 +409,15 @@ Namespace Models
 
         <JsonProperty("completed_at", NullValueHandling:=NullValueHandling.Ignore)>
         Public Property CompletedAt As String
+
+        <JsonProperty("paid_at", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property PaidAt As String
+
+        <JsonProperty("canceled_at", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property CanceledAt As String
+
+        <JsonProperty("cancel_reason", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property CancelReason As String
     End Class
 
     Public Class OrderMemberRef
@@ -428,6 +437,20 @@ Namespace Models
 
         <JsonProperty("store_code", NullValueHandling:=NullValueHandling.Ignore)>
         Public Property StoreCode As String
+    End Class
+
+    Public Class ChannelDirectoryInfo
+        <JsonProperty("uid")>
+        Public Property Uid As Long
+
+        <JsonProperty("name")>
+        Public Property Name As String
+
+        <JsonProperty("channel_type")>
+        Public Property ChannelType As String
+
+        <JsonProperty("icon_url")>
+        Public Property IconUrl As String
     End Class
 
     Public Class OrderLineItem

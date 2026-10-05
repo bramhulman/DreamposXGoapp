@@ -106,8 +106,8 @@ Namespace Services
         ''' <summary>
         ''' Memeriksa informasi channel/toko yang terdaftar pada kredensial saat ini
         ''' </summary>
-        Public Async Function GetChannelInfoAsync() As Task(Of ApiResponse(Of ChannelInfoResponse))
-            Return Await SendAuthorizedRequestAsync(Of ChannelInfoResponse)(
+        Public Async Function GetChannelDirectoryAsync() As Task(Of ApiResponse(Of ChannelDirectoryInfo))
+            Return Await SendAuthorizedRequestAsync(Of ChannelDirectoryInfo)(
                 HttpMethod.Get,
                 $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/directory/channel/0/"
             )

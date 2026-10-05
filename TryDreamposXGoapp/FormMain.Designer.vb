@@ -64,10 +64,13 @@ Partial Class FormMain
     Friend WithEvents btnCancelBurnPoint As System.Windows.Forms.Button
     Friend WithEvents btnPushSalesOrder As System.Windows.Forms.Button
     Friend WithEvents lblLastPaymentRef As System.Windows.Forms.Label
+    Friend WithEvents txtOrderRawJson As System.Windows.Forms.TextBox
 
     ' Receipt Tab
     Friend WithEvents btnGenerateReceipt As System.Windows.Forms.Button
     Friend WithEvents txtReceiptPreview As System.Windows.Forms.TextBox
+    Friend WithEvents picQrCode As System.Windows.Forms.PictureBox
+    Friend WithEvents lblQrCode As System.Windows.Forms.Label
 
     ' Register Tab Controls
     Friend WithEvents grpRegForm As System.Windows.Forms.GroupBox
@@ -166,6 +169,7 @@ Partial Class FormMain
         Me.btnCancelBurnPoint = New System.Windows.Forms.Button()
         Me.btnPushSalesOrder = New System.Windows.Forms.Button()
         Me.lblLastPaymentRef = New System.Windows.Forms.Label()
+        Me.txtOrderRawJson = New System.Windows.Forms.TextBox()
 
         ' Receipt Controls
         Me.btnGenerateReceipt = New System.Windows.Forms.Button()
@@ -394,6 +398,7 @@ Partial Class FormMain
         Me.tabTransaction.Controls.Add(Me.btnCancelBurnPoint)
         Me.tabTransaction.Controls.Add(Me.btnPushSalesOrder)
         Me.tabTransaction.Controls.Add(Me.lblLastPaymentRef)
+        Me.tabTransaction.Controls.Add(Me.txtOrderRawJson)
 
         Me.lblBillTotal.Text = "Total Belanja (Rp):"
         Me.lblBillTotal.Location = New System.Drawing.Point(20, 30)
@@ -401,7 +406,7 @@ Partial Class FormMain
 
         Me.txtBillTotal.Location = New System.Drawing.Point(160, 27)
         Me.txtBillTotal.Size = New System.Drawing.Size(150, 23)
-        Me.txtBillTotal.Text = "50000"
+        Me.txtBillTotal.Text = "500000"
 
         Me.lblBurnPoint.Text = "Poin Dibakar (Burn):"
         Me.lblBurnPoint.Location = New System.Drawing.Point(20, 75)
@@ -426,7 +431,14 @@ Partial Class FormMain
         Me.btnPushSalesOrder.BackColor = System.Drawing.Color.LightSkyBlue
 
         Me.lblLastPaymentRef.Location = New System.Drawing.Point(20, 180)
-        Me.lblLastPaymentRef.Size = New System.Drawing.Size(700, 30)
+        Me.lblLastPaymentRef.Size = New System.Drawing.Size(700, 20)
+
+        Me.txtOrderRawJson.Location = New System.Drawing.Point(20, 210)
+        Me.txtOrderRawJson.Size = New System.Drawing.Size(900, 110)
+        Me.txtOrderRawJson.Multiline = True
+        Me.txtOrderRawJson.ScrollBars = System.Windows.Forms.ScrollBars.Both
+        Me.txtOrderRawJson.ReadOnly = True
+        Me.txtOrderRawJson.Font = New System.Drawing.Font("Consolas", 8.5F)
         Me.lblLastPaymentRef.Text = "Last Payment Ref: -"
 
         ' --- TAB 4: RECEIPT ---
@@ -443,6 +455,21 @@ Partial Class FormMain
         Me.txtReceiptPreview.Multiline = True
         Me.txtReceiptPreview.Font = New System.Drawing.Font("Courier New", 9.0F)
         Me.txtReceiptPreview.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
+
+        Me.lblQrCode = New System.Windows.Forms.Label()
+        Me.lblQrCode.Text = "QR Code (Live Render):"
+        Me.lblQrCode.Location = New System.Drawing.Point(460, 35)
+        Me.lblQrCode.AutoSize = True
+
+        Me.picQrCode = New System.Windows.Forms.PictureBox()
+        Me.picQrCode.Location = New System.Drawing.Point(460, 55)
+        Me.picQrCode.Size = New System.Drawing.Size(200, 200)
+        Me.picQrCode.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage
+        Me.picQrCode.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+
+        Me.tabReceipt.Controls.Add(Me.lblQrCode)
+        Me.tabReceipt.Controls.Add(Me.picQrCode)
+
 
         ' --- TAB 5: REGISTER MEMBER ---
         Me.tabRegister.Text = "5. Daftar Member Baru"

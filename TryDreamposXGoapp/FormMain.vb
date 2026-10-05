@@ -129,7 +129,7 @@ Public Class FormMain
         Try
             InitClient()
             ' Cek token dan info channel toko
-            Dim channelResp = Await _client.GetChannelInfoAsync()
+            Dim channelResp = Await _client.GetChannelDirectoryAsync()
 
             If channelResp.IsSuccess AndAlso channelResp.Data IsNot Nothing Then
                 lblStatusChannel.Text = $"Terkoneksi: {channelResp.Data.Name} ({channelResp.Data.ChannelType})"
@@ -386,34 +386,52 @@ Public Class FormMain
             Decimal.TryParse(txtBillTotal.Text, billTotal)
             If billTotal <= 0 Then billTotal = 50000D
 
+            Dim item1Price = Math.Round(billTotal * 0.6D)
+            Dim item2Price = billTotal - item1Price
+
+            Dim pay1Amount = Math.Round(billTotal * 0.7D)
+            Dim pay2Amount = billTotal - pay1Amount
+
             Dim orderReq As New PushOrderRequest With {
                 .OrderNo = orderNo,
                 .ProviderRef = orderNo,
                 .OrderDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
                 .LinesTotal = billTotal,
+                .LinesTax = 0,
                 .TotalInclTax = billTotal,
                 .TotalPaid = billTotal,
+                .PaidAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
                 .CompletedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
-                .Store = New OrderStoreRef With {
-                    .Uid = 138350315235400,
-                    .Name = "Dream POS Store"
-                },
                 .Lines = New List(Of OrderLineItem) From {
                     New OrderLineItem With {
                         .Product = New OrderProductInfo With {
-                            .Sku = "SKU-DEMO-01",
-                            .Name = "Produk Demo POS"
+                            .Sku = "SKFTRR02-S",
+                            .Name = "Baju FT RR Small"
                         },
                         .Quantity = 1,
-                        .PriceBeforeDiscount = billTotal,
-                        .Price = billTotal
+                        .PriceBeforeDiscount = item1Price,
+                        .Price = item1Price
+                    },
+                    New OrderLineItem With {
+                        .Product = New OrderProductInfo With {
+                            .Sku = "SKFTRR03-M",
+                            .Name = "Baju FT RR Medium"
+                        },
+                        .Quantity = 1,
+                        .PriceBeforeDiscount = item2Price,
+                        .Price = item2Price
                     }
                 },
                 .Payments = New List(Of OrderPaymentItem) From {
                     New OrderPaymentItem With {
-                        .PaymentMethodName = "Cash",
-                        .PaymentType = "CASH",
-                        .Amount = billTotal
+                        .PaymentMethodName = "EDC BCA",
+                        .PaymentType = "EDC",
+                        .Amount = pay1Amount
+                    },
+                    New OrderPaymentItem With {
+                        .PaymentMethodName = "Gopay",
+                        .PaymentType = "EWALLET",
+                        .Amount = pay2Amount
                     }
                 }
             }
@@ -425,6 +443,9 @@ Public Class FormMain
                 }
             End If
 
+            Dim requestJson = Newtonsoft.Json.JsonConvert.SerializeObject(orderReq, Newtonsoft.Json.Formatting.Indented, New Newtonsoft.Json.JsonSerializerSettings With {.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore})
+            txtOrderRawJson.Text = "=== REQUEST JSON ===" & Environment.NewLine & requestJson & Environment.NewLine & Environment.NewLine
+
             Dim resp = Await _client.PushSalesOrderAsync(orderReq)
             If resp.IsSuccess Then
                 Dim earnedPts = If(resp.Data?.Reward IsNot Nothing AndAlso resp.Data.Reward.Count > 0, resp.Data.Reward(0).Amount, 0)
@@ -432,7 +453,7 @@ Public Class FormMain
             Else
                 MessageBox.Show($"Gagal mengirim transaksi:{Environment.NewLine}{resp.Message}", "Gagal Push Order", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End If
-            txtRawJson.Text = FormatJson(resp.RawJson)
+            txtOrderRawJson.Text &= "=== RESPONSE JSON ===" & Environment.NewLine & FormatJson(resp.RawJson)
         Finally
             btnPushSalesOrder.Enabled = True
         End Try
@@ -467,6 +488,18 @@ Public Class FormMain
 
         txtReceiptPreview.Text = receiptContent
         AppendLog($"[RECEIPT] Preview struk transaksi {orderNo} berhasil di-generate.")
+
+        ' Reconstruct URL to generate QR preview
+        Dim surveyUrl As String = $"https://survey.goapp.co.id/?ref={orderNo}"
+        If _currentMember IsNot Nothing Then
+            surveyUrl &= $"&member_uid={_currentMember.Uid}&mobile={_currentMember.MobileNo}"
+        End If
+
+        Try
+            picQrCode.Load($"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={Uri.EscapeDataString(surveyUrl)}")
+        Catch ex As Exception
+            AppendLog("[ERROR] Gagal merender QR Code preview: " & ex.Message)
+        End Try
     End Sub
 
 #End Region
