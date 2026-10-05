@@ -120,7 +120,7 @@ Partial Class FormMain
     Friend WithEvents txtLogs As System.Windows.Forms.TextBox
     Friend WithEvents btnClearLogs As System.Windows.Forms.Button
 
-    <System.Diagnostics.DebuggerStepThrough()> _
+    <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Me.grpAuth = New System.Windows.Forms.GroupBox()
         Me.lblApiKey = New System.Windows.Forms.Label()
@@ -556,11 +556,11 @@ Partial Class FormMain
         Me.txtRegNotes.ReadOnly = True
         Me.txtRegNotes.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
         Me.txtRegNotes.Font = New System.Drawing.Font("Segoe UI", 9.0F)
-        Me.txtRegNotes.Text = "CARA PENDAFTARAN MEMBER BARU:" & vbCrLf & vbCrLf & _
-            "1. Jika kasir mencari nomor HP member di Tab 1 dan tidak ditemukan, klik tombol '+ Daftar Member Baru' atau buka Tab 5 ini." & vbCrLf & vbCrLf & _
-            "2. Masukkan Nama Depan dan Nomor HP (wajib diisi)." & vbCrLf & vbCrLf & _
-            "3. Pilih Tier/Scheme membership (Default: Go Member)." & vbCrLf & vbCrLf & _
-            "4. Klik tombol 'Simpan / Daftarkan Member'." & vbCrLf & vbCrLf & _
+        Me.txtRegNotes.Text = "CARA PENDAFTARAN MEMBER BARU:" & vbCrLf & vbCrLf &
+            "1. Jika kasir mencari nomor HP member di Tab 1 dan tidak ditemukan, klik tombol '+ Daftar Member Baru' atau buka Tab 5 ini." & vbCrLf & vbCrLf &
+            "2. Masukkan Nama Depan dan Nomor HP (wajib diisi)." & vbCrLf & vbCrLf &
+            "3. Pilih Tier/Scheme membership (Default: Go Member)." & vbCrLf & vbCrLf &
+            "4. Klik tombol 'Simpan / Daftarkan Member'." & vbCrLf & vbCrLf &
             "5. Setelah berhasil, data member langsung otomatis tersimpan di Goapp CRM dan aplikasi akan berpindah ke Tab 1 untuk memuat profil & saldo poin member secara instan."
 
         ' --- TAB 6: MASTER & SIKLUS VOUCHER ---

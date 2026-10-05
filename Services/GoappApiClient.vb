@@ -321,6 +321,13 @@ Namespace Services
                 .OrderAmount = orderAmountIdr,
                 .ProviderRef = providerRef
             }
+            
+            If _config.StoreUid.HasValue Then
+                payload.Store = New OrderStoreRef With {
+                    .Uid = _config.StoreUid.Value,
+                    .Name = _config.StoreName
+                }
+            End If
 
             Log($"Melakukan Burn Point: Member UID {memberUid}, Poin: {pointAmount}, Nilai Rp: {orderAmountIdr:N0}, Ref: {providerRef}")
             Return Await SendAuthorizedRequestAsync(Of PaymentTransactionResponse)(HttpMethod.Post, url, payload)

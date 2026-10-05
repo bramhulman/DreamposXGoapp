@@ -86,12 +86,24 @@ Public Class FormMain
         Dim channelUrl As String = System.Configuration.ConfigurationManager.AppSettings("Goapp.ChannelBaseUrl")
         If String.IsNullOrEmpty(channelUrl) Then channelUrl = "https://api.goapp.co.id/channel/v1"
 
+        Dim storeUidStr As String = System.Configuration.ConfigurationManager.AppSettings("Goapp.StoreUid")
+        Dim storeUid As Long = 0
+        Dim finalStoreUid As Long? = Nothing
+        If Not String.IsNullOrEmpty(storeUidStr) AndAlso Long.TryParse(storeUidStr, storeUid) Then
+            finalStoreUid = storeUid
+        End If
+
+        Dim storeName As String = System.Configuration.ConfigurationManager.AppSettings("Goapp.StoreName")
+        If String.IsNullOrEmpty(storeName) Then storeName = "Default POS Store"
+
         Dim config As New GoappConfig With {
             .ApiKey = apiKey,
             .ApiSecret = apiSecret,
             .ChannelUid = channelUid,
             .AuthBaseUrl = authUrl,
             .ChannelBaseUrl = channelUrl,
+            .StoreUid = finalStoreUid,
+            .StoreName = storeName,
             .TimeoutSeconds = 30,
             .MaxRetryAttempts = 3,
             .RetryDelayMilliseconds = 1500
@@ -386,11 +398,17 @@ Public Class FormMain
             Decimal.TryParse(txtBillTotal.Text, billTotal)
             If billTotal <= 0 Then billTotal = 50000D
 
+            Dim burnPoint As Decimal = 0
+            Decimal.TryParse(txtBurnPoint.Text, burnPoint)
+            
+            Dim pointPayAmount = If(burnPoint <= billTotal, burnPoint, billTotal)
+            Dim remainingTotal = billTotal - pointPayAmount
+
             Dim item1Price = Math.Round(billTotal * 0.6D)
             Dim item2Price = billTotal - item1Price
 
-            Dim pay1Amount = Math.Round(billTotal * 0.7D)
-            Dim pay2Amount = billTotal - pay1Amount
+            Dim pay1Amount = Math.Round(remainingTotal * 0.7D)
+            Dim pay2Amount = remainingTotal - pay1Amount
 
             Dim orderReq As New PushOrderRequest With {
                 .OrderNo = orderNo,
@@ -422,19 +440,32 @@ Public Class FormMain
                         .Price = item2Price
                     }
                 },
-                .Payments = New List(Of OrderPaymentItem) From {
-                    New OrderPaymentItem With {
-                        .PaymentMethodName = "EDC BCA",
-                        .PaymentType = "EDC",
-                        .Amount = pay1Amount
-                    },
-                    New OrderPaymentItem With {
-                        .PaymentMethodName = "Gopay",
-                        .PaymentType = "EWALLET",
-                        .Amount = pay2Amount
-                    }
-                }
+                .Payments = New List(Of OrderPaymentItem)()
             }
+
+            If pointPayAmount > 0 Then
+                orderReq.Payments.Add(New OrderPaymentItem With {
+                    .PaymentMethodName = "Point",
+                    .PaymentType = "POINT",
+                    .Amount = pointPayAmount
+                })
+            End If
+
+            If pay1Amount > 0 Then
+                orderReq.Payments.Add(New OrderPaymentItem With {
+                    .PaymentMethodName = "EDC BCA",
+                    .PaymentType = "EDC",
+                    .Amount = pay1Amount
+                })
+            End If
+
+            If pay2Amount > 0 Then
+                orderReq.Payments.Add(New OrderPaymentItem With {
+                    .PaymentMethodName = "Gopay",
+                    .PaymentType = "EWALLET",
+                    .Amount = pay2Amount
+                })
+            End If
 
             If _currentMember IsNot Nothing Then
                 orderReq.Member = New OrderMemberRef With {

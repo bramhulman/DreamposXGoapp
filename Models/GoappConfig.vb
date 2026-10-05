@@ -21,6 +21,12 @@ Namespace Models
         ''' <summary>Base URL Channel API Goapp. Default: production Goapp.</summary>
         Public Property ChannelBaseUrl As String = "https://api.goapp.co.id/channel/v1"
 
+        ''' <summary>Store UID untuk transaksi yang butuh Toko (misal Burn Point).</summary>
+        Public Property StoreUid As Long? = Nothing
+
+        ''' <summary>Nama Store.</summary>
+        Public Property StoreName As String = String.Empty
+
         ''' <summary>Timeout HTTP request dalam detik.</summary>
         Public Property TimeoutSeconds As Integer = 30
 
