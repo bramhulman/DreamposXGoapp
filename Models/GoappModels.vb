@@ -301,6 +301,9 @@ Namespace Models
         <JsonProperty("description", NullValueHandling:=NullValueHandling.Ignore)>
         Public Property Description As String
 
+        <JsonProperty("redeem_code", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property RedeemCode As String
+
         <JsonProperty("reward_sku")>
         Public Property RewardSku As String
 
@@ -340,6 +343,9 @@ Namespace Models
 
         <JsonProperty("provider_ref")>
         Public Property ProviderRef As String ' POS Bill/Transaction No
+
+        <JsonProperty("store", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property Store As OrderStoreRef
     End Class
 
     Public Class PaymentMemberRef

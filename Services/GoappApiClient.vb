@@ -279,11 +279,12 @@ Namespace Services
         ''' Catatan: Master deal umumnya dikonfigurasi melalui Web Dashboard CRM.
         ''' Bila melalui API, reward_sku harus merupakan SKU yang valid di master catalog.
         ''' </summary>
-        Public Async Function CreateDealAsync(name As String, rewardSku As String, startTime As DateTime, endTime As DateTime, Optional discountType As String = "amount", Optional discountAmount As Decimal = 0, Optional minPurchase As Decimal = 0) As Task(Of ApiResponse(Of DirectDealInfo))
+        Public Async Function CreateDealAsync(name As String, rewardSku As String, startTime As DateTime, endTime As DateTime, Optional discountType As String = "amount", Optional discountAmount As Decimal = 0, Optional minPurchase As Decimal = 0, Optional redeemCode As String = "") As Task(Of ApiResponse(Of DirectDealInfo))
             Dim url = $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/member/deal/"
             Dim payload As New CreateDealRequest With {
                 .Name = name.Trim(),
                 .RewardSku = rewardSku.Trim(),
+                .RedeemCode = If(String.IsNullOrEmpty(redeemCode), Nothing, redeemCode.Trim()),
                 .StartTime = startTime.ToString("yyyy-MM-ddTHH:mm:sszzz"),
                 .EndTime = endTime.ToString("yyyy-MM-ddTHH:mm:sszzz"),
                 .RewardChannel = New ChannelRef With {.Uid = _config.ChannelUid},

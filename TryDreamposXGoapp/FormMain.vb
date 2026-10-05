@@ -585,6 +585,7 @@ Public Class FormMain
         Dim name = txtDealName.Text.Trim()
         Dim sku = txtDealSku.Text.Trim()
         Dim amountText = txtDealAmount.Text.Trim()
+        Dim redeemCode = txtDealCode.Text.Trim()
         Dim discountType = If(cmbDealType.SelectedIndex = 1, "percentage", If(cmbDealType.SelectedIndex = 2, "free_item", "amount"))
 
         If String.IsNullOrWhiteSpace(name) OrElse String.IsNullOrWhiteSpace(sku) Then
@@ -610,7 +611,8 @@ Public Class FormMain
                 startTime:=startTime,
                 endTime:=endTime,
                 discountType:=discountType,
-                discountAmount:=amount
+                discountAmount:=amount,
+                redeemCode:=redeemCode
             )
 
             If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
@@ -644,7 +646,8 @@ Public Class FormMain
             Dim resp = Await _client.GetAvailableDealsAsync()
             If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
                 For Each d In resp.Data
-                    Dim desc = $"[UID: {d.Uid}] {d.Name} | SKU: {d.RewardSku}"
+                    Dim kodePromo = If(Not String.IsNullOrEmpty(d.RedeemCode), d.RedeemCode, d.Uid.ToString())
+                    Dim desc = $"[KODE: {kodePromo}] {d.Name} | Tipe: {d.RewardSku}"
                     lstDeals.Items.Add(desc)
                 Next
                 AppendLog($"[DEALS] Berhasil memuat {resp.Data.Count} promo deal aktif dari Goapp.")

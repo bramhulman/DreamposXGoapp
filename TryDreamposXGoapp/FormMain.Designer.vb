@@ -99,6 +99,8 @@ Partial Class FormMain
     Friend WithEvents cmbDealType As System.Windows.Forms.ComboBox
     Friend WithEvents lblDealAmount As System.Windows.Forms.Label
     Friend WithEvents txtDealAmount As System.Windows.Forms.TextBox
+    Friend WithEvents lblDealCode As System.Windows.Forms.Label
+    Friend WithEvents txtDealCode As System.Windows.Forms.TextBox
     Friend WithEvents btnCreateDeal As System.Windows.Forms.Button
     Friend WithEvents lblCreateDealStatus As System.Windows.Forms.Label
 
@@ -202,6 +204,8 @@ Partial Class FormMain
         Me.cmbDealType = New System.Windows.Forms.ComboBox()
         Me.lblDealAmount = New System.Windows.Forms.Label()
         Me.txtDealAmount = New System.Windows.Forms.TextBox()
+        Me.lblDealCode = New System.Windows.Forms.Label()
+        Me.txtDealCode = New System.Windows.Forms.TextBox()
         Me.btnCreateDeal = New System.Windows.Forms.Button()
         Me.lblCreateDealStatus = New System.Windows.Forms.Label()
 
@@ -284,7 +288,7 @@ Partial Class FormMain
 
         Me.txtInputMember.Location = New System.Drawing.Point(145, 17)
         Me.txtInputMember.Size = New System.Drawing.Size(180, 23)
-        Me.txtInputMember.Text = "08159136224"
+        Me.txtInputMember.Text = "087890760858"
 
         Me.btnSearchMember.Text = "Cek Member (Async)"
         Me.btnSearchMember.Location = New System.Drawing.Point(335, 15)
@@ -576,6 +580,8 @@ Partial Class FormMain
         Me.grpCreateDeal.Controls.Add(Me.cmbDealType)
         Me.grpCreateDeal.Controls.Add(Me.lblDealAmount)
         Me.grpCreateDeal.Controls.Add(Me.txtDealAmount)
+        Me.grpCreateDeal.Controls.Add(Me.lblDealCode)
+        Me.grpCreateDeal.Controls.Add(Me.txtDealCode)
         Me.grpCreateDeal.Controls.Add(Me.btnCreateDeal)
         Me.grpCreateDeal.Controls.Add(Me.lblCreateDealStatus)
 
@@ -613,15 +619,23 @@ Partial Class FormMain
         Me.txtDealAmount.Size = New System.Drawing.Size(265, 23)
         Me.txtDealAmount.Text = "15000"
 
+        Me.lblDealCode.Text = "Kode Promo (Universal):"
+        Me.lblDealCode.Location = New System.Drawing.Point(15, 182)
+        Me.lblDealCode.AutoSize = True
+
+        Me.txtDealCode.Location = New System.Drawing.Point(170, 179)
+        Me.txtDealCode.Size = New System.Drawing.Size(265, 23)
+        Me.txtDealCode.Text = "PROMO15K"
+
         Me.btnCreateDeal.Text = "Insert Master Voucher (POST)"
-        Me.btnCreateDeal.Location = New System.Drawing.Point(170, 185)
+        Me.btnCreateDeal.Location = New System.Drawing.Point(170, 215)
         Me.btnCreateDeal.Size = New System.Drawing.Size(265, 35)
         Me.btnCreateDeal.BackColor = System.Drawing.Color.LightSkyBlue
         Me.btnCreateDeal.Font = New System.Drawing.Font("Segoe UI", 9.0F, System.Drawing.FontStyle.Bold)
 
         Me.lblCreateDealStatus.Text = "Catatan: Master promo dibuat di CRM Admin. Via API mewajibkan reward_sku valid di catalog."
-        Me.lblCreateDealStatus.Location = New System.Drawing.Point(15, 235)
-        Me.lblCreateDealStatus.Size = New System.Drawing.Size(425, 45)
+        Me.lblCreateDealStatus.Location = New System.Drawing.Point(15, 260)
+        Me.lblCreateDealStatus.Size = New System.Drawing.Size(425, 35)
         Me.lblCreateDealStatus.ForeColor = System.Drawing.Color.DarkSlateGray
 
         ' grpManageDeals
