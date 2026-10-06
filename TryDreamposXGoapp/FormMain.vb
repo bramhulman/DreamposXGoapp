@@ -249,9 +249,14 @@ Public Class FormMain
             Dim memberUid As Long? = If(_currentMember IsNot Nothing, _currentMember.Uid, CType(Nothing, Long?))
             Dim resp = Await _client.ValidateVoucherAsync(code, memberUid)
 
-            If resp.IsSuccess Then
-                lblVoucherStatus.Text = $"Status: Voucher VALID! {resp.Message}"
+            If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
+                Dim v = resp.Data
+                Dim infoMsg = $"VOUCHER VALID!{Environment.NewLine}Nama: {v.Name}{Environment.NewLine}Tipe Diskon: {v.DiscountType}{Environment.NewLine}Nominal Potongan: {v.DiscountAmount:N0}"
+                
+                lblVoucherStatus.Text = $"Status: VALID - {v.Name} ({v.DiscountAmount:N0})"
                 lblVoucherStatus.ForeColor = Color.DarkGreen
+                
+                MessageBox.Show(infoMsg, "Detail Voucher", MessageBoxButtons.OK, MessageBoxIcon.Information)
                 txtRawJson.Text = FormatJson(resp.RawJson)
             Else
                 lblVoucherStatus.Text = $"Status: Voucher TIDAK VALID! ({resp.Message})"

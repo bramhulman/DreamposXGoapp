@@ -236,7 +236,10 @@ def create_pdf(output_path):
     )
 
     pdf.section_title("4.3 Push Transaksi Selesai (Earning Point)")
-    pdf.body_p("Method: POST | Endpoint: https://api.goapp.co.id/channel/v1/sales/order/")
+    pdf.body_p(
+        "Method: POST | Endpoint: https://api.goapp.co.id/channel/v1/sales/order/\n"
+        "Catatan: Perhitungan poin yang didapat 100% dikendalikan oleh Server Goapp (rule kelipatan, limit harian, dsb), bukan oleh aplikasi POS."
+    )
     pdf.code_block(
 """// Payload Request Body:
 {
@@ -266,13 +269,13 @@ def create_pdf(output_path):
     pdf.section_title("4.4 Burn Point (Pembayaran Transaksi Menggunakan Poin)")
     pdf.body_p(
         "Method: POST | Endpoint: https://api.goapp.co.id/channel/v1/member/payment/\n"
+        "Endpoint ini WAJIB menggunakan Physical Store UID (bukan Channel UID) dan store_code.\n"
         "Payload Input:\n"
         "- member.uid (Long): UID member pemilik poin.\n"
-        "- amount (Decimal): Jumlah poin yang dipotong (misal: 50.00).\n"
-        "- order_amount (Decimal): Nilai rupiah dari poin (misal: 50000.00).\n"
-        "- provider_ref (String): No transaksi POS (mencegah double-deduction / idempotency).\n"
-        "- order_currency (String): Nilai tetap 'idr'.\n"
-        "Void/Cancel Point: POST https://api.goapp.co.id/channel/v1/member/payment/{payment_id}/cancel/."
+        "- amount (Decimal): Jumlah poin yang dipotong (misal: 5000.00).\n"
+        "- order_amount (Decimal): Nilai rupiah dari poin (Rasio 1:1, misal: 5000.00).\n"
+        "- provider_ref (String): No transaksi POS (mencegah double-deduction).\n"
+        "- store (Object): Harus berisi uid fisik dan store_code (contoh: 'DS')."
     )
 
     pdf.section_title("4.5 Validasi & Penggunaan Voucher (Persen, Nominal, Free Item, Specific SKU)")
@@ -400,7 +403,7 @@ End If"""
         "     DLL       : Await _client.GetAvailableDealsAsync()\n\n"
         "4.10 POST /member/deal/cancel_code/\n"
         "     Deskripsi : Membatalkan kode voucher yang sudah digunakan, kembali ke status available.\n"
-        "     Request   : {deal_code, transaction_ref, member:{uid}}\n"
+        "     Request   : WAJIB menyertakan {deal_code, transaction_ref, member:{uid}} (Gagal jika member uid null)\n"
         "     Response  : {\"detail\": \"Deal code cancelled successfully.\"}\n"
         "     DLL       : Await _client.CancelVoucherAsync(dealCode, txRef, memberUid)\n\n"
         "4.11 POST /member/deal/\n"
@@ -426,7 +429,7 @@ End If"""
         ("1. Test Auth", "Klik tombol 'Test Koneksi' pada form utama.", "Label hijau: Terkoneksi: Dream POS (offline).", "PASSED"),
         ("2. Cari No HP", "Tab 1: Input '08159136224', klik 'Cek Member'.", "Nama, Sisa Poin, dan Nilai Rp terisi otomatis.", "READY"),
         ("3. Cari Member ID", "Tab 1: Input UID '110270830028872', klik Cek.", "Hasil sama persis dengan pencarian No HP.", "READY"),
-        ("4. Validasi Voucher", "Tab 2: Masukkan kode deal, klik Validasi.", "Tampil status valid dan nominal/persen diskon.", "READY"),
+        ("4. Validasi Voucher", "Tab 2: Masukkan kode deal, klik Validasi.", "Tampil status valid dan popup detail potongan voucher.", "READY"),
         ("5. Pakai Voucher", "Tab 2: Masukkan No Struk, klik Gunakan.", "Voucher terkunci, Auto-Retry berjalan jika lag.", "READY"),
         ("6. Burn Point", "Tab 3: Input belanja & 50 poin, klik Burn Point.", "Poin terpotong, muncul PaymentRef transaksi.", "READY"),
         ("7. Void Burn Point", "Tab 3: Klik tombol 'Cancel Burn Point (Void)'.", "Status Payment menjadi CANCEL, poin kembali.", "READY"),
