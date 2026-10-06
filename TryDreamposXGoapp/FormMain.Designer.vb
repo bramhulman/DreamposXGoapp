@@ -288,7 +288,8 @@ Partial Class FormMain
 
         Me.txtInputMember.Location = New System.Drawing.Point(145, 17)
         Me.txtInputMember.Size = New System.Drawing.Size(180, 23)
-        Me.txtInputMember.Text = "087890760858"
+        Me.txtInputMember.Text = "081588809090"
+        'Me.txtInputMember.Text = "087890760858" '081588809090
 
         Me.btnSearchMember.Text = "Cek Member (Async)"
         Me.btnSearchMember.Location = New System.Drawing.Point(335, 15)

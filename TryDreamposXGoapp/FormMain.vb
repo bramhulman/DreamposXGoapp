@@ -96,6 +96,9 @@ Public Class FormMain
         Dim storeName As String = System.Configuration.ConfigurationManager.AppSettings("Goapp.StoreName")
         If String.IsNullOrEmpty(storeName) Then storeName = "Default POS Store"
 
+        Dim storeCode As String = System.Configuration.ConfigurationManager.AppSettings("Goapp.StoreCode")
+        If String.IsNullOrEmpty(storeCode) Then storeCode = ""
+
         Dim config As New GoappConfig With {
             .ApiKey = apiKey,
             .ApiSecret = apiSecret,
@@ -104,6 +107,7 @@ Public Class FormMain
             .ChannelBaseUrl = channelUrl,
             .StoreUid = finalStoreUid,
             .StoreName = storeName,
+            .StoreCode = storeCode,
             .TimeoutSeconds = 30,
             .MaxRetryAttempts = 3,
             .RetryDelayMilliseconds = 1500
@@ -350,7 +354,7 @@ Public Class FormMain
         btnBurnPoint.Enabled = False
         Try
             Dim txRef = "TRX-" & DateTime.Now.ToString("yyMMddHHmmss")
-            Dim orderAmountIdr = burnPt * 1000D ' Estimasi rasio 1 poin = Rp 1.000
+            Dim orderAmountIdr = burnPt ' 1 poin = 1 Rupiah
 
             Dim resp = Await _client.CreatePointPaymentAsync(_currentMember.Uid, burnPt, orderAmountIdr, txRef)
             If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then

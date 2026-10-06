@@ -27,6 +27,9 @@ Namespace Models
         ''' <summary>Nama Store.</summary>
         Public Property StoreName As String = String.Empty
 
+        ''' <summary>Store Code (opsional, tapi kadang wajib untuk transaksi tertentu).</summary>
+        Public Property StoreCode As String = String.Empty
+
         ''' <summary>Timeout HTTP request dalam detik.</summary>
         Public Property TimeoutSeconds As Integer = 30
 

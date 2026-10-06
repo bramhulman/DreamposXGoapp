@@ -325,7 +325,8 @@ Namespace Services
             If _config.StoreUid.HasValue Then
                 payload.Store = New OrderStoreRef With {
                     .Uid = _config.StoreUid.Value,
-                    .Name = _config.StoreName
+                    .Name = _config.StoreName,
+                    .StoreCode = If(String.IsNullOrEmpty(_config.StoreCode), Nothing, _config.StoreCode)
                 }
             End If
 
