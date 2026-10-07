@@ -43,7 +43,7 @@ Partial Class FormMain
     Friend WithEvents lblMemberPoints As System.Windows.Forms.Label
     Friend WithEvents lblMemberRupiah As System.Windows.Forms.Label
     Friend WithEvents lblMemberReferral As System.Windows.Forms.Label
-    Friend WithEvents lblMemberPromo As System.Windows.Forms.Label
+
     Friend WithEvents txtRawJson As System.Windows.Forms.TextBox
 
     ' Voucher Tab
@@ -152,7 +152,7 @@ Partial Class FormMain
         Me.lblMemberPoints = New System.Windows.Forms.Label()
         Me.lblMemberRupiah = New System.Windows.Forms.Label()
         Me.lblMemberReferral = New System.Windows.Forms.Label()
-        Me.lblMemberPromo = New System.Windows.Forms.Label()
+
         Me.txtRawJson = New System.Windows.Forms.TextBox()
 
         ' Voucher Controls
@@ -314,7 +314,7 @@ Partial Class FormMain
         Me.grpMemberResult.Controls.Add(Me.lblMemberPoints)
         Me.grpMemberResult.Controls.Add(Me.lblMemberRupiah)
         Me.grpMemberResult.Controls.Add(Me.lblMemberReferral)
-        Me.grpMemberResult.Controls.Add(Me.lblMemberPromo)
+
 
         Me.lblMemberName.Text = "Nama Member : -"
         Me.lblMemberName.Location = New System.Drawing.Point(15, 30)
@@ -344,12 +344,6 @@ Partial Class FormMain
         Me.lblMemberReferral.Text = "Referral Code : -"
         Me.lblMemberReferral.Location = New System.Drawing.Point(15, 215)
         Me.lblMemberReferral.AutoSize = True
-
-        Me.lblMemberPromo.Text = "Promo/Benefit : -"
-        Me.lblMemberPromo.Location = New System.Drawing.Point(15, 250)
-        Me.lblMemberPromo.AutoSize = True
-        Me.lblMemberPromo.Font = New System.Drawing.Font("Segoe UI", 9.0F, System.Drawing.FontStyle.Bold)
-        Me.lblMemberPromo.ForeColor = System.Drawing.Color.MediumVioletRed
 
         Me.txtRawJson.Location = New System.Drawing.Point(460, 55)
         Me.txtRawJson.Size = New System.Drawing.Size(480, 290)

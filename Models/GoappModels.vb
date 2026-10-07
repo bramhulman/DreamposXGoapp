@@ -78,9 +78,6 @@ Namespace Models
         <JsonProperty("account")>
         Public Property Account As MemberAccount
 
-        <JsonProperty("direct_deal")>
-        Public Property DirectDeal As DirectDealInfo
-
         Public ReadOnly Property FullName As String
             Get
                 Dim full = $"{FirstName} {LastName}".Trim()

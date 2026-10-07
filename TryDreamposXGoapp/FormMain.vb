@@ -201,12 +201,7 @@ Public Class FormMain
                 lblMemberPoints.Text = $"Sisa Poin : {_currentMember.AvailablePoints:N0} Pts"
                 lblMemberRupiah.Text = $"Nilai Rupiah Poin : Rp {_currentMember.PointsInRupiah:N0}"
                 lblMemberReferral.Text = $"Referral Code : {If(String.IsNullOrEmpty(_currentMember.ReferralCode), "-", _currentMember.ReferralCode)}"
-                
-                If _currentMember.DirectDeal IsNot Nothing AndAlso Not String.IsNullOrEmpty(_currentMember.DirectDeal.Name) Then
-                    lblMemberPromo.Text = $"Promo/Benefit : {_currentMember.DirectDeal.Name} (Kode: {_currentMember.DirectDeal.RedeemCode})"
-                Else
-                    lblMemberPromo.Text = $"Promo/Benefit : Belum ada promo aktif."
-                End If
+                ' Promo logic removed
 
                 ' Tampilkan raw JSON response di box sebelah kanan
                 txtRawJson.Text = FormatJson(response.RawJson)
