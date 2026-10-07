@@ -1,228 +1,243 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>Dokumentasi API Goapp</title>
-<style>
-  body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 40px auto; padding: 20px; }
-  h1 { color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; }
-  h2 { color: #1576b6; margin-top: 30px; }
-  h3 { color: #0d9488; margin-top: 25px; }
-  pre { background: #1e293b; color: #f8fafc; padding: 15px; border-radius: 5px; overflow-x: auto; }
-  code { font-family: Consolas, monospace; background: #e2e8f0; color: #b91c1c; padding: 2px 5px; border-radius: 3px; font-size: 0.9em; }
-  pre code { background: transparent; color: inherit; padding: 0; }
-  hr { border: 0; height: 1px; background: #cbd5e1; margin: 30px 0; }
-</style>
+    <meta charset="UTF-8">
+    <title>Dokumentasi Integrasi DreamPOS x Goapp CRM</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; max-width: 900px; margin: 0 auto; padding: 20px; color: #333; }
+        h1, h2, h3 { color: #0056b3; }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        code { font-family: Consolas, monospace; background: #f4f4f4; padding: 2px 5px; border-radius: 3px; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f8f9fa; }
+    </style>
 </head>
 <body>
-<h1>Dokumentasi Integrasi API Goapp CRM x DreamPOS</h1><br>
-<br>
-Dokumen ini berisi panduan teknis, contoh kode (cara pemanggilan <code>.dll</code>), dan <i>raw</i> JSON (Request & Response) berdasarkan hasil pengujian integrasi antara DreamPOS dan backend Goapp CRM.<br>
-<br>
----<br>
-<br>
-<h2>1. Persiapan Konfigurasi (App.config)</h2><br>
-Agar <i>hardcoding</i> dapat dihindari, nilai-nilai kredensial dan preferensi toko disimpan di dalam file <code>App.config</code> aplikasi pemanggil (POS).<br>
-<br>
-<pre><code>&lt;appSettings&gt;
+    <h1>Dokumentasi Integrasi API Goapp CRM x DreamPOS</h1>
+<p>Dokumen ini berisi panduan teknis, contoh kode (cara pemanggilan <code>.dll</code>), dan <em>raw</em> JSON (Request &amp; Response) berdasarkan hasil pengujian integrasi antara DreamPOS dan backend Goapp CRM.</p>
+<hr />
+<h2>1. Persiapan Konfigurasi (App.config)</h2>
+<p>Agar <em>hardcoding</em> dapat dihindari, nilai-nilai kredensial dan preferensi toko disimpan di dalam file <code>App.config</code> aplikasi pemanggil (POS).</p>
+<pre><code class="language-xml">&lt;appSettings&gt;
     &lt;!-- Kredensial Channel Goapp CRM --&gt;
-    &lt;add key="Goapp.ApiKey" value="138350315235400" /&gt;
-    &lt;add key="Goapp.ApiSecret" value="cbf5b1c921b36bfb06ca988c6d98f608482c40f1" /&gt;
-    &lt;add key="Goapp.ChannelUid" value="138350315235400" /&gt;
-    &lt;add key="Goapp.AuthBaseUrl" value="https://account.goapp.co.id/auth" /&gt;
-    &lt;add key="Goapp.ChannelBaseUrl" value="https://api.goapp.co.id/channel/v1" /&gt;
-    
+    &lt;add key=&quot;Goapp.ApiKey&quot; value=&quot;138350315235400&quot; /&gt;
+    &lt;add key=&quot;Goapp.ApiSecret&quot; value=&quot;cbf5b1c921b36bfb06ca988c6d98f608482c40f1&quot; /&gt;
+    &lt;add key=&quot;Goapp.ChannelUid&quot; value=&quot;138350315235400&quot; /&gt;
+    &lt;add key=&quot;Goapp.AuthBaseUrl&quot; value=&quot;https://account.goapp.co.id/auth&quot; /&gt;
+    &lt;add key=&quot;Goapp.ChannelBaseUrl&quot; value=&quot;https://api.goapp.co.id/channel/v1&quot; /&gt;
+
     &lt;!-- Konfigurasi Physical Store (Wajib untuk Burn Point) --&gt;
-    &lt;add key="Goapp.StoreUid" value="138533231320136" /&gt;
-    &lt;add key="Goapp.StoreName" value="Go DimSum Bogor" /&gt;
-    &lt;add key="Goapp.StoreCode" value="DS" /&gt;
-&lt;/appSettings&gt;</code></pre><br>
-<br>
----<br>
-<br>
-<h2>2. Instansiasi DLL (<code>GoappApiClient</code>)</h2><br>
-Di dalam project POS Anda, pastikan Anda menambahkan <i>Reference</i> ke <code>DreamposXGoapp.dll</code>. Lalu inisialisasi <i>client</i> seperti berikut (Contoh dalam VB.NET):<br>
-<br>
-<pre><code>Imports DreamposXGoapp.Models
+    &lt;add key=&quot;Goapp.StoreUid&quot; value=&quot;138533231320136&quot; /&gt;
+    &lt;add key=&quot;Goapp.StoreName&quot; value=&quot;Go DimSum Bogor&quot; /&gt;
+    &lt;add key=&quot;Goapp.StoreCode&quot; value=&quot;DS&quot; /&gt;
+&lt;/appSettings&gt;
+</code></pre>
+<hr />
+<h2>2. Instansiasi DLL (<code>GoappApiClient</code>)</h2>
+<p>Di dalam project POS Anda, pastikan Anda menambahkan <em>Reference</em> ke <code>DreamposXGoapp.dll</code>. Lalu inisialisasi <em>client</em> seperti berikut (Contoh dalam VB.NET):</p>
+<pre><code class="language-vb">Imports DreamposXGoapp.Models
 Imports DreamposXGoapp.Services
 
 ' 1. Baca konfigurasi dari App.config
 Dim config As New GoappConfig With {
-    .ApiKey = ConfigurationManager.AppSettings("Goapp.ApiKey"),
-    .ApiSecret = ConfigurationManager.AppSettings("Goapp.ApiSecret"),
-    .ChannelUid = Long.Parse(ConfigurationManager.AppSettings("Goapp.ChannelUid")),
-    .AuthBaseUrl = ConfigurationManager.AppSettings("Goapp.AuthBaseUrl"),
-    .ChannelBaseUrl = ConfigurationManager.AppSettings("Goapp.ChannelBaseUrl"),
-    .StoreUid = Long.Parse(ConfigurationManager.AppSettings("Goapp.StoreUid")),
-    .StoreName = ConfigurationManager.AppSettings("Goapp.StoreName"),
-    .StoreCode = ConfigurationManager.AppSettings("Goapp.StoreCode")
+    .ApiKey = ConfigurationManager.AppSettings(&quot;Goapp.ApiKey&quot;),
+    .ApiSecret = ConfigurationManager.AppSettings(&quot;Goapp.ApiSecret&quot;),
+    .ChannelUid = Long.Parse(ConfigurationManager.AppSettings(&quot;Goapp.ChannelUid&quot;)),
+    .AuthBaseUrl = ConfigurationManager.AppSettings(&quot;Goapp.AuthBaseUrl&quot;),
+    .ChannelBaseUrl = ConfigurationManager.AppSettings(&quot;Goapp.ChannelBaseUrl&quot;),
+    .StoreUid = Long.Parse(ConfigurationManager.AppSettings(&quot;Goapp.StoreUid&quot;)),
+    .StoreName = ConfigurationManager.AppSettings(&quot;Goapp.StoreName&quot;),
+    .StoreCode = ConfigurationManager.AppSettings(&quot;Goapp.StoreCode&quot;)
 }
 
 ' 2. Instansiasi Client
-Dim goappClient As New GoappApiClient(config)</code></pre><br>
-<br>
----<br>
-<br>
-<h2>3. Fitur Utama & Contoh JSON</h2><br>
-<br>
-<h3>A. Validasi Voucher (Cek Tipe & Nominal Diskon)</h3><br>
-Digunakan sebelum transaksi dibayar. Berfungsi untuk mengetahui tipe potongan (<code>amount</code> / <code>percentage</code>) dan nilainya.<br>
-<br>
-<b>Pemanggilan DLL:</b><br>
-<pre><code>Dim code = "0M9NO"
+Dim goappClient As New GoappApiClient(config)
+</code></pre>
+<hr />
+<h2>3. Fitur Utama &amp; Contoh JSON</h2>
+<h3>A. Validasi Voucher (Cek Tipe &amp; Nominal Diskon)</h3>
+<p>Digunakan sebelum transaksi dibayar. Berfungsi untuk mengetahui tipe potongan (<code>amount</code> / <code>percentage</code>) dan nilainya.</p>
+<p><strong>Pemanggilan DLL:</strong></p>
+<pre><code class="language-vb">Dim code = &quot;0M9NO&quot;
 Dim memberUid As Long? = 155999749384776
 Dim resp = Await goappClient.ValidateVoucherAsync(code, memberUid)
 
 If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
-    Console.WriteLine($"Diskon: {resp.Data.DiscountAmount} Tipe: {resp.Data.DiscountType}")
-End If</code></pre><br>
-<br>
-<b>Request JSON (<code>POST /member/deal/validate/</code>):</b><br>
-<pre><code>{
-  "deal_code": "0M9NO",
-  "member": {
-    "uid": 155999749384776
+    Console.WriteLine($&quot;Diskon: {resp.Data.DiscountAmount} Tipe: {resp.Data.DiscountType}&quot;)
+End If
+</code></pre>
+<p><strong>Request JSON (<code>POST /member/deal/validate/</code>):</strong></p>
+<pre><code class="language-json">{
+  &quot;deal_code&quot;: &quot;0M9NO&quot;,
+  &quot;member&quot;: {
+    &quot;uid&quot;: 155999749384776
   }
-}</code></pre><br>
-<br>
-<b>Response JSON (Sukses):</b><br>
-<pre><code>{
-  "uid": 138501234567,
-  "deal_code": "0M9NO",
-  "name": "Diskon Spesial DimSum",
-  "discount_type": "amount",
-  "discount_amount": 50000.0,
-  "status": "valid"
-}</code></pre><br>
-<br>
----<br>
-<br>
-<h3>B. Batalkan Voucher (Void / Cancel)</h3><br>
-Membatalkan pemakaian voucher dan mengembalikannya ke HP pelanggan. <b>Catatan Penting:</b> Pemanggilan fungsi ini HANYA membatalkan status voucher, <b>tidak</b> membatalkan transaksi / struk kasir Anda. <br>
-<br>
-<b>Pemanggilan DLL:</b><br>
-<pre><code>' Wajib menyertakan TxRef asal dan UID Member!
-Dim resp = Await goappClient.CancelVoucherAsync("0M9NO", "TRX-261006095015", 155999749384776)</code></pre><br>
-<br>
-<b>Request JSON (<code>POST /member/deal/cancel_code/</code>):</b><br>
-<pre><code>{
-  "deal_code": "0M9NO",
-  "transaction_ref": "TRX-261006095015",
-  "member": {
-    "uid": 155999749384776
+}
+</code></pre>
+<p><strong>Response JSON (Sukses):</strong></p>
+<pre><code class="language-json">{
+  &quot;uid&quot;: 138501234567,
+  &quot;deal_code&quot;: &quot;0M9NO&quot;,
+  &quot;name&quot;: &quot;Diskon Spesial DimSum&quot;,
+  &quot;discount_type&quot;: &quot;amount&quot;,
+  &quot;discount_amount&quot;: 50000.0,
+  &quot;status&quot;: &quot;valid&quot;
+}
+</code></pre>
+<hr />
+<h3>B. Batalkan Voucher (Void / Cancel)</h3>
+<p>Membatalkan pemakaian voucher dan mengembalikannya ke HP pelanggan. <strong>Catatan Penting:</strong> Pemanggilan fungsi ini HANYA membatalkan status voucher, <strong>tidak</strong> membatalkan transaksi / struk kasir Anda. </p>
+<p><strong>Pemanggilan DLL:</strong></p>
+<pre><code class="language-vb">' Wajib menyertakan TxRef asal dan UID Member!
+Dim resp = Await goappClient.CancelVoucherAsync(&quot;0M9NO&quot;, &quot;TRX-261006095015&quot;, 155999749384776)
+</code></pre>
+<p><strong>Request JSON (<code>POST /member/deal/cancel_code/</code>):</strong></p>
+<pre><code class="language-json">{
+  &quot;deal_code&quot;: &quot;0M9NO&quot;,
+  &quot;transaction_ref&quot;: &quot;TRX-261006095015&quot;,
+  &quot;member&quot;: {
+    &quot;uid&quot;: 155999749384776
   }
-}</code></pre><br>
-<br>
-<b>Contoh Response Error (400) Jika Lupa Menyisipkan UID Member:</b><br>
-<pre><code>{
-  "detail": "Missing member information"
-}</code></pre><br>
-<br>
----<br>
-<br>
-<h3>C. Burn Point (Potong Poin Member)</h3><br>
-<b>Catatan Penting:</b> <br>
-1. Endpoint ini <b>menolak</b> penggunaan <code>Channel UID</code>. Harus mengirimkan parameter <code>store</code> lengkap dengan <code>Store UID</code> fisik dan <code>store_code</code>.<br>
-2. Jika admin belum mengaktifkan metode Point Payment di Dashboard, akan muncul Error <code>400 Payment not configured</code>.<br>
-3. Rasio perhitungan pemotongan di DLL sudah dikunci <code>1 Poin = 1 Rupiah</code> (Bukan dikali 1000).<br>
-<br>
-<b>Pemanggilan DLL:</b><br>
-<pre><code>Dim pointDibakar As Decimal = 5000
-Dim txRef As String = "TRX-261006090001"
-Dim resp = Await goappClient.CreatePointPaymentAsync(155999749384776, pointDibakar, pointDibakar, txRef)</code></pre><br>
-<br>
-<b>Request JSON (<code>POST /member/payment/</code>):</b><br>
-<pre><code>{
-  "member": {
-    "uid": 155999749384776
+}
+</code></pre>
+<p><strong>Contoh Response Error (400) Jika Lupa Menyisipkan UID Member:</strong></p>
+<pre><code class="language-json">{
+  &quot;detail&quot;: &quot;Missing member information&quot;
+}
+</code></pre>
+<hr />
+<h3>C. Burn Point (Potong Poin Member)</h3>
+<p><strong>Catatan Penting:</strong> 
+1. Endpoint ini <strong>menolak</strong> penggunaan <code>Channel UID</code>. Harus mengirimkan parameter <code>store</code> lengkap dengan <code>Store UID</code> fisik dan <code>store_code</code>.
+2. Jika admin belum mengaktifkan metode Point Payment di Dashboard, akan muncul Error <code>400 Payment not configured</code>.
+3. Rasio perhitungan pemotongan di DLL sudah dikunci <code>1 Poin = 1 Rupiah</code> (Bukan dikali 1000).</p>
+<p><strong>Pemanggilan DLL:</strong></p>
+<pre><code class="language-vb">Dim pointDibakar As Decimal = 5000
+Dim txRef As String = &quot;TRX-261006090001&quot;
+Dim resp = Await goappClient.CreatePointPaymentAsync(155999749384776, pointDibakar, pointDibakar, txRef)
+</code></pre>
+<p><strong>Request JSON (<code>POST /member/payment/</code>):</strong></p>
+<pre><code class="language-json">{
+  &quot;member&quot;: {
+    &quot;uid&quot;: 155999749384776
   },
-  "amount": 5000,
-  "order_amount": 5000,
-  "order_currency": "idr",
-  "provider_ref": "TRX-261006090001",
-  "store": {
-    "uid": 138533231320136,
-    "name": "Go DimSum Bogor",
-    "store_code": "DS"
+  &quot;amount&quot;: 5000,
+  &quot;order_amount&quot;: 5000,
+  &quot;order_currency&quot;: &quot;idr&quot;,
+  &quot;provider_ref&quot;: &quot;TRX-261006090001&quot;,
+  &quot;store&quot;: {
+    &quot;uid&quot;: 138533231320136,
+    &quot;name&quot;: &quot;Go DimSum Bogor&quot;,
+    &quot;store_code&quot;: &quot;DS&quot;
   }
-}</code></pre><br>
-<br>
-<b>Contoh Response Error (400) Jika Dashboard Belum Dikonfigurasi:</b><br>
-<pre><code>{
-  "detail": "Payment for transaction type 'payment' not configured"
-}</code></pre><br>
-<br>
----<br>
-<br>
-<h3>D. Push Transaksi (Earning Point)</h3><br>
-Mencatat total transaksi ke Goapp. Perhitungan berapa poin yang didapat pelanggan <b>DIHITUNG OLEH SERVER GOAPP</b>, bukan aplikasi kasir (Misal: Batas maksimal per hari, tidak berlaku kelipatan belanja, dsb diatur di Dashboard CRM Goapp).<br>
-<br>
-<b>Pemanggilan DLL:</b><br>
-<pre><code>Dim lines As New List(Of OrderLineItem)
-lines.Add(New OrderLineItem With {.Sku = "ITEM-1", .Name = "Baju A", .Quantity = 1, .Price = 100000})
+}
+</code></pre>
+<p><strong>Contoh Response Error (400) Jika Dashboard Belum Dikonfigurasi:</strong></p>
+<pre><code class="language-json">{
+  &quot;detail&quot;: &quot;Payment for transaction type 'payment' not configured&quot;
+}
+</code></pre>
+<hr />
+<h3>D. Push Transaksi (Earning Point)</h3>
+<p>Mencatat total transaksi ke Goapp. Perhitungan berapa poin yang didapat pelanggan <strong>DIHITUNG OLEH SERVER GOAPP</strong>, bukan aplikasi kasir (Misal: Batas maksimal per hari, tidak berlaku kelipatan belanja, dsb diatur di Dashboard CRM Goapp).</p>
+<p><strong>Pemanggilan DLL:</strong></p>
+<pre><code class="language-vb">Dim lines As New List(Of OrderLineItem)
+lines.Add(New OrderLineItem With {.Sku = &quot;ITEM-1&quot;, .Name = &quot;Baju A&quot;, .Quantity = 1, .Price = 100000})
 
 ' Pembayaran bisa berisi banyak metode (Gopay, EDC, Tunai, dsb)
 Dim payments As New List(Of Object)
-payments.Add(New With { .payment_method_name = "Cash", .payment_type = "CASH", .amount = 100000 })
+payments.Add(New With { .payment_method_name = &quot;Cash&quot;, .payment_type = &quot;CASH&quot;, .amount = 100000 })
 
 Dim resp = Await goappClient.PushSalesOrderAsync(
-    orderNo:="POS-261005",
-    providerRef:="POS-261005",
+    orderNo:=&quot;POS-261005&quot;,
+    providerRef:=&quot;POS-261005&quot;,
     memberUid:=155999749384776,
-    mobileNo:="087890760858",
+    mobileNo:=&quot;087890760858&quot;,
     lines:=lines,
     payments:=payments
 )
 
 ' Baca poin yang didapat (dihitung oleh Goapp)
-Dim pointDidapat = If(resp.Data.Reward.Count &gt; 0, resp.Data.Reward(0).Amount, 0)</code></pre><br>
-<br>
-<b>Request JSON (<code>POST /sales/order/</code>):</b><br>
-<i>(Bisa menggunakan base channel (tanpa parameter <code>store</code>) jika TIDAK ADA metode pembayaran point <code>POINT</code> di dalamnya. Server Goapp akan otomatis me-mapping ke Store Default.)</i><br>
-<pre><code>{
-  "order_no": "POS-261005-165553",
-  "provider_ref": "POS-261005-165553",
-  "order_date": "2026-10-05 16:55:53+07:00",
-  "member": {
-    "uid": 155999749384776,
-    "mobile_no": "081588809090"
+Dim pointDidapat = If(resp.Data.Reward.Count &gt; 0, resp.Data.Reward(0).Amount, 0)
+</code></pre>
+<p><strong>Request JSON (<code>POST /sales/order/</code>):</strong>
+<em>(Bisa menggunakan base channel (tanpa parameter <code>store</code>) jika TIDAK ADA metode pembayaran point <code>POINT</code> di dalamnya. Server Goapp akan otomatis me-mapping ke Store Default.)</em></p>
+<pre><code class="language-json">{
+  &quot;order_no&quot;: &quot;POS-261005-165553&quot;,
+  &quot;provider_ref&quot;: &quot;POS-261005-165553&quot;,
+  &quot;order_date&quot;: &quot;2026-10-05 16:55:53+07:00&quot;,
+  &quot;member&quot;: {
+    &quot;uid&quot;: 155999749384776,
+    &quot;mobile_no&quot;: &quot;081588809090&quot;
   },
-  "lines": [
+  &quot;lines&quot;: [
     {
-      "product": {
-        "sku": "ITEM-1",
-        "name": "Baju A"
+      &quot;product&quot;: {
+        &quot;sku&quot;: &quot;ITEM-1&quot;,
+        &quot;name&quot;: &quot;Baju A&quot;
       },
-      "quantity": 1,
-      "price": 100000.0,
-      "price_before_discount": 100000.0
+      &quot;quantity&quot;: 1,
+      &quot;price&quot;: 100000.0,
+      &quot;price_before_discount&quot;: 100000.0
     }
   ],
-  "lines_total": 100000.0,
-  "lines_tax": 0.0,
-  "total_incl_tax": 100000.0,
-  "total_paid": 100000.0,
-  "payments": [
+  &quot;lines_total&quot;: 100000.0,
+  &quot;lines_tax&quot;: 0.0,
+  &quot;total_incl_tax&quot;: 100000.0,
+  &quot;total_paid&quot;: 100000.0,
+  &quot;payments&quot;: [
     {
-      "payment_method_name": "Cash",
-      "payment_type": "CASH",
-      "amount": 100000.0
+      &quot;payment_method_name&quot;: &quot;Cash&quot;,
+      &quot;payment_type&quot;: &quot;CASH&quot;,
+      &quot;amount&quot;: 100000.0
     }
   ],
-  "completed_at": "2026-10-05 16:55:53+07:00",
-  "paid_at": "2026-10-05 16:55:53+07:00"
-}</code></pre><br>
-<br>
-<b>Response JSON (Menunjukkan Member tidak dapat poin karena terkena limit dashboard / bukan kelipatan):</b><br>
-<pre><code>{
-  "order_no": "SO-000902",
-  "status": "Invalid",
-  "reward": [
+  &quot;completed_at&quot;: &quot;2026-10-05 16:55:53+07:00&quot;,
+  &quot;paid_at&quot;: &quot;2026-10-05 16:55:53+07:00&quot;
+}
+</code></pre>
+<p><strong>Response JSON (Menunjukkan Member tidak dapat poin karena terkena limit dashboard / bukan kelipatan):</strong></p>
+<pre><code class="language-json">{
+  &quot;order_no&quot;: &quot;SO-000902&quot;,
+  &quot;status&quot;: &quot;Invalid&quot;,
+  &quot;reward&quot;: [
     {
-      "amount": 0,
-      "est_new_balance": 109410.0
+      &quot;amount&quot;: 0,
+      &quot;est_new_balance&quot;: 109410.0
     }
   ]
-}</code></pre>
+}
+</code></pre>
+<h2>5. Fitur Baru &amp; Improvement Terbaru (Oktober 2026)</h2>
+<p>Beberapa pembaruan fungsional dan teknis yang telah ditambahkan ke dalam aplikasi POS:</p>
+<ol>
+<li><strong>Penambahan Data Promo/Benefit di Tab Cek Member:</strong></li>
+<li>Menampilkan promo otomatis yang dimiliki member langsung dari objek \direct_deal\ (API Get Member).</li>
+<li>
+<p>Kasir kini dapat langsung melihat nama promo dan kode redeem aktif tanpa perlu melakukan pencarian manual.</p>
+</li>
+<li>
+<p><strong>Penyempurnaan UI Validasi Voucher (Tab 2):</strong></p>
+</li>
+<li>Menambahkan kotak <strong>Raw JSON Textbox</strong> di Tab 2 (Validasi &amp; Gunakan Voucher) untuk mempermudah debugging dan pelaporan <em>request/response</em> API tanpa perlu berpindah tab.</li>
+<li>
+<p>Status Validasi Voucher yang tadinya hanya satu baris, kini diperbesar menjadi multiline untuk menampilkan rincian: <strong>Nama Deal</strong>, <strong>Deskripsi</strong>, <strong>Tipe Diskon</strong>, dan <strong>Nominal Potongan</strong>.</p>
+</li>
+<li>
+<p><strong>Modern Database Logging (SQL Server):</strong></p>
+</li>
+<li>Mengimplementasikan sistem logging <em>Asynchronous</em> ke dalam database <strong>POS_Restaurant</strong>.</li>
+<li>Setiap kali POS melakukan <em>request</em> ke API Goapp, sistem otomatis akan menyimpan riwayat interaksi di tabel [dbo].[GoappApiLog]\ secara <em>fire-and-forget</em> (tidak membuat UI freeze/lag).</li>
+<li>Atribut yang dilog meliputi:<ul>
+<li>\LogDate\ &amp; \LogDateTime\ (Tanggal &amp; Waktu presisi).</li>
+<li>\HttpMethod\ (GET/POST) &amp; \EndpointUrl.</li>
+<li>\RequestPayload\ &amp; \ResponsePayload\ (Raw JSON lengkap).</li>
+<li>\StatusCode\ &amp; \IsSuccess.</li>
+<li>\ErrorMessage\ (Pesan spesifik dari API / Exception aplikasi saat crash).</li>
+<li>\DurationMs\ (Waktu respons / Latency API dalam milidetik).</li>
+</ul>
+</li>
+</ol>
 </body>
 </html>

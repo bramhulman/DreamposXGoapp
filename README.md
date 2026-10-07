@@ -235,3 +235,25 @@ Dim pointDidapat = If(resp.Data.Reward.Count > 0, resp.Data.Reward(0).Amount, 0)
   ]
 }
 ```
+
+## 5. Fitur Baru & Improvement Terbaru (Oktober 2026)
+Beberapa pembaruan fungsional dan teknis yang telah ditambahkan ke dalam aplikasi POS:
+
+1. **Penambahan Data Promo/Benefit di Tab Cek Member:**
+   - Menampilkan promo otomatis yang dimiliki member langsung dari objek \direct_deal\ (API Get Member).
+   - Kasir kini dapat langsung melihat nama promo dan kode redeem aktif tanpa perlu melakukan pencarian manual.
+
+2. **Penyempurnaan UI Validasi Voucher (Tab 2):**
+   - Menambahkan kotak **Raw JSON Textbox** di Tab 2 (Validasi & Gunakan Voucher) untuk mempermudah debugging dan pelaporan *request/response* API tanpa perlu berpindah tab.
+   - Status Validasi Voucher yang tadinya hanya satu baris, kini diperbesar menjadi multiline untuk menampilkan rincian: **Nama Deal**, **Deskripsi**, **Tipe Diskon**, dan **Nominal Potongan**.
+
+3. **Modern Database Logging (SQL Server):**
+   - Mengimplementasikan sistem logging *Asynchronous* ke dalam database **POS_Restaurant**.
+   - Setiap kali POS melakukan *request* ke API Goapp, sistem otomatis akan menyimpan riwayat interaksi di tabel \[dbo].[GoappApiLog]\ secara *fire-and-forget* (tidak membuat UI freeze/lag).
+   - Atribut yang dilog meliputi:
+     - \LogDate\ & \LogDateTime\ (Tanggal & Waktu presisi).
+     - \HttpMethod\ (GET/POST) & \EndpointUrl\.
+     - \RequestPayload\ & \ResponsePayload\ (Raw JSON lengkap).
+     - \StatusCode\ & \IsSuccess\.
+     - \ErrorMessage\ (Pesan spesifik dari API / Exception aplikasi saat crash).
+     - \DurationMs\ (Waktu respons / Latency API dalam milidetik).

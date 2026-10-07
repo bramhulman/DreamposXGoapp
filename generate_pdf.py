@@ -1,4 +1,4 @@
-import os
+﻿import os
 from fpdf import FPDF
 
 class PDFReport(FPDF):
@@ -473,3 +473,4 @@ End If"""
 if __name__ == "__main__":
     out_file = r"D:\PCL\DreamposXGoapp\Dokumentasi_Integrasi_DreamPOS_Goapp.pdf"
     create_pdf(out_file)
+

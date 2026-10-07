@@ -1,8 +1,8 @@
-<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
+<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class FormMain
     Inherits System.Windows.Forms.Form
 
-    <System.Diagnostics.DebuggerNonUserCode()> _
+    <System.Diagnostics.DebuggerNonUserCode()>
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
@@ -306,7 +306,7 @@ Partial Class FormMain
         Me.btnGoToRegister.BackColor = System.Drawing.Color.PaleGreen
 
         Me.grpMemberResult.Location = New System.Drawing.Point(15, 55)
-        Me.grpMemberResult.Size = New System.Drawing.Size(430, 260)
+        Me.grpMemberResult.Size = New System.Drawing.Size(430, 290)
         Me.grpMemberResult.Text = "Informasi Member Goapp"
         Me.grpMemberResult.Controls.Add(Me.lblMemberName)
         Me.grpMemberResult.Controls.Add(Me.lblMemberPhone)
@@ -352,7 +352,7 @@ Partial Class FormMain
         Me.lblMemberPromo.ForeColor = System.Drawing.Color.MediumVioletRed
 
         Me.txtRawJson.Location = New System.Drawing.Point(460, 55)
-        Me.txtRawJson.Size = New System.Drawing.Size(480, 260)
+        Me.txtRawJson.Size = New System.Drawing.Size(480, 290)
         Me.txtRawJson.Multiline = True
         Me.txtRawJson.ScrollBars = System.Windows.Forms.ScrollBars.Both
         Me.txtRawJson.ReadOnly = True
