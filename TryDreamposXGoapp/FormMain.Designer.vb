@@ -43,6 +43,7 @@ Partial Class FormMain
     Friend WithEvents lblMemberPoints As System.Windows.Forms.Label
     Friend WithEvents lblMemberRupiah As System.Windows.Forms.Label
     Friend WithEvents lblMemberReferral As System.Windows.Forms.Label
+    Friend WithEvents lblMemberPromo As System.Windows.Forms.Label
     Friend WithEvents txtRawJson As System.Windows.Forms.TextBox
 
     ' Voucher Tab
@@ -54,6 +55,7 @@ Partial Class FormMain
     Friend WithEvents txtVoucherTxRef As System.Windows.Forms.TextBox
     Friend WithEvents lblVoucherTxRef As System.Windows.Forms.Label
     Friend WithEvents lblVoucherStatus As System.Windows.Forms.Label
+    Friend WithEvents txtVoucherRawJson As System.Windows.Forms.TextBox
 
     ' Transaction & Point Burn Tab
     Friend WithEvents lblBillTotal As System.Windows.Forms.Label
@@ -150,6 +152,7 @@ Partial Class FormMain
         Me.lblMemberPoints = New System.Windows.Forms.Label()
         Me.lblMemberRupiah = New System.Windows.Forms.Label()
         Me.lblMemberReferral = New System.Windows.Forms.Label()
+        Me.lblMemberPromo = New System.Windows.Forms.Label()
         Me.txtRawJson = New System.Windows.Forms.TextBox()
 
         ' Voucher Controls
@@ -161,6 +164,7 @@ Partial Class FormMain
         Me.btnUseVoucher = New System.Windows.Forms.Button()
         Me.btnCancelVoucher = New System.Windows.Forms.Button()
         Me.lblVoucherStatus = New System.Windows.Forms.Label()
+        Me.txtVoucherRawJson = New System.Windows.Forms.TextBox()
 
         ' Transaction Controls
         Me.lblBillTotal = New System.Windows.Forms.Label()
@@ -310,6 +314,7 @@ Partial Class FormMain
         Me.grpMemberResult.Controls.Add(Me.lblMemberPoints)
         Me.grpMemberResult.Controls.Add(Me.lblMemberRupiah)
         Me.grpMemberResult.Controls.Add(Me.lblMemberReferral)
+        Me.grpMemberResult.Controls.Add(Me.lblMemberPromo)
 
         Me.lblMemberName.Text = "Nama Member : -"
         Me.lblMemberName.Location = New System.Drawing.Point(15, 30)
@@ -340,6 +345,12 @@ Partial Class FormMain
         Me.lblMemberReferral.Location = New System.Drawing.Point(15, 215)
         Me.lblMemberReferral.AutoSize = True
 
+        Me.lblMemberPromo.Text = "Promo/Benefit : -"
+        Me.lblMemberPromo.Location = New System.Drawing.Point(15, 250)
+        Me.lblMemberPromo.AutoSize = True
+        Me.lblMemberPromo.Font = New System.Drawing.Font("Segoe UI", 9.0F, System.Drawing.FontStyle.Bold)
+        Me.lblMemberPromo.ForeColor = System.Drawing.Color.MediumVioletRed
+
         Me.txtRawJson.Location = New System.Drawing.Point(460, 55)
         Me.txtRawJson.Size = New System.Drawing.Size(480, 260)
         Me.txtRawJson.Multiline = True
@@ -357,6 +368,7 @@ Partial Class FormMain
         Me.tabVoucher.Controls.Add(Me.btnUseVoucher)
         Me.tabVoucher.Controls.Add(Me.btnCancelVoucher)
         Me.tabVoucher.Controls.Add(Me.lblVoucherStatus)
+        Me.tabVoucher.Controls.Add(Me.txtVoucherRawJson)
 
         Me.lblVoucherCode.Text = "Kode Voucher / Deal:"
         Me.lblVoucherCode.Location = New System.Drawing.Point(20, 25)
@@ -392,6 +404,13 @@ Partial Class FormMain
         Me.lblVoucherStatus.Size = New System.Drawing.Size(700, 60)
         Me.lblVoucherStatus.Text = "Status Voucher: Menunggu aksi pengujian..."
         Me.lblVoucherStatus.Font = New System.Drawing.Font("Segoe UI", 9.5F)
+
+        Me.txtVoucherRawJson.Location = New System.Drawing.Point(20, 180)
+        Me.txtVoucherRawJson.Size = New System.Drawing.Size(920, 200)
+        Me.txtVoucherRawJson.Multiline = True
+        Me.txtVoucherRawJson.ScrollBars = System.Windows.Forms.ScrollBars.Both
+        Me.txtVoucherRawJson.ReadOnly = True
+        Me.txtVoucherRawJson.Font = New System.Drawing.Font("Consolas", 8.5F)
 
         ' --- TAB 3: TRANSACTION & POINT BURN ---
         Me.tabTransaction.Text = "3. Transaksi POS (Burn & Earn Point)"

@@ -12,7 +12,7 @@ resp = requests.post(auth_url, json=auth_data, verify=False)
 token = resp.json().get('token')
 headers = {'Authorization': f'Token {token}'}
 
-# Let's try getting stores
-store_url = 'https://api.goapp.co.id/channel/v1/store/'
-s_resp = requests.get(store_url, headers=headers, verify=False)
-print("Stores:", s_resp.status_code, s_resp.text)
+# Get Member (Archen's UID)
+member_url = 'https://api.goapp.co.id/channel/v1/member/member/155999749384776/'
+s_resp = requests.get(member_url, headers=headers, verify=False)
+print("Member Response:", s_resp.status_code, json.dumps(s_resp.json(), indent=2))
