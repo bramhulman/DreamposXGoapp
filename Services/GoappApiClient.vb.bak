@@ -365,10 +365,6 @@ Namespace Services
 
         Private Async Function SendAuthorizedRequestAsync(Of T)(method As HttpMethod, url As String, Optional payload As Object = Nothing, Optional retryOn401 As Boolean = True) As Task(Of ApiResponse(Of T))
             Dim result As New ApiResponse(Of T)()
-            Dim sw = System.Diagnostics.Stopwatch.StartNew()
-            Dim requestJson As String = ""
-            Dim responseJson As String = ""
-            Dim errMsgForLog As String = ""
 
             Try
                 Dim token = Await GetValidTokenAsync()
@@ -376,14 +372,14 @@ Namespace Services
                 request.Headers.Authorization = New AuthenticationHeaderValue("Bearer", token)
 
                 If payload IsNot Nothing Then
-                    requestJson = JsonConvert.SerializeObject(payload)
-                    request.Content = New StringContent(requestJson, Encoding.UTF8, "application/json")
+                    Dim json = JsonConvert.SerializeObject(payload)
+                    request.Content = New StringContent(json, Encoding.UTF8, "application/json")
                 End If
 
                 Dim response = Await _httpClient.SendAsync(request)
-                responseJson = Await response.Content.ReadAsStringAsync()
+                Dim resContent = Await response.Content.ReadAsStringAsync()
                 result.StatusCode = CInt(response.StatusCode)
-                result.RawJson = responseJson
+                result.RawJson = resContent
 
                 ' Jika token kadaluarsa (401 Unauthorized), auto-refresh token dan ulangi 1 kali
                 If response.StatusCode = HttpStatusCode.Unauthorized AndAlso retryOn401 Then
@@ -394,8 +390,8 @@ Namespace Services
 
                 If response.IsSuccessStatusCode Then
                     result.IsSuccess = True
-                    If Not String.IsNullOrWhiteSpace(responseJson) Then
-                        result.Data = JsonConvert.DeserializeObject(Of T)(responseJson)
+                    If Not String.IsNullOrWhiteSpace(resContent) Then
+                        result.Data = JsonConvert.DeserializeObject(Of T)(resContent)
                     End If
                     result.Message = "OK"
                 Else
@@ -403,7 +399,7 @@ Namespace Services
                     ' Coba ekstrak pesan error dari JSON Goapp jika ada field 'detail' atau 'message'
                     Dim errMsg = response.ReasonPhrase
                     Try
-                        Dim jObj = JObject.Parse(responseJson)
+                        Dim jObj = JObject.Parse(resContent)
                         If jObj("detail") IsNot Nothing Then
                             errMsg = jObj("detail").ToString()
                         ElseIf jObj("message") IsNot Nothing Then
@@ -412,19 +408,13 @@ Namespace Services
                     Catch
                     End Try
                     result.Message = $"[{result.StatusCode}] {errMsg}"
-                    errMsgForLog = result.Message
                 End If
 
             Catch ex As Exception
                 result.IsSuccess = False
                 result.StatusCode = 0
                 result.Message = $"Exception: {ex.Message}"
-                errMsgForLog = ex.Message
                 Log($"HTTP Request Error ({url}): {ex.Message}")
-            Finally
-                sw.Stop()
-                ' Log to Database asynchronously (fire and forget)
-                Dim _ = _dbLogger.LogApiAsync(method.Method, url, requestJson, responseJson, result.StatusCode, result.IsSuccess, errMsgForLog, CInt(sw.ElapsedMilliseconds))
             End Try
 
             Return result

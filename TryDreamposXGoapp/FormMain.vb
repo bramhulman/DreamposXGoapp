@@ -257,13 +257,14 @@ Public Class FormMain
 
             If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
                 Dim v = resp.Data
-                Dim infoMsg = $"VOUCHER VALID!{Environment.NewLine}Nama: {v.Name}{Environment.NewLine}Tipe Diskon: {v.DiscountType}{Environment.NewLine}Nominal Potongan: {v.DiscountAmount:N0}"
+                Dim desc = If(String.IsNullOrEmpty(v.Description), "-", v.Description)
+                Dim infoMsg = $"VOUCHER VALID!{Environment.NewLine}Nama: {v.Name}{Environment.NewLine}Deskripsi: {desc}{Environment.NewLine}Tipe Diskon: {v.DiscountType}{Environment.NewLine}Nominal Potongan: {v.DiscountAmount:N0}"
                 
-                lblVoucherStatus.Text = $"Status: VALID - {v.Name} ({v.DiscountAmount:N0})"
+                lblVoucherStatus.Text = $"Status: VALID{Environment.NewLine}• Nama Deal: {v.Name}{Environment.NewLine}• Deskripsi: {desc}{Environment.NewLine}• Tipe: {v.DiscountType} ({v.DiscountAmount:N0})"
                 lblVoucherStatus.ForeColor = Color.DarkGreen
                 
                 MessageBox.Show(infoMsg, "Detail Voucher", MessageBoxButtons.OK, MessageBoxIcon.Information)
-                txtRawJson.Text = FormatJson(resp.RawJson)
+                txtVoucherRawJson.Text = FormatJson(resp.RawJson)
             Else
                 lblVoucherStatus.Text = $"Status: Voucher TIDAK VALID! ({resp.Message})"
                 lblVoucherStatus.ForeColor = Color.Red
@@ -300,7 +301,7 @@ Public Class FormMain
                 lblVoucherStatus.ForeColor = Color.Red
                 MessageBox.Show($"Voucher gagal diterapkan:{Environment.NewLine}{resp.Message}", "Gagal", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End If
-            txtRawJson.Text = FormatJson(resp.RawJson)
+            txtVoucherRawJson.Text = FormatJson(resp.RawJson)
         Finally
             btnUseVoucher.Enabled = True
         End Try
@@ -332,7 +333,7 @@ Public Class FormMain
                 lblVoucherStatus.ForeColor = Color.Red
                 MessageBox.Show($"Pembatalan voucher gagal:{Environment.NewLine}{resp.Message}", "Gagal Void", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End If
-            txtRawJson.Text = FormatJson(resp.RawJson)
+            txtVoucherRawJson.Text = FormatJson(resp.RawJson)
         Finally
             btnCancelVoucher.Enabled = True
         End Try

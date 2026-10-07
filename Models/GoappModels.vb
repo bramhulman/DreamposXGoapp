@@ -281,6 +281,9 @@ Namespace Models
 
         <JsonProperty("detail")>
         Public Property Detail As String
+
+        <JsonProperty("description")>
+        Public Property Description As String
     End Class
 
     Public Class VoucherCancelRequest

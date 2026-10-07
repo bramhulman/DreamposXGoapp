@@ -400,13 +400,13 @@ Partial Class FormMain
         Me.btnCancelVoucher.Size = New System.Drawing.Size(180, 27)
         Me.btnCancelVoucher.BackColor = System.Drawing.Color.LightPink
 
-        Me.lblVoucherStatus.Location = New System.Drawing.Point(20, 115)
-        Me.lblVoucherStatus.Size = New System.Drawing.Size(700, 60)
+        Me.lblVoucherStatus.Location = New System.Drawing.Point(20, 110)
+        Me.lblVoucherStatus.Size = New System.Drawing.Size(700, 105)
         Me.lblVoucherStatus.Text = "Status Voucher: Menunggu aksi pengujian..."
         Me.lblVoucherStatus.Font = New System.Drawing.Font("Segoe UI", 9.5F)
 
-        Me.txtVoucherRawJson.Location = New System.Drawing.Point(20, 180)
-        Me.txtVoucherRawJson.Size = New System.Drawing.Size(920, 200)
+        Me.txtVoucherRawJson.Location = New System.Drawing.Point(20, 220)
+        Me.txtVoucherRawJson.Size = New System.Drawing.Size(920, 160)
         Me.txtVoucherRawJson.Multiline = True
         Me.txtVoucherRawJson.ScrollBars = System.Windows.Forms.ScrollBars.Both
         Me.txtVoucherRawJson.ReadOnly = True

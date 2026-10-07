@@ -70,6 +70,7 @@
     <Compile Include="Class1.vb" />
     <Compile Include="Models\GoappConfig.vb" />
     <Compile Include="Models\GoappModels.vb" />
+    <Compile Include="Services\DatabaseLogger.vb" />
     <Compile Include="Services\GoappApiClient.vb" />
     <Compile Include="Services\ReceiptGenerator.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
