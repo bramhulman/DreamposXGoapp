@@ -1,4 +1,4 @@
-﻿import os
+import os
 from fpdf import FPDF
 
 class PDFReport(FPDF):
