@@ -424,7 +424,7 @@ Namespace Services
             Finally
                 sw.Stop()
                 ' Log to Database asynchronously (fire and forget)
-                Dim _ = _dbLogger.LogApiAsync(method.Method, url, requestJson, responseJson, result.StatusCode, result.IsSuccess, errMsgForLog, CInt(sw.ElapsedMilliseconds))
+                Dim logTask = _dbLogger.LogApiAsync(method.Method, url, requestJson, responseJson, result.StatusCode, result.IsSuccess, errMsgForLog, CInt(sw.ElapsedMilliseconds))
             End Try
 
             Return result
