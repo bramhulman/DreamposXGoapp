@@ -782,5 +782,16 @@ Public Class FormMain
         End Try
     End Function
 
+    Private Sub lblMemberReferral_Click(sender As Object, e As EventArgs) Handles lblMemberReferral.Click
+
+    End Sub
+
+    Private Sub lblMemberRupiah_Click(sender As Object, e As EventArgs) Handles lblMemberRupiah.Click
+
+    End Sub
+
+    Private Sub lblMemberPoints_Click(sender As Object, e As EventArgs) Handles lblMemberPoints.Click
+
+    End Sub
 End Class
 
