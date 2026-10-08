@@ -1,4 +1,4 @@
-Imports System.Collections.Generic
+﻿Imports System.Collections.Generic
 Imports Newtonsoft.Json
 
 Namespace Models
@@ -519,4 +519,17 @@ Namespace Models
         <JsonProperty("est_new_balance")>
         Public Property EstNewBalance As Decimal ' Estimasi saldo poin baru
     End Class
+
+    Public Class MemberDealCodeResponse
+        <JsonProperty("id")>
+        Public Property Id As Long
+
+        <JsonProperty("code")>
+        Public Property Code As String
+
+        <JsonProperty("deal")>
+        Public Property Deal As DirectDealInfo
+    End Class
+
 End Namespace
+

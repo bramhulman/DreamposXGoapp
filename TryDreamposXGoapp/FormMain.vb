@@ -1,4 +1,4 @@
-Imports System
+﻿Imports System
 Imports System.Collections.Generic
 Imports System.Drawing
 Imports System.Threading.Tasks
@@ -204,6 +204,19 @@ Public Class FormMain
                 ' Promo logic removed
 
                 ' Tampilkan raw JSON response di box sebelah kanan
+                                ' Load Member Deal Codes
+                lstMemberPromos.Items.Clear()
+                Dim dealResp = Await _client.GetMemberDealCodesAsync(txtInputMember.Text)
+                If dealResp.IsSuccess AndAlso dealResp.Data IsNot Nothing AndAlso dealResp.Data.Count > 0 Then
+                    lstMemberPromos.Items.Add($"Ada {dealResp.Data.Count} Benefit Aktif:")
+                    For Each v In dealResp.Data
+                        Dim dealName = If(v.Deal IsNot Nothing AndAlso Not String.IsNullOrEmpty(v.Deal.Name), v.Deal.Name, "-")
+                        lstMemberPromos.Items.Add($"- [{v.Code}] {dealName}")
+                    Next
+                Else
+                    lstMemberPromos.Items.Add("Belum ada benefit / promo aktif.")
+                End If
+
                 txtRawJson.Text = FormatJson(response.RawJson)
 
                 AppendLog($"[SUCCESS] Member {_currentMember.FullName} berhasil divalidasi. Poin aktif: {_currentMember.AvailablePoints}")
@@ -255,7 +268,7 @@ Public Class FormMain
                 Dim desc = If(String.IsNullOrEmpty(v.Description), "-", v.Description)
                 Dim infoMsg = $"VOUCHER VALID!{Environment.NewLine}Nama: {v.Name}{Environment.NewLine}Deskripsi: {desc}{Environment.NewLine}Tipe Diskon: {v.DiscountType}{Environment.NewLine}Nominal Potongan: {v.DiscountAmount:N0}"
                 
-                lblVoucherStatus.Text = $"Status: VALID{Environment.NewLine}• Nama Deal: {v.Name}{Environment.NewLine}• Deskripsi: {desc}{Environment.NewLine}• Tipe: {v.DiscountType} ({v.DiscountAmount:N0})"
+                lblVoucherStatus.Text = $"Status: VALID{Environment.NewLine}â€¢ Nama Deal: {v.Name}{Environment.NewLine}â€¢ Deskripsi: {desc}{Environment.NewLine}â€¢ Tipe: {v.DiscountType} ({v.DiscountAmount:N0})"
                 lblVoucherStatus.ForeColor = Color.DarkGreen
                 
                 MessageBox.Show(infoMsg, "Detail Voucher", MessageBoxButtons.OK, MessageBoxIcon.Information)
@@ -770,3 +783,4 @@ Public Class FormMain
     End Function
 
 End Class
+

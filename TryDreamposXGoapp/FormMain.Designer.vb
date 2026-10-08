@@ -1,4 +1,4 @@
-<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
+﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class FormMain
     Inherits System.Windows.Forms.Form
 
@@ -45,6 +45,7 @@ Partial Class FormMain
     Friend WithEvents lblMemberReferral As System.Windows.Forms.Label
 
     Friend WithEvents txtRawJson As System.Windows.Forms.TextBox
+    Friend WithEvents lstMemberPromos As System.Windows.Forms.ListBox
 
     ' Voucher Tab
     Friend WithEvents lblVoucherCode As System.Windows.Forms.Label
@@ -154,6 +155,7 @@ Partial Class FormMain
         Me.lblMemberReferral = New System.Windows.Forms.Label()
 
         Me.txtRawJson = New System.Windows.Forms.TextBox()
+        Me.lstMemberPromos = New System.Windows.Forms.ListBox()
 
         ' Voucher Controls
         Me.lblVoucherCode = New System.Windows.Forms.Label()
@@ -269,7 +271,7 @@ Partial Class FormMain
 
         ' tabControl
         Me.tabControl.Location = New System.Drawing.Point(12, 85)
-        Me.tabControl.Size = New System.Drawing.Size(960, 360)
+        Me.tabControl.Size = New System.Drawing.Size(960, 480)
         Me.tabControl.Controls.Add(Me.tabMember)
         Me.tabControl.Controls.Add(Me.tabVoucher)
         Me.tabControl.Controls.Add(Me.tabTransaction)
@@ -314,6 +316,7 @@ Partial Class FormMain
         Me.grpMemberResult.Controls.Add(Me.lblMemberPoints)
         Me.grpMemberResult.Controls.Add(Me.lblMemberRupiah)
         Me.grpMemberResult.Controls.Add(Me.lblMemberReferral)
+        Me.grpMemberResult.Controls.Add(Me.lstMemberPromos)
 
 
         Me.lblMemberName.Text = "Nama Member : -"
@@ -344,6 +347,10 @@ Partial Class FormMain
         Me.lblMemberReferral.Text = "Referral Code : -"
         Me.lblMemberReferral.Location = New System.Drawing.Point(15, 215)
         Me.lblMemberReferral.AutoSize = True
+
+        Me.lstMemberPromos.FormattingEnabled = True
+        Me.lstMemberPromos.Location = New System.Drawing.Point(15, 250)
+        Me.lstMemberPromos.Size = New System.Drawing.Size(400, 121)
 
         Me.txtRawJson.Location = New System.Drawing.Point(460, 55)
         Me.txtRawJson.Size = New System.Drawing.Size(480, 290)
@@ -703,7 +710,7 @@ Partial Class FormMain
         Me.lblCancelVoucherStatus.Size = New System.Drawing.Size(420, 30)
 
         ' grpLogs
-        Me.grpLogs.Location = New System.Drawing.Point(12, 455)
+        Me.grpLogs.Location = New System.Drawing.Point(12, 575)
         Me.grpLogs.Size = New System.Drawing.Size(960, 190)
         Me.grpLogs.Text = "Live Activity & Integration Logs"
         Me.grpLogs.Controls.Add(Me.txtLogs)
@@ -723,7 +730,7 @@ Partial Class FormMain
         ' FormMain properties
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0F, 15.0F)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(984, 655)
+        Me.ClientSize = New System.Drawing.Size(984, 775)
         Me.Controls.Add(Me.grpAuth)
         Me.Controls.Add(Me.tabControl)
         Me.Controls.Add(Me.grpLogs)
@@ -736,3 +743,5 @@ Partial Class FormMain
 
     End Sub
 End Class
+
+

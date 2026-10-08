@@ -257,3 +257,10 @@ Beberapa pembaruan fungsional dan teknis yang telah ditambahkan ke dalam aplikas
      - \StatusCode\ & \IsSuccess\.
      - \ErrorMessage\ (Pesan spesifik dari API / Exception aplikasi saat crash).
      - \DurationMs\ (Waktu respons / Latency API dalam milidetik).
+
+
+## 6. Update Ekstra (List Benefit Member)
+1. **Fitur Cek Benefit/Promo Member (Tab 1)**
+   - Mengimplementasikan pemanggilan API baru yaitu GET /member/member/{id}/deal_codes/?status=not_used.
+   - API ini dipanggil secara transparan dan asinkron tepat setelah data utama member berhasil diambil.
+   - Semua benefit dan promo (seperti voucher diskon atau free item) yang dimiliki oleh member tersebut akan langsung dirender ke dalam ListBox, mempermudah kasir menginformasikan penawaran yang tersedia kepada pelanggan.

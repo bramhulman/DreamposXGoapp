@@ -1,4 +1,4 @@
-Imports System
+﻿Imports System
 Imports System.Collections.Generic
 Imports System.Net
 Imports System.Net.Http
@@ -185,6 +185,19 @@ Namespace Services
         Public Async Function GetAvailableDealsAsync() As Task(Of ApiResponse(Of List(Of DirectDealInfo)))
             Dim url = $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/member/deal/"
             Return Await SendAuthorizedRequestAsync(Of List(Of DirectDealInfo))(HttpMethod.Get, url)
+        End Function
+
+        ''' <summary>
+        ''' Mengambil daftar voucher/deal code aktif milik spesifik member
+        ''' </summary>
+        Public Async Function GetMemberDealCodesAsync(mobileNoOrMemberId As String) As Task(Of ApiResponse(Of List(Of MemberDealCodeResponse)))
+            If String.IsNullOrWhiteSpace(mobileNoOrMemberId) Then
+                Return New ApiResponse(Of List(Of MemberDealCodeResponse)) With {.IsSuccess = False, .Message = "No HP / Member ID tidak boleh kosong."}
+            End If
+
+            Dim cleanParam = mobileNoOrMemberId.Trim()
+            Dim url = $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/member/member/{System.Net.WebUtility.UrlEncode(cleanParam)}/deal_codes/?status=not_used"
+            Return Await SendAuthorizedRequestAsync(Of List(Of MemberDealCodeResponse))(System.Net.Http.HttpMethod.Get, url)
         End Function
 
 #End Region
@@ -434,3 +447,6 @@ Namespace Services
 
     End Class
 End Namespace
+
+
+
