@@ -485,8 +485,8 @@ Public Class FormMain
 
             If pay2Amount > 0 Then
                 orderReq.Payments.Add(New OrderPaymentItem With {
-                    .PaymentMethodName = "Gopay",
-                    .PaymentType = "EWALLET",
+                    .PaymentMethodName = "Tunai",
+                    .PaymentType = "CASH",
                     .Amount = pay2Amount
                 })
             End If
@@ -794,4 +794,5 @@ Public Class FormMain
 
     End Sub
 End Class
+
 
