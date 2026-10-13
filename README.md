@@ -1,4 +1,4 @@
-# Dokumentasi Integrasi API Goapp CRM x DreamPOS
+﻿# Dokumentasi Integrasi API Goapp CRM x DreamPOS
 
 Dokumen ini berisi panduan teknis, contoh kode (cara pemanggilan `.dll`), dan *raw* JSON (Request & Response) berdasarkan hasil pengujian integrasi antara DreamPOS dan backend Goapp CRM.
 
@@ -247,16 +247,21 @@ Beberapa pembaruan fungsional dan teknis yang telah ditambahkan ke dalam aplikas
    - Menambahkan kotak **Raw JSON Textbox** di Tab 2 (Validasi & Gunakan Voucher) untuk mempermudah debugging dan pelaporan *request/response* API tanpa perlu berpindah tab.
    - Status Validasi Voucher yang tadinya hanya satu baris, kini diperbesar menjadi multiline untuk menampilkan rincian: **Nama Deal**, **Deskripsi**, **Tipe Diskon**, dan **Nominal Potongan**.
 
-3. **Modern Database Logging (SQL Server):**
-   - Mengimplementasikan sistem logging *Asynchronous* ke dalam database **POS_Restaurant**.
-   - Setiap kali POS melakukan *request* ke API Goapp, sistem otomatis akan menyimpan riwayat interaksi di tabel \[dbo].[GoappApiLog]\ secara *fire-and-forget* (tidak membuat UI freeze/lag).
+3. **Modern Database Logging (SQL Server - Bebas Hardcode):**
+   - Mengimplementasikan sistem logging *Asynchronous* ke dalam database SQL Server.
+   - **Bebas Hardcode di DLL:** File .dll (DreamposXGoapp.dll) sama sekali tidak menyimpan kredensial atau connection string database secara statis.
+   - Fleksibilitas konfigurasi:
+     - **Metode 1 (Inject via Kode):** Pemanggil dapat mengoper connection string aktifnya langsung via GoappConfig.DbConnectionString atau properti client.DbConnectionString.
+     - **Metode 2 (App.config / Web.config):** Jika tidak diisi di kode, DLL otomatis membaca connection string dari file konfigurasi pemanggil (<connectionStrings><add name="POSDatabase" .../></connectionStrings>).
+     - **Metode 3 (Custom Table Name):** Nama tabel dapat disesuaikan via GoappConfig.LogTableName (default: [dbo].[GoappApiLog]).
+     - **Safety:** Jika koneksi DB tidak diisi atau database offline, logging akan di-skip secara graceful tanpa memicu exception ke transaksi POS.
    - Atribut yang dilog meliputi:
-     - \LogDate\ & \LogDateTime\ (Tanggal & Waktu presisi).
-     - \HttpMethod\ (GET/POST) & \EndpointUrl\.
-     - \RequestPayload\ & \ResponsePayload\ (Raw JSON lengkap).
-     - \StatusCode\ & \IsSuccess\.
-     - \ErrorMessage\ (Pesan spesifik dari API / Exception aplikasi saat crash).
-     - \DurationMs\ (Waktu respons / Latency API dalam milidetik).
+     - LogDate & LogDateTime (Tanggal & Waktu presisi).
+     - HttpMethod (GET/POST) & EndpointUrl.
+     - RequestPayload & ResponsePayload (Raw JSON lengkap).
+     - StatusCode & IsSuccess.
+     - ErrorMessage (Pesan spesifik dari API / Exception aplikasi saat crash).
+     - DurationMs (Waktu respons / Latency API dalam milidetik).
 
 
 ## 6. Update Ekstra (List Benefit Member)
@@ -264,3 +269,4 @@ Beberapa pembaruan fungsional dan teknis yang telah ditambahkan ke dalam aplikas
    - Mengimplementasikan pemanggilan API baru yaitu GET /member/member/{id}/deal_codes/?status=not_used.
    - API ini dipanggil secara transparan dan asinkron tepat setelah data utama member berhasil diambil.
    - Semua benefit dan promo (seperti voucher diskon atau free item) yang dimiliki oleh member tersebut akan langsung dirender ke dalam ListBox, mempermudah kasir menginformasikan penawaran yang tersedia kepada pelanggan.
+

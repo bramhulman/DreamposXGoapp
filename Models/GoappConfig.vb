@@ -40,6 +40,23 @@ Namespace Models
         Public Property RetryDelayMilliseconds As Integer = 1000
 
         ''' <summary>
+        ''' Connection string database SQL Server untuk logging request/response API.
+        ''' Jika diisi, nilai ini akan langsung dipakai oleh DLL tanpa membaca App.config.
+        ''' Sangat disarankan agar aplikasi POS (DreamPOS) mengoper connection string aktifnya ke properti ini.
+        ''' </summary>
+        Public Property DbConnectionString As String = String.Empty
+
+        ''' <summary>
+        ''' Nama key ConnectionString di App.config pemanggil jika DbConnectionString tidak diisi langsung di kode. Default: "POSDatabase".
+        ''' </summary>
+        Public Property DbConnectionStringName As String = "POSDatabase"
+
+        ''' <summary>
+        ''' Nama tabel SQL Server untuk log API. Default: "[dbo].[GoappApiLog]".
+        ''' </summary>
+        Public Property LogTableName As String = "[dbo].[GoappApiLog]"
+
+        ''' <summary>
         ''' Validasi bahwa semua field wajib sudah diisi sebelum digunakan.
         ''' Lemparkan InvalidOperationException jika ada yang kosong/nol.
         ''' </summary>

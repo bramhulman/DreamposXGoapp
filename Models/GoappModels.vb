@@ -1,5 +1,6 @@
-﻿Imports System.Collections.Generic
+Imports System.Collections.Generic
 Imports Newtonsoft.Json
+Imports Newtonsoft.Json.Linq
 
 Namespace Models
     ''' <summary>
@@ -210,21 +211,184 @@ Namespace Models
         Public Property RewardData As RewardDataInfo
     End Class
 
+    Public Class RewardRuleInfo
+        <JsonProperty("min_purchase")>
+        Public Property MinPurchase As Decimal?
+
+        <JsonExtensionData>
+        Public Property AdditionalData As Dictionary(Of String, JToken)
+    End Class
+
+    Public Class RewardDetailInfo
+        <JsonProperty("apply_to")>
+        Public Property ApplyTo As String
+
+        <JsonProperty("discount_amount_type")>
+        Public Property DiscountAmountType As String
+
+        <JsonProperty("discount_amount")>
+        Public Property DiscountAmount As Decimal?
+
+        <JsonProperty("discount_max_amount")>
+        Public Property DiscountMaxAmount As Decimal?
+
+        <JsonExtensionData>
+        Public Property AdditionalData As Dictionary(Of String, JToken)
+    End Class
+
+    Public Class RewardItemInfo
+        <JsonProperty("skus")>
+        Public Property Skus As List(Of String)
+
+        <JsonProperty("quantity")>
+        Public Property Quantity As Integer?
+
+        <JsonExtensionData>
+        Public Property AdditionalData As Dictionary(Of String, JToken)
+    End Class
+
     Public Class RewardDataInfo
         <JsonProperty("name")>
         Public Property Name As String
 
         <JsonProperty("discount_type")>
-        Public Property DiscountType As String ' percentage / amount / free_item
+        Public Property DiscountType As String ' percentage / amount / free_items
 
         <JsonProperty("discount_amount")>
-        Public Property DiscountAmount As Decimal
+        Public Property DiscountAmount As Decimal?
 
         <JsonProperty("min_purchase")>
-        Public Property MinPurchase As Decimal
+        Public Property MinPurchase As Decimal?
 
         <JsonProperty("products")>
         Public Property Products As List(Of String)
+
+        <JsonProperty("rule")>
+        Public Property Rule As RewardRuleInfo
+
+        <JsonProperty("reward")>
+        Public Property Reward As RewardDetailInfo
+
+        <JsonProperty("item")>
+        Public Property Item As RewardItemInfo
+
+        <JsonExtensionData>
+        Public Property AdditionalData As Dictionary(Of String, JToken)
+
+        Public ReadOnly Property EffectiveDiscountType As String
+            Get
+                If Reward IsNot Nothing AndAlso Not String.IsNullOrEmpty(Reward.DiscountAmountType) Then
+                    Return Reward.DiscountAmountType
+                End If
+                Return If(String.IsNullOrEmpty(DiscountType), "-", DiscountType)
+            End Get
+        End Property
+
+        Public ReadOnly Property EffectiveDiscountAmount As Decimal
+            Get
+                If Reward IsNot Nothing AndAlso Reward.DiscountAmount.HasValue Then
+                    Return Reward.DiscountAmount.Value
+                End If
+                Return DiscountAmount.GetValueOrDefault(0D)
+            End Get
+        End Property
+
+        Public ReadOnly Property EffectiveMinPurchase As Decimal
+            Get
+                If Rule IsNot Nothing AndAlso Rule.MinPurchase.HasValue Then
+                    Return Rule.MinPurchase.Value
+                End If
+                Return MinPurchase.GetValueOrDefault(0D)
+            End Get
+        End Property
+
+        Public ReadOnly Property EffectiveDiscountMaxAmount As Decimal?
+            Get
+                If Reward IsNot Nothing AndAlso Reward.DiscountMaxAmount.HasValue Then
+                    Return Reward.DiscountMaxAmount.Value
+                End If
+                Return Nothing
+            End Get
+        End Property
+
+        Public ReadOnly Property EffectiveApplyTo As String
+            Get
+                If Reward IsNot Nothing AndAlso Not String.IsNullOrEmpty(Reward.ApplyTo) Then
+                    Return Reward.ApplyTo
+                End If
+                Return "-"
+            End Get
+        End Property
+
+        Public ReadOnly Property EffectiveItemSkus As String
+            Get
+                If Item IsNot Nothing AndAlso Item.Skus IsNot Nothing AndAlso Item.Skus.Count > 0 Then
+                    Return String.Join(", ", Item.Skus)
+                End If
+                Return "-"
+            End Get
+        End Property
+
+        Public ReadOnly Property EffectiveItemQuantity As Integer
+            Get
+                If Item IsNot Nothing AndAlso Item.Quantity.HasValue Then
+                    Return Item.Quantity.Value
+                End If
+                Return 0
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' Menghasilkan daftar detail setiap variable di dalam objek reward_data secara lengkap
+        ''' </summary>
+        Public Function GetDetailLines() As List(Of String)
+            Dim lines As New List(Of String)()
+            lines.Add($"• discount_type : {If(String.IsNullOrEmpty(DiscountType), "-", DiscountType)}")
+
+            ' Nilai Diskon
+            Dim discVal = EffectiveDiscountAmount
+            If EffectiveDiscountType.ToLower().Contains("percent") Then
+                Dim pct = If(discVal <= 1D, discVal * 100D, discVal)
+                lines.Add($"• discount_amount : {pct:N0}% (nilai asli: {discVal})")
+            Else
+                lines.Add($"• discount_amount : Rp {discVal:N0}")
+            End If
+
+            ' Minimal Pembelian
+            lines.Add($"• min_purchase : Rp {EffectiveMinPurchase:N0}")
+
+            ' Maksimal Diskon
+            If EffectiveDiscountMaxAmount.HasValue Then
+                lines.Add($"• discount_max_amount : Rp {EffectiveDiscountMaxAmount.Value:N0}")
+            Else
+                lines.Add("• discount_max_amount : (Tidak ada batas / Unlimited)")
+            End If
+
+            ' Apply To
+            If EffectiveApplyTo <> "-" Then
+                lines.Add($"• apply_to : {EffectiveApplyTo}")
+            End If
+
+            ' Free Item / SKU
+            If EffectiveItemSkus <> "-" Then
+                lines.Add($"• free_items (skus) : {EffectiveItemSkus}")
+                lines.Add($"• free_items (qty) : {EffectiveItemQuantity}")
+            End If
+
+            ' Products
+            If Products IsNot Nothing AndAlso Products.Count > 0 Then
+                lines.Add($"• products : {String.Join(", ", Products)}")
+            End If
+
+            ' Additional raw fields jika ada custom data lain
+            If AdditionalData IsNot Nothing AndAlso AdditionalData.Count > 0 Then
+                For Each kvp In AdditionalData
+                    lines.Add($"• [extra] {kvp.Key} : {kvp.Value}")
+                Next
+            End If
+
+            Return lines
+        End Function
     End Class
 
     ''' <summary>
@@ -258,20 +422,47 @@ Namespace Models
     End Class
 
     Public Class VoucherResult
+        Private _dealCodeProp As String
+        Private _explicitName As String
+        Private _explicitDescription As String
+        Private _explicitDiscountType As String
+        Private _explicitDiscountAmount As Decimal
+
+        <JsonProperty("id")>
+        Public Property Id As Long
+
         <JsonProperty("uid")>
         Public Property Uid As Long
 
+        <JsonProperty("code")>
+        Public Property Code As String
+
         <JsonProperty("deal_code")>
+        Public Property DealCodeProp As String
+            Get
+                Return _dealCodeProp
+            End Get
+            Set(value As String)
+                _dealCodeProp = value
+            End Set
+        End Property
+
         Public Property DealCode As String
+            Get
+                If Not String.IsNullOrEmpty(Code) Then Return Code
+                Return _dealCodeProp
+            End Get
+            Set(value As String)
+                _dealCodeProp = value
+                Code = value
+            End Set
+        End Property
 
-        <JsonProperty("name")>
-        Public Property Name As String
+        <JsonProperty("deal")>
+        Public Property Deal As DirectDealInfo
 
-        <JsonProperty("discount_type")>
-        Public Property DiscountType As String
-
-        <JsonProperty("discount_amount")>
-        Public Property DiscountAmount As Decimal
+        <JsonProperty("status_code")>
+        Public Property StatusCode As String
 
         <JsonProperty("status")>
         Public Property Status As String
@@ -279,8 +470,99 @@ Namespace Models
         <JsonProperty("detail")>
         Public Property Detail As String
 
+        <JsonProperty("name")>
+        Public Property ExplicitName As String
+            Get
+                Return _explicitName
+            End Get
+            Set(value As String)
+                _explicitName = value
+            End Set
+        End Property
+
+        Public Property Name As String
+            Get
+                If Deal IsNot Nothing AndAlso Not String.IsNullOrEmpty(Deal.Name) Then Return Deal.Name
+                Return _explicitName
+            End Get
+            Set(value As String)
+                _explicitName = value
+            End Set
+        End Property
+
         <JsonProperty("description")>
+        Public Property ExplicitDescription As String
+            Get
+                Return _explicitDescription
+            End Get
+            Set(value As String)
+                _explicitDescription = value
+            End Set
+        End Property
+
         Public Property Description As String
+            Get
+                If Deal IsNot Nothing AndAlso Not String.IsNullOrEmpty(Deal.Description) Then Return Deal.Description
+                Return _explicitDescription
+            End Get
+            Set(value As String)
+                _explicitDescription = value
+            End Set
+        End Property
+
+        <JsonProperty("discount_type")>
+        Public Property ExplicitDiscountType As String
+            Get
+                Return _explicitDiscountType
+            End Get
+            Set(value As String)
+                _explicitDiscountType = value
+            End Set
+        End Property
+
+        Public Property DiscountType As String
+            Get
+                If Deal IsNot Nothing AndAlso Deal.RewardData IsNot Nothing AndAlso Not String.IsNullOrEmpty(Deal.RewardData.EffectiveDiscountType) Then
+                    Return Deal.RewardData.EffectiveDiscountType
+                End If
+                Return _explicitDiscountType
+            End Get
+            Set(value As String)
+                _explicitDiscountType = value
+            End Set
+        End Property
+
+        <JsonProperty("discount_amount")>
+        Public Property ExplicitDiscountAmount As Decimal
+            Get
+                Return _explicitDiscountAmount
+            End Get
+            Set(value As Decimal)
+                _explicitDiscountAmount = value
+            End Set
+        End Property
+
+        Public Property DiscountAmount As Decimal
+            Get
+                If Deal IsNot Nothing AndAlso Deal.RewardData IsNot Nothing Then
+                    Return Deal.RewardData.EffectiveDiscountAmount
+                End If
+                Return _explicitDiscountAmount
+            End Get
+            Set(value As Decimal)
+                _explicitDiscountAmount = value
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' Objek reward_data utama milik voucher (dari Deal.RewardData)
+        ''' </summary>
+        Public ReadOnly Property RewardData As RewardDataInfo
+            Get
+                If Deal IsNot Nothing Then Return Deal.RewardData
+                Return Nothing
+            End Get
+        End Property
     End Class
 
     Public Class VoucherCancelRequest

@@ -1,4 +1,4 @@
-﻿Imports System
+Imports System
 Imports System.Collections.Generic
 Imports System.Net
 Imports System.Net.Http
@@ -20,7 +20,7 @@ Namespace Services
         Private ReadOnly _config As GoappConfig
         Private ReadOnly _httpClient As HttpClient
         Private ReadOnly _tokenLock As New SemaphoreSlim(1, 1)
-        Private ReadOnly _dbLogger As New DatabaseLogger()
+        Private ReadOnly _dbLogger As DatabaseLogger
 
         Private _cachedToken As String = String.Empty
         Private _tokenExpiryEpoch As Double = 0
@@ -30,8 +30,36 @@ Namespace Services
         ''' </summary>
         Public Event OnLog(message As String)
 
+        ''' <summary>
+        ''' Connection string database SQL Server untuk logging API.
+        ''' Dapat diisi atau diubah kapan saja secara dinamis oleh aplikasi POS tanpa bergantung pada App.config.
+        ''' </summary>
+        Public Property DbConnectionString As String
+            Get
+                Return _dbLogger.ConnectionString
+            End Get
+            Set(value As String)
+                _dbLogger.ConnectionString = value
+                _config.DbConnectionString = value
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' Nama tabel database untuk logging API (Default: [dbo].[GoappApiLog]).
+        ''' </summary>
+        Public Property LogTableName As String
+            Get
+                Return _dbLogger.TableName
+            End Get
+            Set(value As String)
+                _dbLogger.TableName = value
+                _config.LogTableName = value
+            End Set
+        End Property
+
         Public Sub New(Optional config As GoappConfig = Nothing)
             _config = If(config, New GoappConfig())
+            _dbLogger = New DatabaseLogger(_config.DbConnectionString, _config.DbConnectionStringName, _config.LogTableName)
 
             ' Pastikan TLS 1.2 aktif (krusial untuk koneksi HTTPS ke API modern)
             Try

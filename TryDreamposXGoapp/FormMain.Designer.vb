@@ -1,4 +1,4 @@
-﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
+<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class FormMain
     Inherits System.Windows.Forms.Form
 
@@ -538,22 +538,22 @@ Partial Class FormMain
         '
         'lblVoucherStatus
         '
-        Me.lblVoucherStatus.Font = New System.Drawing.Font("Segoe UI", 9.5!)
-        Me.lblVoucherStatus.Location = New System.Drawing.Point(20, 110)
+        Me.lblVoucherStatus.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.lblVoucherStatus.Location = New System.Drawing.Point(20, 105)
         Me.lblVoucherStatus.Name = "lblVoucherStatus"
-        Me.lblVoucherStatus.Size = New System.Drawing.Size(700, 105)
+        Me.lblVoucherStatus.Size = New System.Drawing.Size(920, 140)
         Me.lblVoucherStatus.TabIndex = 7
         Me.lblVoucherStatus.Text = "Status Voucher: Menunggu aksi pengujian..."
         '
         'txtVoucherRawJson
         '
         Me.txtVoucherRawJson.Font = New System.Drawing.Font("Consolas", 8.5!)
-        Me.txtVoucherRawJson.Location = New System.Drawing.Point(20, 220)
+        Me.txtVoucherRawJson.Location = New System.Drawing.Point(20, 250)
         Me.txtVoucherRawJson.Multiline = True
         Me.txtVoucherRawJson.Name = "txtVoucherRawJson"
         Me.txtVoucherRawJson.ReadOnly = True
         Me.txtVoucherRawJson.ScrollBars = System.Windows.Forms.ScrollBars.Both
-        Me.txtVoucherRawJson.Size = New System.Drawing.Size(920, 160)
+        Me.txtVoucherRawJson.Size = New System.Drawing.Size(920, 180)
         Me.txtVoucherRawJson.TabIndex = 8
         '
         'tabTransaction

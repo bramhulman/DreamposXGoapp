@@ -14,7 +14,7 @@
     </style>
 </head>
 <body>
-    <h1>Dokumentasi Integrasi API Goapp CRM x DreamPOS</h1>
+    <p>﻿# Dokumentasi Integrasi API Goapp CRM x DreamPOS</p>
 <p>Dokumen ini berisi panduan teknis, contoh kode (cara pemanggilan <code>.dll</code>), dan <em>raw</em> JSON (Request &amp; Response) berdasarkan hasil pengujian integrasi antara DreamPOS dan backend Goapp CRM.</p>
 <hr />
 <h2>1. Persiapan Konfigurasi (App.config)</h2>
@@ -225,17 +225,24 @@ Dim pointDidapat = If(resp.Data.Reward.Count &gt; 0, resp.Data.Reward(0).Amount,
 <p>Status Validasi Voucher yang tadinya hanya satu baris, kini diperbesar menjadi multiline untuk menampilkan rincian: <strong>Nama Deal</strong>, <strong>Deskripsi</strong>, <strong>Tipe Diskon</strong>, dan <strong>Nominal Potongan</strong>.</p>
 </li>
 <li>
-<p><strong>Modern Database Logging (SQL Server):</strong></p>
+<p><strong>Modern Database Logging (SQL Server - Bebas Hardcode):</strong></p>
 </li>
-<li>Mengimplementasikan sistem logging <em>Asynchronous</em> ke dalam database <strong>POS_Restaurant</strong>.</li>
-<li>Setiap kali POS melakukan <em>request</em> ke API Goapp, sistem otomatis akan menyimpan riwayat interaksi di tabel [dbo].[GoappApiLog]\ secara <em>fire-and-forget</em> (tidak membuat UI freeze/lag).</li>
+<li>Mengimplementasikan sistem logging <em>Asynchronous</em> ke dalam database SQL Server.</li>
+<li><strong>Bebas Hardcode di DLL:</strong> File .dll (DreamposXGoapp.dll) sama sekali tidak menyimpan kredensial atau connection string database secara statis.</li>
+<li>Fleksibilitas konfigurasi:<ul>
+<li><strong>Metode 1 (Inject via Kode):</strong> Pemanggil dapat mengoper connection string aktifnya langsung via GoappConfig.DbConnectionString atau properti client.DbConnectionString.</li>
+<li><strong>Metode 2 (App.config / Web.config):</strong> Jika tidak diisi di kode, DLL otomatis membaca connection string dari file konfigurasi pemanggil (<connectionStrings><add name="POSDatabase" .../></connectionStrings>).</li>
+<li><strong>Metode 3 (Custom Table Name):</strong> Nama tabel dapat disesuaikan via GoappConfig.LogTableName (default: [dbo].[GoappApiLog]).</li>
+<li><strong>Safety:</strong> Jika koneksi DB tidak diisi atau database offline, logging akan di-skip secara graceful tanpa memicu exception ke transaksi POS.</li>
+</ul>
+</li>
 <li>Atribut yang dilog meliputi:<ul>
-<li>\LogDate\ &amp; \LogDateTime\ (Tanggal &amp; Waktu presisi).</li>
-<li>\HttpMethod\ (GET/POST) &amp; \EndpointUrl.</li>
-<li>\RequestPayload\ &amp; \ResponsePayload\ (Raw JSON lengkap).</li>
-<li>\StatusCode\ &amp; \IsSuccess.</li>
-<li>\ErrorMessage\ (Pesan spesifik dari API / Exception aplikasi saat crash).</li>
-<li>\DurationMs\ (Waktu respons / Latency API dalam milidetik).</li>
+<li>LogDate &amp; LogDateTime (Tanggal &amp; Waktu presisi).</li>
+<li>HttpMethod (GET/POST) &amp; EndpointUrl.</li>
+<li>RequestPayload &amp; ResponsePayload (Raw JSON lengkap).</li>
+<li>StatusCode &amp; IsSuccess.</li>
+<li>ErrorMessage (Pesan spesifik dari API / Exception aplikasi saat crash).</li>
+<li>DurationMs (Waktu respons / Latency API dalam milidetik).</li>
 </ul>
 </li>
 </ol>

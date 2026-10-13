@@ -263,15 +263,49 @@ Public Class FormMain
             Dim memberUid As Long? = If(_currentMember IsNot Nothing, _currentMember.Uid, CType(Nothing, Long?))
             Dim resp = Await _client.ValidateVoucherAsync(code, memberUid)
 
-            If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
+                        If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
                 Dim v = resp.Data
                 Dim desc = If(String.IsNullOrEmpty(v.Description), "-", v.Description)
-                Dim infoMsg = $"VOUCHER VALID!{Environment.NewLine}Nama: {v.Name}{Environment.NewLine}Deskripsi: {desc}{Environment.NewLine}Tipe Diskon: {v.DiscountType}{Environment.NewLine}Nominal Potongan: {v.DiscountAmount:N0}"
-                
-                lblVoucherStatus.Text = $"Status: VALID{Environment.NewLine}â€¢ Nama Deal: {v.Name}{Environment.NewLine}â€¢ Deskripsi: {desc}{Environment.NewLine}â€¢ Tipe: {v.DiscountType} ({v.DiscountAmount:N0})"
+                Dim rd = v.RewardData
+
+                ' 1. Susun detail pada Label
+                Dim sbLabel As New System.Text.StringBuilder()
+                sbLabel.AppendLine($"Status: VALID (Kode: {v.DealCode})")
+                sbLabel.AppendLine($"[DEAL] {v.Name} | {desc}")
+                If rd IsNot Nothing Then
+                    sbLabel.AppendLine($"[REWARD_DATA]:")
+                    For Each line In rd.GetDetailLines()
+                        sbLabel.AppendLine("  " & line)
+                    Next
+                Else
+                    sbLabel.AppendLine($"Tipe: {v.DiscountType} ({v.DiscountAmount:N0})")
+                End If
+
+                lblVoucherStatus.Text = sbLabel.ToString().TrimEnd()
                 lblVoucherStatus.ForeColor = Color.DarkGreen
-                
-                MessageBox.Show(infoMsg, "Detail Voucher", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+                ' 2. Susun detail lengkap setiap variabel 'reward_data' untuk MessageBox
+                Dim sbMsg As New System.Text.StringBuilder()
+                sbMsg.AppendLine("==========================================")
+                sbMsg.AppendLine("           DETAIL VALIDASI VOUCHER")
+                sbMsg.AppendLine("==========================================")
+                sbMsg.AppendLine($"Kode Voucher  : {v.DealCode}")
+                sbMsg.AppendLine($"ID Voucher    : {v.Id}")
+                sbMsg.AppendLine($"Nama Deal     : {v.Name}")
+                sbMsg.AppendLine($"Deskripsi     : {desc}")
+                sbMsg.AppendLine($"Status Code   : {If(String.IsNullOrEmpty(v.StatusCode), "active", v.StatusCode)}")
+                sbMsg.AppendLine()
+                sbMsg.AppendLine("--- DETAIL OBJEK 'reward_data' (TIAP VARIABEL) ---")
+                If rd IsNot Nothing Then
+                    For Each line In rd.GetDetailLines()
+                        sbMsg.AppendLine(line)
+                    Next
+                Else
+                    sbMsg.AppendLine("(Objek reward_data tidak ditemukan pada respons)")
+                End If
+                sbMsg.AppendLine("==========================================")
+
+                MessageBox.Show(sbMsg.ToString(), "Detail Voucher & Objek reward_data", MessageBoxButtons.OK, MessageBoxIcon.Information)
                 txtVoucherRawJson.Text = FormatJson(resp.RawJson)
             Else
                 lblVoucherStatus.Text = $"Status: Voucher TIDAK VALID! ({resp.Message})"
@@ -794,5 +828,6 @@ Public Class FormMain
 
     End Sub
 End Class
+
 
 
