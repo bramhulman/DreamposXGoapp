@@ -59,7 +59,7 @@ Namespace Services
 
         Public Sub New(Optional config As GoappConfig = Nothing)
             _config = If(config, New GoappConfig())
-            _dbLogger = New DatabaseLogger(_config.DbConnectionString, _config.DbConnectionStringName, _config.LogTableName)
+            _dbLogger = New DatabaseLogger(_config.DbConnectionString, _config.LogTableName)
 
             ' Pastikan TLS 1.2 aktif (krusial untuk koneksi HTTPS ke API modern)
             Try

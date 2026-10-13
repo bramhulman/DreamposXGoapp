@@ -99,7 +99,14 @@ Public Class FormMain
         Dim storeCode As String = System.Configuration.ConfigurationManager.AppSettings("Goapp.StoreCode")
         If String.IsNullOrEmpty(storeCode) Then storeCode = ""
 
+        Dim dbConnStr As String = String.Empty
+        Dim connStrSetting = System.Configuration.ConfigurationManager.ConnectionStrings("POSDatabase")
+        If connStrSetting IsNot Nothing Then
+            dbConnStr = connStrSetting.ConnectionString
+        End If
+
         Dim config As New GoappConfig With {
+            .DbConnectionString = dbConnStr,
             .ApiKey = apiKey,
             .ApiSecret = apiSecret,
             .ChannelUid = channelUid,
@@ -828,6 +835,7 @@ Public Class FormMain
 
     End Sub
 End Class
+
 
 
 

@@ -1,30 +1,13 @@
 Imports System.Data.SqlClient
-Imports System.Configuration
 Imports System.Threading.Tasks
 
 Public Class DatabaseLogger
     Public Property ConnectionString As String = String.Empty
     Public Property TableName As String = "[dbo].[GoappApiLog]"
 
-    Public Sub New(Optional customConnectionString As String = Nothing, Optional connectionStringName As String = "POSDatabase", Optional tableName As String = "[dbo].[GoappApiLog]")
+    Public Sub New(Optional customConnectionString As String = Nothing, Optional tableName As String = "[dbo].[GoappApiLog]")
         Me.TableName = If(String.IsNullOrWhiteSpace(tableName), "[dbo].[GoappApiLog]", tableName)
-
-        If Not String.IsNullOrWhiteSpace(customConnectionString) Then
-            Me.ConnectionString = customConnectionString
-        Else
-            ' Fallback 1: Ambil dari ConnectionStrings di App.config
-            Dim keyName = If(String.IsNullOrWhiteSpace(connectionStringName), "POSDatabase", connectionStringName)
-            Dim connStrSetting = ConfigurationManager.ConnectionStrings(keyName)
-            If connStrSetting IsNot Nothing AndAlso Not String.IsNullOrWhiteSpace(connStrSetting.ConnectionString) Then
-                Me.ConnectionString = connStrSetting.ConnectionString
-            Else
-                ' Fallback 2: Ambil dari AppSettings jika pemanggil menyimpannya di <appSettings>
-                Dim appSettingVal = ConfigurationManager.AppSettings(keyName)
-                If Not String.IsNullOrWhiteSpace(appSettingVal) Then
-                    Me.ConnectionString = appSettingVal
-                End If
-            End If
-        End If
+        Me.ConnectionString = If(customConnectionString, String.Empty)
     End Sub
 
     Public Async Function LogApiAsync(method As String, endpoint As String, requestJson As String, responseJson As String, statusCode As Integer, isSuccess As Boolean, errorMessage As String, durationMs As Integer) As Task
