@@ -57,9 +57,18 @@ Namespace Services
             End Set
         End Property
 
+        ''' <summary>
+        ''' Instance DatabaseLogger yang digunakan untuk pencatatan log API ke SQL Server.
+        ''' </summary>
+        Public ReadOnly Property Logger As DatabaseLogger
+            Get
+                Return _dbLogger
+            End Get
+        End Property
+
         Public Sub New(Optional config As GoappConfig = Nothing)
             _config = If(config, New GoappConfig())
-            _dbLogger = New DatabaseLogger(_config.DbConnectionString, _config.DbConnectionStringName, _config.LogTableName)
+            _dbLogger = New DatabaseLogger(_config.DbConnectionString, _config.LogTableName)
 
             ' Pastikan TLS 1.2 aktif (krusial untuk koneksi HTTPS ke API modern)
             Try
@@ -68,10 +77,13 @@ Namespace Services
                 ' Abaikan jika platform mengelola security protocol secara default
             End Try
 
-            Dim handler As New HttpClientHandler()
-            ' Toleransi sertifikat untuk testing / dev environment jika diperlukan
-            handler.ServerCertificateCustomValidationCallback = Function(message, cert, chain, errors) True
+            ' Toleransi sertifikat untuk testing / dev environment jika diperlukan (.NET 4.6.1 compatible)
+            Try
+                ServicePointManager.ServerCertificateValidationCallback = Function(sender, certificate, chain, sslPolicyErrors) True
+            Catch
+            End Try
 
+            Dim handler As New HttpClientHandler()
             _httpClient = New HttpClient(handler) With {
                 .Timeout = TimeSpan.FromSeconds(_config.TimeoutSeconds)
             }
@@ -254,13 +266,14 @@ Namespace Services
         ''' <summary>
         ''' Menggunakan voucher dengan mekanisme Auto-Retry jika terjadi kendala jaringan / server busy
         ''' </summary>
-        Public Async Function UseVoucherWithRetryAsync(dealCode As String, transactionRef As String, Optional memberUid As Long? = Nothing, Optional customMaxRetry As Integer = -1) As Task(Of ApiResponse(Of VoucherResult))
+        Public Async Function UseVoucherWithRetryAsync(dealCode As String, transactionRef As String, Optional memberUid As Long? = Nothing, Optional customMaxRetry As Integer = -1, Optional authorizationCode As String = Nothing) As Task(Of ApiResponse(Of VoucherResult))
             Dim maxRetry = If(customMaxRetry > 0, customMaxRetry, _config.MaxRetryAttempts)
             Dim url = $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/member/deal/use/"
             Dim payload = New VoucherUseRequest With {
                 .DealCode = dealCode.Trim(),
                 .TransactionRef = transactionRef,
-                .Member = If(memberUid.HasValue AndAlso memberUid.Value > 0, New VoucherMemberRef With {.Uid = memberUid.Value}, Nothing)
+                .Member = If(memberUid.HasValue AndAlso memberUid.Value > 0, New VoucherMemberRef With {.Uid = memberUid.Value}, Nothing),
+                .AuthorizationCode = If(String.IsNullOrWhiteSpace(authorizationCode), Nothing, authorizationCode.Trim())
             }
 
             Dim lastResult As ApiResponse(Of VoucherResult) = Nothing
@@ -355,13 +368,14 @@ Namespace Services
         ''' <summary>
         ''' Melakukan pemotongan (Burn) poin member untuk pembayaran transaksi POS
         ''' </summary>
-        Public Async Function CreatePointPaymentAsync(memberUid As Long, pointAmount As Decimal, orderAmountIdr As Decimal, providerRef As String) As Task(Of ApiResponse(Of PaymentTransactionResponse))
+        Public Async Function CreatePointPaymentAsync(memberUid As Long, pointAmount As Decimal, orderAmountIdr As Decimal, providerRef As String, Optional authorizationCode As String = Nothing) As Task(Of ApiResponse(Of PaymentTransactionResponse))
             Dim url = $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/member/payment/"
             Dim payload = New PaymentTransactionRequest With {
                 .Member = New PaymentMemberRef With {.Uid = memberUid},
                 .Amount = pointAmount,
                 .OrderAmount = orderAmountIdr,
-                .ProviderRef = providerRef
+                .ProviderRef = providerRef,
+                .AuthorizationCode = If(String.IsNullOrWhiteSpace(authorizationCode), Nothing, authorizationCode.Trim())
             }
             
             If _config.StoreUid.HasValue Then
@@ -464,8 +478,8 @@ Namespace Services
                 Log($"HTTP Request Error ({url}): {ex.Message}")
             Finally
                 sw.Stop()
-                ' Log to Database asynchronously (fire and forget)
-                Dim logTask = _dbLogger.LogApiAsync(method.Method, url, requestJson, responseJson, result.StatusCode, result.IsSuccess, errMsgForLog, CInt(sw.ElapsedMilliseconds))
+                ' Log to Database asynchronously (fire and forget) dengan passing connection string
+                Dim logTask = _dbLogger.LogApiAsync(method.Method, url, requestJson, responseJson, result.StatusCode, result.IsSuccess, errMsgForLog, CInt(sw.ElapsedMilliseconds), Me.DbConnectionString)
             End Try
 
             Return result

@@ -36,6 +36,7 @@ Partial Class FormMain
     Friend WithEvents txtInputMember As System.Windows.Forms.TextBox
     Friend WithEvents btnSearchMember As System.Windows.Forms.Button
     Friend WithEvents btnGoToRegister As System.Windows.Forms.Button
+    Friend WithEvents btnSearchMemberDialog As System.Windows.Forms.Button
     Friend WithEvents grpMemberResult As System.Windows.Forms.GroupBox
     Friend WithEvents lblMemberName As System.Windows.Forms.Label
     Friend WithEvents lblMemberPhone As System.Windows.Forms.Label
@@ -55,6 +56,8 @@ Partial Class FormMain
     Friend WithEvents btnCancelVoucher As System.Windows.Forms.Button
     Friend WithEvents txtVoucherTxRef As System.Windows.Forms.TextBox
     Friend WithEvents lblVoucherTxRef As System.Windows.Forms.Label
+    Friend WithEvents lblVoucherAuthCode As System.Windows.Forms.Label
+    Friend WithEvents txtVoucherAuthCode As System.Windows.Forms.TextBox
     Friend WithEvents lblVoucherStatus As System.Windows.Forms.Label
     Friend WithEvents txtVoucherRawJson As System.Windows.Forms.TextBox
 
@@ -63,6 +66,8 @@ Partial Class FormMain
     Friend WithEvents txtBillTotal As System.Windows.Forms.TextBox
     Friend WithEvents lblBurnPoint As System.Windows.Forms.Label
     Friend WithEvents txtBurnPoint As System.Windows.Forms.TextBox
+    Friend WithEvents lblBurnAuthCode As System.Windows.Forms.Label
+    Friend WithEvents txtBurnAuthCode As System.Windows.Forms.TextBox
     Friend WithEvents btnBurnPoint As System.Windows.Forms.Button
     Friend WithEvents btnCancelBurnPoint As System.Windows.Forms.Button
     Friend WithEvents btnPushSalesOrder As System.Windows.Forms.Button
@@ -139,6 +144,7 @@ Partial Class FormMain
         Me.txtInputMember = New System.Windows.Forms.TextBox()
         Me.btnSearchMember = New System.Windows.Forms.Button()
         Me.btnGoToRegister = New System.Windows.Forms.Button()
+        Me.btnSearchMemberDialog = New System.Windows.Forms.Button()
         Me.grpMemberResult = New System.Windows.Forms.GroupBox()
         Me.lblMemberName = New System.Windows.Forms.Label()
         Me.lblMemberPhone = New System.Windows.Forms.Label()
@@ -154,6 +160,8 @@ Partial Class FormMain
         Me.btnValidateVoucher = New System.Windows.Forms.Button()
         Me.lblVoucherTxRef = New System.Windows.Forms.Label()
         Me.txtVoucherTxRef = New System.Windows.Forms.TextBox()
+        Me.lblVoucherAuthCode = New System.Windows.Forms.Label()
+        Me.txtVoucherAuthCode = New System.Windows.Forms.TextBox()
         Me.btnUseVoucher = New System.Windows.Forms.Button()
         Me.btnCancelVoucher = New System.Windows.Forms.Button()
         Me.lblVoucherStatus = New System.Windows.Forms.Label()
@@ -163,6 +171,8 @@ Partial Class FormMain
         Me.txtBillTotal = New System.Windows.Forms.TextBox()
         Me.lblBurnPoint = New System.Windows.Forms.Label()
         Me.txtBurnPoint = New System.Windows.Forms.TextBox()
+        Me.lblBurnAuthCode = New System.Windows.Forms.Label()
+        Me.txtBurnAuthCode = New System.Windows.Forms.TextBox()
         Me.btnBurnPoint = New System.Windows.Forms.Button()
         Me.btnCancelBurnPoint = New System.Windows.Forms.Button()
         Me.btnPushSalesOrder = New System.Windows.Forms.Button()
@@ -317,6 +327,7 @@ Partial Class FormMain
         Me.tabMember.Controls.Add(Me.txtInputMember)
         Me.tabMember.Controls.Add(Me.btnSearchMember)
         Me.tabMember.Controls.Add(Me.btnGoToRegister)
+        Me.tabMember.Controls.Add(Me.btnSearchMemberDialog)
         Me.tabMember.Controls.Add(Me.grpMemberResult)
         Me.tabMember.Controls.Add(Me.txtRawJson)
         Me.tabMember.Location = New System.Drawing.Point(4, 29)
@@ -361,6 +372,18 @@ Partial Class FormMain
         Me.btnGoToRegister.TabIndex = 3
         Me.btnGoToRegister.Text = "+ Daftar Member Baru"
         Me.btnGoToRegister.UseVisualStyleBackColor = False
+        '
+        'btnSearchMemberDialog
+        '
+        Me.btnSearchMemberDialog.BackColor = System.Drawing.Color.DodgerBlue
+        Me.btnSearchMemberDialog.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Bold)
+        Me.btnSearchMemberDialog.ForeColor = System.Drawing.Color.White
+        Me.btnSearchMemberDialog.Location = New System.Drawing.Point(665, 15)
+        Me.btnSearchMemberDialog.Name = "btnSearchMemberDialog"
+        Me.btnSearchMemberDialog.Size = New System.Drawing.Size(200, 27)
+        Me.btnSearchMemberDialog.TabIndex = 4
+        Me.btnSearchMemberDialog.Text = "🔍 Cari Member (Form DLL)"
+        Me.btnSearchMemberDialog.UseVisualStyleBackColor = False
         '
         'grpMemberResult
         '
@@ -464,6 +487,8 @@ Partial Class FormMain
         Me.tabVoucher.Controls.Add(Me.btnValidateVoucher)
         Me.tabVoucher.Controls.Add(Me.lblVoucherTxRef)
         Me.tabVoucher.Controls.Add(Me.txtVoucherTxRef)
+        Me.tabVoucher.Controls.Add(Me.lblVoucherAuthCode)
+        Me.tabVoucher.Controls.Add(Me.txtVoucherAuthCode)
         Me.tabVoucher.Controls.Add(Me.btnUseVoucher)
         Me.tabVoucher.Controls.Add(Me.btnCancelVoucher)
         Me.tabVoucher.Controls.Add(Me.lblVoucherStatus)
@@ -502,7 +527,7 @@ Partial Class FormMain
         'lblVoucherTxRef
         '
         Me.lblVoucherTxRef.AutoSize = True
-        Me.lblVoucherTxRef.Location = New System.Drawing.Point(20, 70)
+        Me.lblVoucherTxRef.Location = New System.Drawing.Point(20, 65)
         Me.lblVoucherTxRef.Name = "lblVoucherTxRef"
         Me.lblVoucherTxRef.Size = New System.Drawing.Size(154, 20)
         Me.lblVoucherTxRef.TabIndex = 3
@@ -510,39 +535,55 @@ Partial Class FormMain
         '
         'txtVoucherTxRef
         '
-        Me.txtVoucherTxRef.Location = New System.Drawing.Point(160, 67)
+        Me.txtVoucherTxRef.Location = New System.Drawing.Point(160, 62)
         Me.txtVoucherTxRef.Name = "txtVoucherTxRef"
         Me.txtVoucherTxRef.Size = New System.Drawing.Size(220, 27)
         Me.txtVoucherTxRef.TabIndex = 4
         Me.txtVoucherTxRef.Text = "TRX-261008142730"
         '
+        'lblVoucherAuthCode
+        '
+        Me.lblVoucherAuthCode.AutoSize = True
+        Me.lblVoucherAuthCode.Location = New System.Drawing.Point(20, 102)
+        Me.lblVoucherAuthCode.Name = "lblVoucherAuthCode"
+        Me.lblVoucherAuthCode.Size = New System.Drawing.Size(137, 20)
+        Me.lblVoucherAuthCode.TabIndex = 5
+        Me.lblVoucherAuthCode.Text = "Authorization Code:"
+        '
+        'txtVoucherAuthCode
+        '
+        Me.txtVoucherAuthCode.Location = New System.Drawing.Point(160, 99)
+        Me.txtVoucherAuthCode.Name = "txtVoucherAuthCode"
+        Me.txtVoucherAuthCode.Size = New System.Drawing.Size(220, 27)
+        Me.txtVoucherAuthCode.TabIndex = 6
+        '
         'btnUseVoucher
         '
         Me.btnUseVoucher.BackColor = System.Drawing.Color.PaleGreen
-        Me.btnUseVoucher.Location = New System.Drawing.Point(395, 65)
+        Me.btnUseVoucher.Location = New System.Drawing.Point(395, 97)
         Me.btnUseVoucher.Name = "btnUseVoucher"
-        Me.btnUseVoucher.Size = New System.Drawing.Size(220, 27)
-        Me.btnUseVoucher.TabIndex = 5
+        Me.btnUseVoucher.Size = New System.Drawing.Size(220, 29)
+        Me.btnUseVoucher.TabIndex = 7
         Me.btnUseVoucher.Text = "2. Gunakan Voucher (Auto-Retry)"
         Me.btnUseVoucher.UseVisualStyleBackColor = False
         '
         'btnCancelVoucher
         '
         Me.btnCancelVoucher.BackColor = System.Drawing.Color.LightPink
-        Me.btnCancelVoucher.Location = New System.Drawing.Point(625, 65)
+        Me.btnCancelVoucher.Location = New System.Drawing.Point(625, 97)
         Me.btnCancelVoucher.Name = "btnCancelVoucher"
-        Me.btnCancelVoucher.Size = New System.Drawing.Size(180, 27)
-        Me.btnCancelVoucher.TabIndex = 6
+        Me.btnCancelVoucher.Size = New System.Drawing.Size(180, 29)
+        Me.btnCancelVoucher.TabIndex = 8
         Me.btnCancelVoucher.Text = "3. Batalkan Voucher (Void)"
         Me.btnCancelVoucher.UseVisualStyleBackColor = False
         '
         'lblVoucherStatus
         '
         Me.lblVoucherStatus.Font = New System.Drawing.Font("Segoe UI", 9.0!)
-        Me.lblVoucherStatus.Location = New System.Drawing.Point(20, 105)
+        Me.lblVoucherStatus.Location = New System.Drawing.Point(20, 140)
         Me.lblVoucherStatus.Name = "lblVoucherStatus"
-        Me.lblVoucherStatus.Size = New System.Drawing.Size(920, 140)
-        Me.lblVoucherStatus.TabIndex = 7
+        Me.lblVoucherStatus.Size = New System.Drawing.Size(920, 100)
+        Me.lblVoucherStatus.TabIndex = 9
         Me.lblVoucherStatus.Text = "Status Voucher: Menunggu aksi pengujian..."
         '
         'txtVoucherRawJson
@@ -562,6 +603,8 @@ Partial Class FormMain
         Me.tabTransaction.Controls.Add(Me.txtBillTotal)
         Me.tabTransaction.Controls.Add(Me.lblBurnPoint)
         Me.tabTransaction.Controls.Add(Me.txtBurnPoint)
+        Me.tabTransaction.Controls.Add(Me.lblBurnAuthCode)
+        Me.tabTransaction.Controls.Add(Me.txtBurnAuthCode)
         Me.tabTransaction.Controls.Add(Me.btnBurnPoint)
         Me.tabTransaction.Controls.Add(Me.btnCancelBurnPoint)
         Me.tabTransaction.Controls.Add(Me.btnPushSalesOrder)
@@ -576,7 +619,7 @@ Partial Class FormMain
         'lblBillTotal
         '
         Me.lblBillTotal.AutoSize = True
-        Me.lblBillTotal.Location = New System.Drawing.Point(20, 30)
+        Me.lblBillTotal.Location = New System.Drawing.Point(20, 25)
         Me.lblBillTotal.Name = "lblBillTotal"
         Me.lblBillTotal.Size = New System.Drawing.Size(130, 20)
         Me.lblBillTotal.TabIndex = 0
@@ -584,7 +627,7 @@ Partial Class FormMain
         '
         'txtBillTotal
         '
-        Me.txtBillTotal.Location = New System.Drawing.Point(160, 27)
+        Me.txtBillTotal.Location = New System.Drawing.Point(160, 22)
         Me.txtBillTotal.Name = "txtBillTotal"
         Me.txtBillTotal.Size = New System.Drawing.Size(150, 27)
         Me.txtBillTotal.TabIndex = 1
@@ -593,7 +636,7 @@ Partial Class FormMain
         'lblBurnPoint
         '
         Me.lblBurnPoint.AutoSize = True
-        Me.lblBurnPoint.Location = New System.Drawing.Point(20, 75)
+        Me.lblBurnPoint.Location = New System.Drawing.Point(20, 65)
         Me.lblBurnPoint.Name = "lblBurnPoint"
         Me.lblBurnPoint.Size = New System.Drawing.Size(140, 20)
         Me.lblBurnPoint.TabIndex = 2
@@ -601,46 +644,62 @@ Partial Class FormMain
         '
         'txtBurnPoint
         '
-        Me.txtBurnPoint.Location = New System.Drawing.Point(160, 72)
+        Me.txtBurnPoint.Location = New System.Drawing.Point(160, 62)
         Me.txtBurnPoint.Name = "txtBurnPoint"
         Me.txtBurnPoint.Size = New System.Drawing.Size(150, 27)
         Me.txtBurnPoint.TabIndex = 3
         Me.txtBurnPoint.Text = "5"
         '
+        'lblBurnAuthCode
+        '
+        Me.lblBurnAuthCode.AutoSize = True
+        Me.lblBurnAuthCode.Location = New System.Drawing.Point(20, 105)
+        Me.lblBurnAuthCode.Name = "lblBurnAuthCode"
+        Me.lblBurnAuthCode.Size = New System.Drawing.Size(137, 20)
+        Me.lblBurnAuthCode.TabIndex = 4
+        Me.lblBurnAuthCode.Text = "Authorization Code:"
+        '
+        'txtBurnAuthCode
+        '
+        Me.txtBurnAuthCode.Location = New System.Drawing.Point(160, 102)
+        Me.txtBurnAuthCode.Name = "txtBurnAuthCode"
+        Me.txtBurnAuthCode.Size = New System.Drawing.Size(150, 27)
+        Me.txtBurnAuthCode.TabIndex = 5
+        '
         'btnBurnPoint
         '
         Me.btnBurnPoint.BackColor = System.Drawing.Color.SandyBrown
-        Me.btnBurnPoint.Location = New System.Drawing.Point(330, 70)
+        Me.btnBurnPoint.Location = New System.Drawing.Point(330, 100)
         Me.btnBurnPoint.Name = "btnBurnPoint"
-        Me.btnBurnPoint.Size = New System.Drawing.Size(180, 27)
-        Me.btnBurnPoint.TabIndex = 4
+        Me.btnBurnPoint.Size = New System.Drawing.Size(180, 29)
+        Me.btnBurnPoint.TabIndex = 6
         Me.btnBurnPoint.Text = "Burn Point (Potong Poin)"
         Me.btnBurnPoint.UseVisualStyleBackColor = False
         '
         'btnCancelBurnPoint
         '
-        Me.btnCancelBurnPoint.Location = New System.Drawing.Point(520, 70)
+        Me.btnCancelBurnPoint.Location = New System.Drawing.Point(520, 100)
         Me.btnCancelBurnPoint.Name = "btnCancelBurnPoint"
-        Me.btnCancelBurnPoint.Size = New System.Drawing.Size(180, 27)
-        Me.btnCancelBurnPoint.TabIndex = 5
+        Me.btnCancelBurnPoint.Size = New System.Drawing.Size(180, 29)
+        Me.btnCancelBurnPoint.TabIndex = 7
         Me.btnCancelBurnPoint.Text = "Cancel Burn Point (Void)"
         '
         'btnPushSalesOrder
         '
         Me.btnPushSalesOrder.BackColor = System.Drawing.Color.LightSkyBlue
-        Me.btnPushSalesOrder.Location = New System.Drawing.Point(160, 130)
+        Me.btnPushSalesOrder.Location = New System.Drawing.Point(160, 150)
         Me.btnPushSalesOrder.Name = "btnPushSalesOrder"
         Me.btnPushSalesOrder.Size = New System.Drawing.Size(260, 32)
-        Me.btnPushSalesOrder.TabIndex = 6
+        Me.btnPushSalesOrder.TabIndex = 8
         Me.btnPushSalesOrder.Text = "Push Transaksi Selesai (Earning Point)"
         Me.btnPushSalesOrder.UseVisualStyleBackColor = False
         '
         'lblLastPaymentRef
         '
-        Me.lblLastPaymentRef.Location = New System.Drawing.Point(20, 180)
+        Me.lblLastPaymentRef.Location = New System.Drawing.Point(20, 195)
         Me.lblLastPaymentRef.Name = "lblLastPaymentRef"
         Me.lblLastPaymentRef.Size = New System.Drawing.Size(700, 20)
-        Me.lblLastPaymentRef.TabIndex = 7
+        Me.lblLastPaymentRef.TabIndex = 9
         Me.lblLastPaymentRef.Text = "Last Payment Ref: -"
         '
         'txtOrderRawJson

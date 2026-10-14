@@ -79,6 +79,24 @@ Namespace Models
         <JsonProperty("account")>
         Public Property Account As MemberAccount
 
+        <JsonProperty("status")>
+        Public Property Status As String
+
+        <JsonProperty("is_active")>
+        Public Property IsActive As Boolean?
+
+        Public ReadOnly Property IsMemberActive As Boolean
+            Get
+                If IsActive.HasValue Then Return IsActive.Value
+                If Not String.IsNullOrEmpty(Status) Then
+                    Dim s = Status.Trim().ToLower()
+                    Return (s = "active" OrElse s = "aktif" OrElse s = "1" OrElse s = "true")
+                End If
+                ' Default True jika profil member ditemukan
+                Return True
+            End Get
+        End Property
+
         Public ReadOnly Property FullName As String
             Get
                 Dim full = $"{FirstName} {LastName}".Trim()
@@ -419,6 +437,9 @@ Namespace Models
 
         <JsonProperty("member", NullValueHandling:=NullValueHandling.Ignore)>
         Public Property Member As VoucherMemberRef
+
+        <JsonProperty("authorization_code", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property AuthorizationCode As String
     End Class
 
     Public Class VoucherResult
@@ -614,8 +635,8 @@ Namespace Models
         <JsonProperty("member")>
         Public Property Member As PaymentMemberRef
 
-        <JsonProperty("amount")>
-        Public Property Amount As Decimal ' Point amount
+        <JsonProperty("amount", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property Amount As Decimal? ' Point amount
 
         <JsonProperty("order_amount")>
         Public Property OrderAmount As Decimal ' IDR amount
@@ -625,6 +646,9 @@ Namespace Models
 
         <JsonProperty("provider_ref")>
         Public Property ProviderRef As String ' POS Bill/Transaction No
+
+        <JsonProperty("authorization_code", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property AuthorizationCode As String
 
         <JsonProperty("store", NullValueHandling:=NullValueHandling.Ignore)>
         Public Property Store As OrderStoreRef

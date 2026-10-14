@@ -4,35 +4,55 @@ Dokumen ini berisi panduan teknis, contoh kode (cara pemanggilan `.dll`), dan *r
 
 ---
 
-## 1. Persiapan Konfigurasi (App.config)
-Agar *hardcoding* dapat dihindari, nilai-nilai kredensial dan preferensi toko disimpan di dalam file `App.config` aplikasi pemanggil (POS).
+## 1. Persiapan Konfigurasi (App.config Aplikasi Pemanggil)
+Agar tidak terjadi *hardcoding* di dalam `.dll`, seluruh kredensial API dan koneksi database SQL Server untuk logging didefinisikan secara terpusat di dalam file `App.config` aplikasi POS pemanggil (`TryDreamposXGoapp\App.config`):
 
 ```xml
-<appSettings>
-    <!-- Kredensial Channel Goapp CRM -->
-    <add key="Goapp.ApiKey" value="138350315235400" />
-    <add key="Goapp.ApiSecret" value="cbf5b1c921b36bfb06ca988c6d98f608482c40f1" />
-    <add key="Goapp.ChannelUid" value="138350315235400" />
-    <add key="Goapp.AuthBaseUrl" value="https://account.goapp.co.id/auth" />
-    <add key="Goapp.ChannelBaseUrl" value="https://api.goapp.co.id/channel/v1" />
-    
-    <!-- Konfigurasi Physical Store (Wajib untuk Burn Point) -->
-    <add key="Goapp.StoreUid" value="138533231320136" />
-    <add key="Goapp.StoreName" value="Go DimSum Bogor" />
-    <add key="Goapp.StoreCode" value="DS" />
-</appSettings>
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <!-- 1. Connection String Database SQL Server untuk Logging API -->
+    <connectionStrings>
+        <add name="POSDatabase" 
+             connectionString="Server=SASL16\SQLEXPRESS03;Database=POS_Restaurant;User Id=dreampos;Password=sophialatjuba;TrustServerCertificate=True;MultipleActiveResultSets=True;" 
+             providerName="System.Data.SqlClient" />
+    </connectionStrings>
+
+    <!-- 2. Parameter Kredensial & Endpoint Goapp CRM -->
+    <appSettings>
+        <add key="Goapp.ApiKey" value="138350315235400" />
+        <add key="Goapp.ApiSecret" value="cbf5b1c921b36bfb06ca988c6d98f608482c40f1" />
+        <add key="Goapp.ChannelUid" value="138350315235400" />
+        <add key="Goapp.AuthBaseUrl" value="https://account.goapp.co.id/auth" />
+        <add key="Goapp.ChannelBaseUrl" value="https://api.goapp.co.id/channel/v1" />
+        
+        <!-- Konfigurasi Physical Store (Wajib untuk Burn Point) -->
+        <add key="Goapp.StoreUid" value="138533231320136" />
+        <add key="Goapp.StoreName" value="Go DimSum Bogor" />
+        <add key="Goapp.StoreCode" value="DS" />
+    </appSettings>
+</configuration>
 ```
 
 ---
 
-## 2. Instansiasi DLL (`GoappApiClient`)
-Di dalam project POS Anda, pastikan Anda menambahkan *Reference* ke `DreamposXGoapp.dll`. Lalu inisialisasi *client* seperti berikut (Contoh dalam VB.NET):
+## 2. Cara Pemanggilan & Inisialisasi DLL (`GoappApiClient`)
+Di dalam project POS Anda, tambahkan referensi ke `DreamposXGoapp.dll`. 
+
+Sesuai arsitektur terbaru **Single-Source Configuration (1 Jalur Konfigurasi)**, library DLL tidak membaca `ConfigurationManager` sendiri. Aplikasi pemanggil membaca parameter dari `App.config` lalu mengopernya secara eksplisit ke objek `GoappConfig`:
 
 ```vb
+Imports System.Configuration
 Imports DreamposXGoapp.Models
 Imports DreamposXGoapp.Services
 
-' 1. Baca konfigurasi dari App.config
+' 1. Baca connection string database log dari App.config
+Dim dbConnStr As String = String.Empty
+Dim connSetting = ConfigurationManager.ConnectionStrings("POSDatabase")
+If connSetting IsNot Nothing Then
+    dbConnStr = connSetting.ConnectionString
+End If
+
+' 2. Susun objek GoappConfig (Passing parameter lengkap 1 pintu)
 Dim config As New GoappConfig With {
     .ApiKey = ConfigurationManager.AppSettings("Goapp.ApiKey"),
     .ApiSecret = ConfigurationManager.AppSettings("Goapp.ApiSecret"),
@@ -41,50 +61,89 @@ Dim config As New GoappConfig With {
     .ChannelBaseUrl = ConfigurationManager.AppSettings("Goapp.ChannelBaseUrl"),
     .StoreUid = Long.Parse(ConfigurationManager.AppSettings("Goapp.StoreUid")),
     .StoreName = ConfigurationManager.AppSettings("Goapp.StoreName"),
-    .StoreCode = ConfigurationManager.AppSettings("Goapp.StoreCode")
+    .StoreCode = ConfigurationManager.AppSettings("Goapp.StoreCode"),
+    .DbConnectionString = dbConnStr,           ' <-- Connection string SQL Server untuk tabel GoappApiLog
+    .LogTableName = "[dbo].[GoappApiLog]",       ' <-- Opsional (Default: [dbo].[GoappApiLog])
+    .TimeoutSeconds = 30,
+    .MaxRetryAttempts = 3,
+    .RetryDelayMilliseconds = 1500
 }
 
-' 2. Instansiasi Client
+' 3. Instansiasi Client
 Dim goappClient As New GoappApiClient(config)
+
+' Opsional: Tangkap log aktivitas HTTP secara real-time
+AddHandler goappClient.OnLog, Sub(msg As String)
+                                  Console.WriteLine(msg)
+                              End Sub
 ```
 
 ---
 
 ## 3. Fitur Utama & Contoh JSON
 
-### A. Validasi Voucher (Cek Tipe & Nominal Diskon)
-Digunakan sebelum transaksi dibayar. Berfungsi untuk mengetahui tipe potongan (`amount` / `percentage`) dan nilainya.
+### A. Validasi Voucher & Ekstraksi Objek `reward_data` (Lengkap)
+Digunakan saat kasir memasukkan kode voucher pelanggan. DLL memetakan seluruh detail diskon, termasuk objek bersarang `reward_data` (tipe diskon, batas maksimal diskon, minimal belanja, dsb):
 
 **Pemanggilan DLL:**
 ```vb
-Dim code = "0M9NO"
-Dim memberUid As Long? = 155999749384776
+Dim code = "0XJPU"
+Dim memberUid As Long? = 157689623681608 ' Opsional: sertakan UID member jika ada
+
 Dim resp = Await goappClient.ValidateVoucherAsync(code, memberUid)
 
 If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
-    Console.WriteLine($"Diskon: {resp.Data.DiscountAmount} Tipe: {resp.Data.DiscountType}")
+    Dim v = resp.Data
+    Dim rd = v.RewardData ' Objek RewardDataInfo lengkap
+    
+    ' Tampilkan pada Label / Form
+    lblVoucherStatus.Text = $"Voucher Valid: {v.Name} ({v.DealCode})"
+    
+    ' Ambil setiap variabel reward_data
+    If rd IsNot Nothing Then
+        For Each line In rd.GetDetailLines()
+            ' Contoh output baris:
+            ' • discount_type : percentage
+            ' • discount_amount : 20% (nilai asli: 0.2)
+            ' • min_purchase : Rp 200,000
+            ' • discount_max_amount : Rp 50,000
+            Console.WriteLine(line)
+        Next
+        
+        ' Atau akses variabel properti langsung:
+        Dim tipeDiskon = rd.EffectiveDiscountType
+        Dim nominal = rd.EffectiveDiscountAmount
+        Dim minBelanja = rd.EffectiveMinPurchase
+        Dim maksDiskon = rd.EffectiveDiscountMaxAmount
+    End If
+    
+    ' Tampilkan ringkasan lengkap di MessageBox
+    MessageBox.Show(String.Join(Environment.NewLine, rd.GetDetailLines()), "Detail reward_data")
 End If
 ```
 
-**Request JSON (`POST /member/deal/validate/`):**
+**Contoh Response JSON (`POST /member/deal/validate/`):**
 ```json
 {
-  "deal_code": "0M9NO",
-  "member": {
-    "uid": 155999749384776
-  }
-}
-```
-
-**Response JSON (Sukses):**
-```json
-{
-  "uid": 138501234567,
-  "deal_code": "0M9NO",
-  "name": "Diskon Spesial DimSum",
-  "discount_type": "amount",
-  "discount_amount": 50000.0,
-  "status": "valid"
+  "id": 2342233,
+  "code": "0XJPU",
+  "deal": {
+    "uid": 157809151046728,
+    "name": "Diskon 20%",
+    "description": "Potongan belanja 20% min purchase 200rb",
+    "reward_data": {
+      "discount_type": "percentage",
+      "min_purchase": 200000,
+      "discount_amount": 0.2,
+      "reward": {
+        "apply_to": "lines_total",
+        "discount_amount_type": "percentage",
+        "discount_amount": 0.2,
+        "discount_max_amount": 50000
+      }
+    }
+  },
+  "status_code": "active"
 }
 ```
 
@@ -247,14 +306,13 @@ Beberapa pembaruan fungsional dan teknis yang telah ditambahkan ke dalam aplikas
    - Menambahkan kotak **Raw JSON Textbox** di Tab 2 (Validasi & Gunakan Voucher) untuk mempermudah debugging dan pelaporan *request/response* API tanpa perlu berpindah tab.
    - Status Validasi Voucher yang tadinya hanya satu baris, kini diperbesar menjadi multiline untuk menampilkan rincian: **Nama Deal**, **Deskripsi**, **Tipe Diskon**, dan **Nominal Potongan**.
 
-3. **Modern Database Logging (SQL Server - Bebas Hardcode):**
+3. **Modern Database Logging (SQL Server - Arsitektur 1 Jalur Konfigurasi):**
    - Mengimplementasikan sistem logging *Asynchronous* ke dalam database SQL Server.
-   - **Bebas Hardcode di DLL:** File .dll (DreamposXGoapp.dll) sama sekali tidak menyimpan kredensial atau connection string database secara statis.
-   - Fleksibilitas konfigurasi:
-     - **Metode 1 (Inject via Kode):** Pemanggil dapat mengoper connection string aktifnya langsung via GoappConfig.DbConnectionString atau properti client.DbConnectionString.
-     - **Metode 2 (App.config / Web.config):** Jika tidak diisi di kode, DLL otomatis membaca connection string dari file konfigurasi pemanggil (<connectionStrings><add name="POSDatabase" .../></connectionStrings>).
-     - **Metode 3 (Custom Table Name):** Nama tabel dapat disesuaikan via GoappConfig.LogTableName (default: [dbo].[GoappApiLog]).
-     - **Safety:** Jika koneksi DB tidak diisi atau database offline, logging akan di-skip secara graceful tanpa memicu exception ke transaksi POS.
+   - **Arsitektur 1 Jalur (Single-Source Configuration):**
+     - Seluruh konfigurasi dan kredensial database murni dibaca dari file konfigurasi aplikasi pemanggil (yaitu TryDreamposXGoapp\App.config).
+     - File .dll (DreamposXGoapp.dll) tidak membaca ConfigurationManager sendiri, tidak memiliki App.config internal, dan tidak menyimpan kredensial/connection string secara statis.
+     - Semua parameter di-pass secara eksplisit melalui objek GoappConfig.DbConnectionString saat inisialisasi di Form pemanggil.
+   - **Safety & Resiliency:** Jika koneksi DB tidak diisi atau database offline, logging akan di-skip secara graceful tanpa mengganggu atau membatalkan transaksi POS.
    - Atribut yang dilog meliputi:
      - LogDate & LogDateTime (Tanggal & Waktu presisi).
      - HttpMethod (GET/POST) & EndpointUrl.
@@ -269,4 +327,5 @@ Beberapa pembaruan fungsional dan teknis yang telah ditambahkan ke dalam aplikas
    - Mengimplementasikan pemanggilan API baru yaitu GET /member/member/{id}/deal_codes/?status=not_used.
    - API ini dipanggil secara transparan dan asinkron tepat setelah data utama member berhasil diambil.
    - Semua benefit dan promo (seperti voucher diskon atau free item) yang dimiliki oleh member tersebut akan langsung dirender ke dalam ListBox, mempermudah kasir menginformasikan penawaran yang tersedia kepada pelanggan.
+
 

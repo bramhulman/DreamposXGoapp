@@ -1,4 +1,5 @@
-﻿Imports System
+Imports DreamposXGoapp.Forms
+Imports System
 Imports System.Collections.Generic
 Imports System.Drawing
 Imports System.Threading.Tasks
@@ -99,7 +100,14 @@ Public Class FormMain
         Dim storeCode As String = System.Configuration.ConfigurationManager.AppSettings("Goapp.StoreCode")
         If String.IsNullOrEmpty(storeCode) Then storeCode = ""
 
+        Dim dbConnStr As String = String.Empty
+        Dim connStrSetting = System.Configuration.ConfigurationManager.ConnectionStrings("POSDatabase")
+        If connStrSetting IsNot Nothing Then
+            dbConnStr = connStrSetting.ConnectionString
+        End If
+
         Dim config As New GoappConfig With {
+            .DbConnectionString = dbConnStr,
             .ApiKey = apiKey,
             .ApiSecret = apiSecret,
             .ChannelUid = channelUid,
@@ -114,6 +122,7 @@ Public Class FormMain
         }
 
         _client = New GoappApiClient(config)
+        _client.DbConnectionString = dbConnStr
         AddHandler _client.OnLog, AddressOf OnClientLog
     End Sub
 
@@ -144,6 +153,15 @@ Public Class FormMain
 
         Try
             InitClient()
+
+            ' Uji koneksi SQL Server Logging yang dioper dari aplikasi POS
+            Dim dbTestResult = Await _client.Logger.TestConnectionAsync(_client.DbConnectionString)
+            If dbTestResult.Item1 Then
+                AppendLog($"[DATABASE] {dbTestResult.Item2}")
+            Else
+                AppendLog($"[DATABASE WARNING] {dbTestResult.Item2}")
+            End If
+
             ' Cek token dan info channel toko
             Dim channelResp = Await _client.GetChannelDirectoryAsync()
 
@@ -233,6 +251,62 @@ Public Class FormMain
             btnSearchMember.Text = "Cek Member (Async)"
             Cursor = Cursors.Default
         End Try
+    End Sub
+
+
+    ''' <summary>
+    ''' Contoh pembukaan FormSearchMember langsung dari DLL dengan RaiseEvent sendMemberData
+    ''' </summary>
+    Private Sub btnSearchMemberDialog_Click(sender As Object, e As EventArgs) Handles btnSearchMemberDialog.Click
+        InitClient()
+        Dim g_frmLoyal As New FormSearchMember(_client)
+
+        ' Pasang listener event dari DLL ke Sub penampung di POS
+        AddHandler g_frmLoyal.sendMemberData, AddressOf GetLoyalID_MemberData
+
+        g_frmLoyal.ShowDialog(Me)
+    End Sub
+
+    ''' <summary>
+    ''' Sub penampung event di POS yang otomatis dipanggil saat kasir memilih member di Form DLL
+    ''' </summary>
+    Private Sub GetLoyalID_MemberData(sender As Object, e As MemberDataEventArgs)
+        AppendLog("[EVENT sendMemberData] Diterima dari FormSearchMember:")
+        AppendLog($" - Nama: {e.FullName}")
+        AppendLog($" - No HP: {e.MobileNo}")
+        AppendLog($" - Status Aktif: {e.IsActive} ({e.StatusDescription})")
+        AppendLog($" - Poin: {e.AvailablePoints:N0} Pts (Rp {e.PointsInRupiah:N0})")
+        AppendLog($" - Level / Scheme: {e.LevelName} / {e.SchemeName}")
+
+        ' Terapkan data member ke form kasir
+        txtInputMember.Text = e.MobileNo
+        lblMemberName.Text = $"Nama Member : {e.FullName}"
+        lblMemberPhone.Text = $"No Handphone : {e.MobileNo}"
+        lblMemberLevel.Text = $"Level / Scheme : {e.LevelName} / {e.SchemeName}"
+        lblMemberPoints.Text = $"Sisa Poin : {e.AvailablePoints:N0} Pts"
+        lblMemberRupiah.Text = $"Nilai Rupiah Poin : Rp {e.PointsInRupiah:N0}"
+        lblMemberReferral.Text = $"Referral Code : {e.ReferralCode}"
+
+        lstMemberPromos.Items.Clear()
+        If e.DealCodes IsNot Nothing AndAlso e.DealCodes.Count > 0 Then
+            lstMemberPromos.Items.Add($"Ada {e.DealCodes.Count} Benefit Aktif:")
+            For Each v In e.DealCodes
+                Dim dealName = If(v.Deal IsNot Nothing AndAlso Not String.IsNullOrEmpty(v.Deal.Name), v.Deal.Name, "-")
+                lstMemberPromos.Items.Add($"- [{v.Code}] {dealName}")
+            Next
+        Else
+            lstMemberPromos.Items.Add("Belum ada benefit / promo aktif.")
+        End If
+
+        If e.RawMember IsNot Nothing Then
+            _currentMember = e.RawMember
+        End If
+
+        If Not e.IsActive Then
+            MessageBox.Show($"Perhatian: Member {e.FullName} ({e.MobileNo}) sedang {e.StatusDescription}!", "Status Member", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+        Else
+            MessageBox.Show($"Member {e.FullName} ({e.MobileNo}) berhasil dipilih via Form DLL!", "Member Terpilih", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        End If
     End Sub
 
     Private Sub ResetMemberLabels()
@@ -331,8 +405,9 @@ Public Class FormMain
 
         Try
             Dim memberUid As Long? = If(_currentMember IsNot Nothing, _currentMember.Uid, CType(Nothing, Long?))
+            Dim authCode = txtVoucherAuthCode.Text.Trim()
             ' Panggil fungsi Auto-Retry dari DLL
-            Dim resp = Await _client.UseVoucherWithRetryAsync(code, txRef, memberUid, customMaxRetry:=3)
+            Dim resp = Await _client.UseVoucherWithRetryAsync(code, txRef, memberUid, customMaxRetry:=3, authorizationCode:=authCode)
 
             If resp.IsSuccess Then
                 lblVoucherStatus.Text = $"Status: Voucher BERHASIL DIGUNAKAN pada transaksi {txRef}!"
@@ -409,8 +484,9 @@ Public Class FormMain
         Try
             Dim txRef = "TRX-" & DateTime.Now.ToString("yyMMddHHmmss")
             Dim orderAmountIdr = burnPt ' 1 poin = 1 Rupiah
+            Dim authCode = txtBurnAuthCode.Text.Trim()
 
-            Dim resp = Await _client.CreatePointPaymentAsync(_currentMember.Uid, burnPt, orderAmountIdr, txRef)
+            Dim resp = Await _client.CreatePointPaymentAsync(_currentMember.Uid, burnPt, orderAmountIdr, txRef, authorizationCode:=authCode)
             If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
                 _lastPaymentRef = resp.Data.PaymentRef
                 lblLastPaymentRef.Text = $"Last Payment Ref: {_lastPaymentRef} (Status: {resp.Data.Status})"
@@ -828,6 +904,7 @@ Public Class FormMain
 
     End Sub
 End Class
+
 
 
 
