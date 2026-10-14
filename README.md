@@ -1,4 +1,4 @@
-﻿# Dokumentasi Integrasi API Goapp CRM x DreamPOS
+# Dokumentasi Integrasi API Goapp CRM x DreamPOS
 
 Dokumen ini berisi panduan teknis, contoh kode (cara pemanggilan `.dll`), dan *raw* JSON (Request & Response) berdasarkan hasil pengujian integrasi antara DreamPOS dan backend Goapp CRM.
 
@@ -149,7 +149,41 @@ End If
 
 ---
 
-### B. Batalkan Voucher (Void / Cancel)
+### B. Gunakan Voucher (Use Voucher)
+Menggunakan voucher saat transaksi pembayaran dilakukan. Jika voucher memerlukan otorisasi (misal OTP/kode otorisasi dari aplikasi), sertakan parameter `authorizationCode`.
+
+**Pemanggilan DLL:**
+```vb
+Dim code As String = "ARKAIS-100-6DR6"
+Dim txRef As String = "TRX-261006095015"
+Dim memberUid As Long? = 155999749384776
+Dim authCode As String = "abc123" ' Opsional: isi jika sistem voucher memerlukan authorization_code
+
+' Panggil fungsi Auto-Retry (otomatis mencoba ulang jika server busy / timeout):
+Dim resp = Await goappClient.UseVoucherWithRetryAsync(code, txRef, memberUid, customMaxRetry:=3, authorizationCode:=authCode)
+
+If resp.IsSuccess Then
+    MessageBox.Show("Voucher berhasil digunakan!", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
+Else
+    MessageBox.Show($"Gagal menggunakan voucher: {resp.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+End If
+```
+
+**Request JSON (`POST /member/deal/use/`):**
+```json
+{
+  "deal_code": "ARKAIS-100-6DR6",
+  "transaction_ref": "TRX-261006095015",
+  "member": {
+    "uid": 155999749384776
+  },
+  "authorization_code": "abc123"
+}
+```
+
+---
+
+### C. Batalkan Voucher (Void / Cancel)
 Membatalkan pemakaian voucher dan mengembalikannya ke HP pelanggan. **Catatan Penting:** Pemanggilan fungsi ini HANYA membatalkan status voucher, **tidak** membatalkan transaksi / struk kasir Anda. 
 
 **Pemanggilan DLL:**
@@ -178,17 +212,26 @@ Dim resp = Await goappClient.CancelVoucherAsync("0M9NO", "TRX-261006095015", 155
 
 ---
 
-### C. Burn Point (Potong Poin Member)
+### D. Burn Point (Potong Poin Member)
 **Catatan Penting:** 
 1. Endpoint ini **menolak** penggunaan `Channel UID`. Harus mengirimkan parameter `store` lengkap dengan `Store UID` fisik dan `store_code`.
-2. Jika admin belum mengaktifkan metode Point Payment di Dashboard, akan muncul Error `400 Payment not configured`.
+2. Jika alur auto-confirm memerlukan kode otorisasi dari member (misal OTP/PIN/Authorization Code dari app Goapp), kirimkan parameter `authorizationCode`.
 3. Rasio perhitungan pemotongan di DLL sudah dikunci `1 Poin = 1 Rupiah` (Bukan dikali 1000).
 
 **Pemanggilan DLL:**
 ```vb
 Dim pointDibakar As Decimal = 5000
+Dim orderAmountIdr As Decimal = 5000
 Dim txRef As String = "TRX-261006090001"
-Dim resp = Await goappClient.CreatePointPaymentAsync(155999749384776, pointDibakar, pointDibakar, txRef)
+Dim authCode As String = "asd123" ' Opsional: isi jika butuh validasi authorization_code
+
+Dim resp = Await goappClient.CreatePointPaymentAsync(155999749384776, pointDibakar, orderAmountIdr, txRef, authorizationCode:=authCode)
+
+If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
+    Dim paymentRef = resp.Data.PaymentRef
+    Dim status = resp.Data.Status
+    MessageBox.Show($"Burn Point Berhasil! Ref: {paymentRef}, Status: {status}")
+End If
 ```
 
 **Request JSON (`POST /member/payment/`):**
@@ -201,6 +244,7 @@ Dim resp = Await goappClient.CreatePointPaymentAsync(155999749384776, pointDibak
   "order_amount": 5000,
   "order_currency": "idr",
   "provider_ref": "TRX-261006090001",
+  "authorization_code": "asd123",
   "store": {
     "uid": 138533231320136,
     "name": "Go DimSum Bogor",
@@ -218,7 +262,7 @@ Dim resp = Await goappClient.CreatePointPaymentAsync(155999749384776, pointDibak
 
 ---
 
-### D. Push Transaksi (Earning Point)
+### E. Push Transaksi (Earning Point)
 Mencatat total transaksi ke Goapp. Perhitungan berapa poin yang didapat pelanggan **DIHITUNG OLEH SERVER GOAPP**, bukan aplikasi kasir (Misal: Batas maksimal per hari, tidak berlaku kelipatan belanja, dsb diatur di Dashboard CRM Goapp).
 
 **Pemanggilan DLL:**
