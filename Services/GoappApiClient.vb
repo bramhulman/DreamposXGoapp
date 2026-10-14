@@ -267,13 +267,20 @@ Namespace Services
         ''' Menggunakan voucher dengan mekanisme Auto-Retry jika terjadi kendala jaringan / server busy
         ''' </summary>
         Public Async Function UseVoucherWithRetryAsync(dealCode As String, transactionRef As String, Optional memberUid As Long? = Nothing, Optional customMaxRetry As Integer = -1, Optional authorizationCode As String = Nothing) As Task(Of ApiResponse(Of VoucherResult))
+            If String.IsNullOrWhiteSpace(authorizationCode) Then
+                Return New ApiResponse(Of VoucherResult) With {
+                    .IsSuccess = False,
+                    .Message = "Authorization Code wajib diisi sebelum menggunakan voucher."
+                }
+            End If
+
             Dim maxRetry = If(customMaxRetry > 0, customMaxRetry, _config.MaxRetryAttempts)
             Dim url = $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/member/deal/use/"
             Dim payload = New VoucherUseRequest With {
                 .DealCode = dealCode.Trim(),
                 .TransactionRef = transactionRef,
                 .Member = If(memberUid.HasValue AndAlso memberUid.Value > 0, New VoucherMemberRef With {.Uid = memberUid.Value}, Nothing),
-                .AuthorizationCode = If(String.IsNullOrWhiteSpace(authorizationCode), Nothing, authorizationCode.Trim())
+                .AuthorizationCode = authorizationCode.Trim()
             }
 
             Dim lastResult As ApiResponse(Of VoucherResult) = Nothing
@@ -369,13 +376,20 @@ Namespace Services
         ''' Melakukan pemotongan (Burn) poin member untuk pembayaran transaksi POS
         ''' </summary>
         Public Async Function CreatePointPaymentAsync(memberUid As Long, pointAmount As Decimal, orderAmountIdr As Decimal, providerRef As String, Optional authorizationCode As String = Nothing) As Task(Of ApiResponse(Of PaymentTransactionResponse))
+            If String.IsNullOrWhiteSpace(authorizationCode) Then
+                Return New ApiResponse(Of PaymentTransactionResponse) With {
+                    .IsSuccess = False,
+                    .Message = "Authorization Code wajib diisi sebelum melakukan Burn Point."
+                }
+            End If
+
             Dim url = $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/member/payment/"
             Dim payload = New PaymentTransactionRequest With {
                 .Member = New PaymentMemberRef With {.Uid = memberUid},
                 .Amount = pointAmount,
                 .OrderAmount = orderAmountIdr,
                 .ProviderRef = providerRef,
-                .AuthorizationCode = If(String.IsNullOrWhiteSpace(authorizationCode), Nothing, authorizationCode.Trim())
+                .AuthorizationCode = authorizationCode.Trim()
             }
             
             If _config.StoreUid.HasValue Then

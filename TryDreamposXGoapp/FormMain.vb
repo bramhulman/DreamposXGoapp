@@ -399,13 +399,19 @@ Public Class FormMain
             Return
         End If
 
+        Dim authCode = txtVoucherAuthCode.Text.Trim()
+        If String.IsNullOrEmpty(authCode) Then
+            MessageBox.Show("Authorization Code wajib diisi sebelum menggunakan voucher!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            txtVoucherAuthCode.Focus()
+            Return
+        End If
+
         btnUseVoucher.Enabled = False
         lblVoucherStatus.Text = "Status: Memproses voucher dengan Auto-Retry..."
         lblVoucherStatus.ForeColor = Color.DarkBlue
 
         Try
             Dim memberUid As Long? = If(_currentMember IsNot Nothing, _currentMember.Uid, CType(Nothing, Long?))
-            Dim authCode = txtVoucherAuthCode.Text.Trim()
             ' Panggil fungsi Auto-Retry dari DLL
             Dim resp = Await _client.UseVoucherWithRetryAsync(code, txRef, memberUid, customMaxRetry:=3, authorizationCode:=authCode)
 
@@ -480,11 +486,17 @@ Public Class FormMain
             Return
         End If
 
+        Dim authCode = txtBurnAuthCode.Text.Trim()
+        If String.IsNullOrEmpty(authCode) Then
+            MessageBox.Show("Authorization Code wajib diisi sebelum melakukan Burn Point!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            txtBurnAuthCode.Focus()
+            Return
+        End If
+
         btnBurnPoint.Enabled = False
         Try
             Dim txRef = "TRX-" & DateTime.Now.ToString("yyMMddHHmmss")
             Dim orderAmountIdr = burnPt ' 1 poin = 1 Rupiah
-            Dim authCode = txtBurnAuthCode.Text.Trim()
 
             Dim resp = Await _client.CreatePointPaymentAsync(_currentMember.Uid, burnPt, orderAmountIdr, txRef, authorizationCode:=authCode)
             If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
