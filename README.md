@@ -262,82 +262,46 @@ End If
 
 ---
 
-### E. Push Transaksi (Earning Point)
-Mencatat total transaksi ke Goapp. Perhitungan berapa poin yang didapat pelanggan **DIHITUNG OLEH SERVER GOAPP**, bukan aplikasi kasir (Misal: Batas maksimal per hari, tidak berlaku kelipatan belanja, dsb diatur di Dashboard CRM Goapp).
+### E. Transaksi Pembayaran / Push Transaksi (Gabung Semua Metode Pembayaran via `member/payment/`)
+Transaksi pembayaran diproses langsung melalui endpoint `{{CHANNEL_API_BASE_URL}}/member/payment/` dengan menggabungkan total nilai belanja (`order_amount`) tanpa perlu memisahkan rincian metode pembayaran (`payment_type`).
 
 **Pemanggilan DLL:**
 ```vb
-Dim lines As New List(Of OrderLineItem)
-lines.Add(New OrderLineItem With {.Sku = "ITEM-1", .Name = "Baju A", .Quantity = 1, .Price = 100000})
+Dim memberUid As Long = 155999749384776
+Dim totalBelanja As Decimal = 200000 ' Total nominal belanja (IDR)
+Dim poinDibakar As Decimal = 0       ' Opsional: isi jika ada pemotongan poin member
+Dim txRef As String = "TRX-" & DateTime.Now.ToString("yyMMdd-HHmmss")
+Dim authCode As String = "asd123"    ' Opsional: kirim authorization_code jika diperlukan
 
-' Pembayaran bisa berisi banyak metode (Gopay, EDC, Tunai, dsb)
-Dim payments As New List(Of Object)
-payments.Add(New With { .payment_method_name = "Cash", .payment_type = "CASH", .amount = 100000 })
+Dim resp = Await goappClient.CreatePointPaymentAsync(memberUid, poinDibakar, totalBelanja, txRef, authorizationCode:=authCode)
 
-Dim resp = Await goappClient.PushSalesOrderAsync(
-    orderNo:="POS-261005",
-    providerRef:="POS-261005",
-    memberUid:=155999749384776,
-    mobileNo:="087890760858",
-    lines:=lines,
-    payments:=payments
-)
-
-' Baca poin yang didapat (dihitung oleh Goapp)
-Dim pointDidapat = If(resp.Data.Reward.Count > 0, resp.Data.Reward(0).Amount, 0)
+If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
+    Dim paymentRef = resp.Data.PaymentRef
+    Dim status = resp.Data.Status
+    MessageBox.Show($"Transaksi Berhasil! Ref: {paymentRef}, Status: {status}")
+Else
+    MessageBox.Show($"Transaksi Gagal: {resp.Message}")
+End If
 ```
 
-**Request JSON (`POST /sales/order/`):**
-*(Bisa menggunakan base channel (tanpa parameter `store`) jika TIDAK ADA metode pembayaran point `POINT` di dalamnya. Server Goapp akan otomatis me-mapping ke Store Default.)*
+**Request JSON (`POST /member/payment/`):**
 ```json
 {
-  "order_no": "POS-261005-165553",
-  "provider_ref": "POS-261005-165553",
-  "order_date": "2026-10-05 16:55:53+07:00",
   "member": {
-    "uid": 155999749384776,
-    "mobile_no": "081588809090"
+    "uid": 155999749384776
   },
-  "lines": [
-    {
-      "product": {
-        "sku": "ITEM-1",
-        "name": "Baju A"
-      },
-      "quantity": 1,
-      "price": 100000.0,
-      "price_before_discount": 100000.0
-    }
-  ],
-  "lines_total": 100000.0,
-  "lines_tax": 0.0,
-  "total_incl_tax": 100000.0,
-  "total_paid": 100000.0,
-  "payments": [
-    {
-      "payment_method_name": "Cash",
-      "payment_type": "CASH",
-      "amount": 100000.0
-    }
-  ],
-  "completed_at": "2026-10-05 16:55:53+07:00",
-  "paid_at": "2026-10-05 16:55:53+07:00"
+  "store": {
+    "name": "Go DimSum Bogor",
+    "store_code": "DS"
+  },
+  "provider_ref": "TRX-261014-142500",
+  "order_amount": 200000.0,
+  "order_currency": "idr",
+  "authorization_code": "asd123"
 }
 ```
 
-**Response JSON (Menunjukkan Member tidak dapat poin karena terkena limit dashboard / bukan kelipatan):**
-```json
-{
-  "order_no": "SO-000902",
-  "status": "Invalid",
-  "reward": [
-    {
-      "amount": 0,
-      "est_new_balance": 109410.0
-    }
-  ]
-}
-```
+---
 
 ## 5. Fitur Baru & Improvement Terbaru (Oktober 2026)
 Beberapa pembaruan fungsional dan teknis yang telah ditambahkan ke dalam aplikasi POS:

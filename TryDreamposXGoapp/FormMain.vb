@@ -399,20 +399,14 @@ Public Class FormMain
             Return
         End If
 
-        Dim authCode = txtVoucherAuthCode.Text.Trim()
-        If String.IsNullOrEmpty(authCode) Then
-            MessageBox.Show("Authorization Code wajib diisi sebelum menggunakan voucher!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            txtVoucherAuthCode.Focus()
-            Return
-        End If
-
         btnUseVoucher.Enabled = False
         lblVoucherStatus.Text = "Status: Memproses voucher dengan Auto-Retry..."
         lblVoucherStatus.ForeColor = Color.DarkBlue
 
         Try
             Dim memberUid As Long? = If(_currentMember IsNot Nothing, _currentMember.Uid, CType(Nothing, Long?))
-            ' Panggil fungsi Auto-Retry dari DLL
+            Dim authCode = txtVoucherAuthCode.Text.Trim()
+            ' Panggil fungsi Auto-Retry dari DLL (authCode bisa terisi, random, atau kosong)
             Dim resp = Await _client.UseVoucherWithRetryAsync(code, txRef, memberUid, customMaxRetry:=3, authorizationCode:=authCode)
 
             If resp.IsSuccess Then
@@ -486,18 +480,13 @@ Public Class FormMain
             Return
         End If
 
-        Dim authCode = txtBurnAuthCode.Text.Trim()
-        If String.IsNullOrEmpty(authCode) Then
-            MessageBox.Show("Authorization Code wajib diisi sebelum melakukan Burn Point!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            txtBurnAuthCode.Focus()
-            Return
-        End If
-
         btnBurnPoint.Enabled = False
         Try
             Dim txRef = "TRX-" & DateTime.Now.ToString("yyMMddHHmmss")
             Dim orderAmountIdr = burnPt ' 1 poin = 1 Rupiah
+            Dim authCode = txtBurnAuthCode.Text.Trim()
 
+            ' Panggil DLL Burn Point (authCode bisa terisi, random, atau kosong)
             Dim resp = Await _client.CreatePointPaymentAsync(_currentMember.Uid, burnPt, orderAmountIdr, txRef, authorizationCode:=authCode)
             If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
                 _lastPaymentRef = resp.Data.PaymentRef
@@ -537,98 +526,49 @@ Public Class FormMain
     End Sub
 
     Private Async Sub btnPushSalesOrder_Click(sender As Object, e As EventArgs) Handles btnPushSalesOrder.Click
+        If _currentMember Is Nothing Then
+            MessageBox.Show("Silakan cari dan pilih member terlebih dahulu!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        Dim billTotal As Decimal
+        Decimal.TryParse(txtBillTotal.Text, billTotal)
+        If billTotal <= 0 Then billTotal = 50000D
+
+        Dim burnPoint As Decimal = 0
+        Decimal.TryParse(txtBurnPoint.Text, burnPoint)
+        ' Jika burn point tidak diisi, gunakan billTotal atau burnPoint
+        Dim pointAmount = If(burnPoint > 0, burnPoint, billTotal)
+
+        Dim authCode = txtBurnAuthCode.Text.Trim()
+        Dim providerRef = "TRX-" & DateTime.Now.ToString("yyMMdd-HHmmss")
+
         btnPushSalesOrder.Enabled = False
         Try
-            Dim orderNo = "POS-" & DateTime.Now.ToString("yyMMdd-HHmmss")
-            Dim billTotal As Decimal
-            Decimal.TryParse(txtBillTotal.Text, billTotal)
-            If billTotal <= 0 Then billTotal = 50000D
-
-            Dim burnPoint As Decimal = 0
-            Decimal.TryParse(txtBurnPoint.Text, burnPoint)
-            
-            Dim pointPayAmount = If(burnPoint <= billTotal, burnPoint, billTotal)
-            Dim remainingTotal = billTotal - pointPayAmount
-
-            Dim item1Price = Math.Round(billTotal * 0.6D)
-            Dim item2Price = billTotal - item1Price
-
-            Dim pay1Amount = Math.Round(remainingTotal * 0.7D)
-            Dim pay2Amount = remainingTotal - pay1Amount
-
-            Dim orderReq As New PushOrderRequest With {
-                .OrderNo = orderNo,
-                .ProviderRef = orderNo,
-                .OrderDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
-                .LinesTotal = billTotal,
-                .LinesTax = 0,
-                .TotalInclTax = billTotal,
-                .TotalPaid = billTotal,
-                .PaidAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
-                .CompletedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
-                .Lines = New List(Of OrderLineItem) From {
-                    New OrderLineItem With {
-                        .Product = New OrderProductInfo With {
-                            .Sku = "SKFTRR02-S",
-                            .Name = "Baju FT RR Small"
-                        },
-                        .Quantity = 1,
-                        .PriceBeforeDiscount = item1Price,
-                        .Price = item1Price
-                    },
-                    New OrderLineItem With {
-                        .Product = New OrderProductInfo With {
-                            .Sku = "SKFTRR03-M",
-                            .Name = "Baju FT RR Medium"
-                        },
-                        .Quantity = 1,
-                        .PriceBeforeDiscount = item2Price,
-                        .Price = item2Price
-                    }
-                },
-                .Payments = New List(Of OrderPaymentItem)()
+            ' Menggunakan endpoint {{CHANNEL_API_BASE_URL}}/member/payment/ (semua digabung, tanpa memisahkan payment type)
+            Dim reqObj As New PaymentTransactionRequest With {
+                .Member = New PaymentMemberRef With {.Uid = _currentMember.Uid},
+                .OrderAmount = billTotal,
+                .OrderCurrency = "idr",
+                .ProviderRef = providerRef,
+                .AuthorizationCode = If(String.IsNullOrWhiteSpace(authCode), Nothing, authCode)
             }
-
-            If pointPayAmount > 0 Then
-                orderReq.Payments.Add(New OrderPaymentItem With {
-                    .PaymentMethodName = "Point",
-                    .PaymentType = "POINT",
-                    .Amount = pointPayAmount
-                })
+            If burnPoint > 0 Then
+                reqObj.Amount = burnPoint
             End If
 
-            If pay1Amount > 0 Then
-                orderReq.Payments.Add(New OrderPaymentItem With {
-                    .PaymentMethodName = "EDC BCA",
-                    .PaymentType = "EDC",
-                    .Amount = pay1Amount
-                })
-            End If
+            Dim requestJson = Newtonsoft.Json.JsonConvert.SerializeObject(reqObj, Newtonsoft.Json.Formatting.Indented, New Newtonsoft.Json.JsonSerializerSettings With {.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore})
+            txtOrderRawJson.Text = "=== REQUEST JSON (POST /member/payment/) ===" & Environment.NewLine & requestJson & Environment.NewLine & Environment.NewLine
 
-            If pay2Amount > 0 Then
-                orderReq.Payments.Add(New OrderPaymentItem With {
-                    .PaymentMethodName = "Tunai",
-                    .PaymentType = "CASH",
-                    .Amount = pay2Amount
-                })
-            End If
-
-            If _currentMember IsNot Nothing Then
-                orderReq.Member = New OrderMemberRef With {
-                    .Uid = _currentMember.Uid,
-                    .MobileNo = _currentMember.MobileNo
-                }
-            End If
-
-            Dim requestJson = Newtonsoft.Json.JsonConvert.SerializeObject(orderReq, Newtonsoft.Json.Formatting.Indented, New Newtonsoft.Json.JsonSerializerSettings With {.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore})
-            txtOrderRawJson.Text = "=== REQUEST JSON ===" & Environment.NewLine & requestJson & Environment.NewLine & Environment.NewLine
-
-            Dim resp = Await _client.PushSalesOrderAsync(orderReq)
-            If resp.IsSuccess Then
-                Dim earnedPts = If(resp.Data?.Reward IsNot Nothing AndAlso resp.Data.Reward.Count > 0, resp.Data.Reward(0).Amount, 0)
-                MessageBox.Show($"Transaksi {orderNo} berhasil dikirim ke Goapp!{Environment.NewLine}Order UID: {resp.Data?.Uid}{Environment.NewLine}Poin Diperoleh: {earnedPts} Pts", "Earning Berhasil", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Dim resp = Await _client.CreatePointPaymentAsync(_currentMember.Uid, pointAmount, billTotal, providerRef, authorizationCode:=authCode)
+            If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
+                _lastPaymentRef = resp.Data.PaymentRef
+                lblLastPaymentRef.Text = $"Last Payment Ref: {_lastPaymentRef} (Status: {resp.Data.Status})"
+                MessageBox.Show($"Transaksi Berhasil Dikirim ke Goapp!{Environment.NewLine}Payment Ref: {_lastPaymentRef}{Environment.NewLine}Status: {resp.Data.Status}{Environment.NewLine}Order Amount: Rp {billTotal:N0}", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                ' Refresh data member
+                btnSearchMember.PerformClick()
             Else
-                MessageBox.Show($"Gagal mengirim transaksi:{Environment.NewLine}{resp.Message}", "Gagal Push Order", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                MessageBox.Show($"Gagal mengirim transaksi:{Environment.NewLine}{resp.Message}", "Gagal Push Transaksi", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End If
             txtOrderRawJson.Text &= "=== RESPONSE JSON ===" & Environment.NewLine & FormatJson(resp.RawJson)
         Finally
