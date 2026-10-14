@@ -1,4 +1,4 @@
-﻿import os
+import os
 from fpdf import FPDF
 
 class PDFReport(FPDF):
@@ -235,55 +235,51 @@ def create_pdf(output_path):
         "- GET deal_codes: CRM memisahkan voucher member via /member/member/{id}/deal_codes/?status=not_used."
     )
 
-    pdf.section_title("4.3 Push Transaksi Selesai (Earning Point)")
+    pdf.section_title("4.3 Transaksi Pembayaran & Push Transaksi via member/payment/")
     pdf.body_p(
-        "Method: POST | Endpoint: https://api.goapp.co.id/channel/v1/sales/order/\n"
-        "Catatan: Perhitungan poin yang didapat 100% dikendalikan oleh Server Goapp (rule kelipatan, limit harian, dsb), bukan oleh aplikasi POS."
+        "Method: POST | Endpoint: https://api.goapp.co.id/channel/v1/member/payment/\n"
+        "Seluruh transaksi kasir diproses langsung melalui endpoint payment tanpa perlu memisahkan rincian metode pembayaran (CASH, EDC, dsb). Total belanja dikirim pada order_amount."
     )
     pdf.code_block(
 """// Payload Request Body:
 {
-  "order_no": "POS-261001-0001",           // String: No Faktur Kasir POS (Unik)
-  "provider_ref": "POS-261001-0001",       // String: Referensi transaksi POS
-  "order_date": "2026-10-01 12:30:00+07:00", // String ISO 8601
-  "member": { "uid": 110270830028872 },    // Long: Member UID penerima poin
-  "store": { "uid": 138350315235400 },     // Long: UID Channel Dream POS Store
-  "lines_total": 100000.00,                // Decimal: Subtotal belanja
-  "total_paid": 100000.00,                 // Decimal: Total yang dibayar
-  "lines": [
-    {
-      "product": { "sku": "SKU-01", "name": "Baju Kemeja" },
-      "quantity": 1,                       // Integer: Qty beli
-      "price": 100000.00                   // Decimal: Harga satuan netto
-    }
-  ],
-  "payments": [
-    { "payment_method_name": "Cash", "payment_type": "CASH", "amount": 100000.00 }
-  ]
-}
-// Respon Sukses: reward[0].amount (Poin reward baru yang diterima member)."""
+  "member": { "uid": 110270830028872 },     // Long: Member UID
+  "store": {                                // Object: Data Store Fisik
+    "name": "JOBB Jakarta",
+    "store_code": "JOBBJKT"
+  },
+  "provider_ref": "TRX/23/232233",          // String: No transaksi POS unik
+  "order_amount": "200000",                 // Decimal/String: Total nilai belanja (IDR)
+  "order_currency": "idr",
+  "authorization_code": "asd123"            // String: Kode otorisasi (opsional jika diminta)
+}"""
     )
 
     # 4.4 BURN POINT & VOUCHER
     pdf.add_page()
-    pdf.section_title("4.4 Burn Point (Pembayaran Transaksi Menggunakan Poin)")
+    pdf.section_title("4.4 Burn Point (Pembayaran Transaksi Menggunakan Poin Member)")
     pdf.body_p(
         "Method: POST | Endpoint: https://api.goapp.co.id/channel/v1/member/payment/\n"
-        "Endpoint ini WAJIB menggunakan Physical Store UID (bukan Channel UID) dan store_code.\n"
+        "Endpoint ini memotong saldo poin member untuk pembayaran belanja di toko fisik.\n"
         "Payload Input:\n"
         "- member.uid (Long): UID member pemilik poin.\n"
-        "- amount (Decimal): Jumlah poin yang dipotong (misal: 5000.00).\n"
-        "- order_amount (Decimal): Nilai rupiah dari poin (Rasio 1:1, misal: 5000.00).\n"
-        "- provider_ref (String): No transaksi POS (mencegah double-deduction).\n"
-        "- store (Object): Harus berisi uid fisik dan store_code (contoh: 'DS')."
+        "- amount (Decimal, Opsional): Jumlah poin yang dipotong (misal: 5000.00).\n"
+        "- order_amount (Decimal): Nilai rupiah dari transaksi belanja (Rasio 1:1, misal: 200000.00).\n"
+        "- provider_ref (String): No transaksi POS unik.\n"
+        "- authorization_code (String, Opsional): Kode otorisasi member jika diproteksi OTP/PIN.\n"
+        "- store (Object): Harus berisi data toko fisik (name dan store_code)."
     )
 
     pdf.section_title("4.5 Validasi & Penggunaan Voucher serta Ekstraksi 'reward_data'")
     pdf.body_p(
         "Validasi: POST /member/deal/validate/ | Gunakan: POST /member/deal/use/\n"
-        "Payload Input: deal_code (String), transaction_ref (String), member.uid (Long).\n"
+        "Payload Penggunaan Voucher (/member/deal/use/):\n"
+        "- deal_code (String): Kode voucher pelanggan (misal: 'ARKAIS-100-6DR6').\n"
+        "- transaction_ref (String): No transaksi/struk kasir POS.\n"
+        "- member.uid (Long): UID member pemilik voucher.\n"
+        "- authorization_code (String, Opsional): Kode otorisasi voucher jika diproteksi OTP/PIN.\n\n"
         "Objek reward_data dipetakan otomatis ke properti RewardDataInfo pada DLL:\n"
-        "- discount_type: percentage, amount, free_items\n"
+        "- discount_type: percentage, amount, special_price, free_items\n"
         "- EffectiveDiscountAmount: Nilai diskon (persen atau rupiah)\n"
         "- EffectiveMinPurchase: Batas minimal belanja dari sub-objek rule.min_purchase\n"
         "- EffectiveDiscountMaxAmount: Batas maksimal potongan rupiah dari sub-objek reward.discount_max_amount\n"

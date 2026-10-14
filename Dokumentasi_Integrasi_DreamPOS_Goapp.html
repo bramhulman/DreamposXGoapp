@@ -14,7 +14,7 @@
     </style>
 </head>
 <body>
-    <p>﻿# Dokumentasi Integrasi API Goapp CRM x DreamPOS</p>
+    <h1>Dokumentasi Integrasi API Goapp CRM x DreamPOS</h1>
 <p>Dokumen ini berisi panduan teknis, contoh kode (cara pemanggilan <code>.dll</code>), dan <em>raw</em> JSON (Request &amp; Response) berdasarkan hasil pengujian integrasi antara DreamPOS dan backend Goapp CRM.</p>
 <hr />
 <h2>1. Persiapan Konfigurasi (App.config Aplikasi Pemanggil)</h2>
@@ -146,7 +146,35 @@ End If
 }
 </code></pre>
 <hr />
-<h3>B. Batalkan Voucher (Void / Cancel)</h3>
+<h3>B. Gunakan Voucher (Use Voucher)</h3>
+<p>Menggunakan voucher saat transaksi pembayaran dilakukan. Jika voucher memerlukan otorisasi (misal OTP/kode otorisasi dari aplikasi), sertakan parameter <code>authorizationCode</code>.</p>
+<p><strong>Pemanggilan DLL:</strong></p>
+<pre><code class="language-vb">Dim code As String = &quot;ARKAIS-100-6DR6&quot;
+Dim txRef As String = &quot;TRX-261006095015&quot;
+Dim memberUid As Long? = 155999749384776
+Dim authCode As String = &quot;abc123&quot; ' Opsional: isi jika sistem voucher memerlukan authorization_code
+
+' Panggil fungsi Auto-Retry (otomatis mencoba ulang jika server busy / timeout):
+Dim resp = Await goappClient.UseVoucherWithRetryAsync(code, txRef, memberUid, customMaxRetry:=3, authorizationCode:=authCode)
+
+If resp.IsSuccess Then
+    MessageBox.Show(&quot;Voucher berhasil digunakan!&quot;, &quot;Sukses&quot;, MessageBoxButtons.OK, MessageBoxIcon.Information)
+Else
+    MessageBox.Show($&quot;Gagal menggunakan voucher: {resp.Message}&quot;, &quot;Error&quot;, MessageBoxButtons.OK, MessageBoxIcon.Error)
+End If
+</code></pre>
+<p><strong>Request JSON (<code>POST /member/deal/use/</code>):</strong></p>
+<pre><code class="language-json">{
+  &quot;deal_code&quot;: &quot;ARKAIS-100-6DR6&quot;,
+  &quot;transaction_ref&quot;: &quot;TRX-261006095015&quot;,
+  &quot;member&quot;: {
+    &quot;uid&quot;: 155999749384776
+  },
+  &quot;authorization_code&quot;: &quot;abc123&quot;
+}
+</code></pre>
+<hr />
+<h3>C. Batalkan Voucher (Void / Cancel)</h3>
 <p>Membatalkan pemakaian voucher dan mengembalikannya ke HP pelanggan. <strong>Catatan Penting:</strong> Pemanggilan fungsi ini HANYA membatalkan status voucher, <strong>tidak</strong> membatalkan transaksi / struk kasir Anda. </p>
 <p><strong>Pemanggilan DLL:</strong></p>
 <pre><code class="language-vb">' Wajib menyertakan TxRef asal dan UID Member!
@@ -167,15 +195,24 @@ Dim resp = Await goappClient.CancelVoucherAsync(&quot;0M9NO&quot;, &quot;TRX-261
 }
 </code></pre>
 <hr />
-<h3>C. Burn Point (Potong Poin Member)</h3>
+<h3>D. Burn Point (Potong Poin Member)</h3>
 <p><strong>Catatan Penting:</strong> 
 1. Endpoint ini <strong>menolak</strong> penggunaan <code>Channel UID</code>. Harus mengirimkan parameter <code>store</code> lengkap dengan <code>Store UID</code> fisik dan <code>store_code</code>.
-2. Jika admin belum mengaktifkan metode Point Payment di Dashboard, akan muncul Error <code>400 Payment not configured</code>.
+2. Jika alur auto-confirm memerlukan kode otorisasi dari member (misal OTP/PIN/Authorization Code dari app Goapp), kirimkan parameter <code>authorizationCode</code>.
 3. Rasio perhitungan pemotongan di DLL sudah dikunci <code>1 Poin = 1 Rupiah</code> (Bukan dikali 1000).</p>
 <p><strong>Pemanggilan DLL:</strong></p>
 <pre><code class="language-vb">Dim pointDibakar As Decimal = 5000
+Dim orderAmountIdr As Decimal = 5000
 Dim txRef As String = &quot;TRX-261006090001&quot;
-Dim resp = Await goappClient.CreatePointPaymentAsync(155999749384776, pointDibakar, pointDibakar, txRef)
+Dim authCode As String = &quot;asd123&quot; ' Opsional: isi jika butuh validasi authorization_code
+
+Dim resp = Await goappClient.CreatePointPaymentAsync(155999749384776, pointDibakar, orderAmountIdr, txRef, authorizationCode:=authCode)
+
+If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
+    Dim paymentRef = resp.Data.PaymentRef
+    Dim status = resp.Data.Status
+    MessageBox.Show($&quot;Burn Point Berhasil! Ref: {paymentRef}, Status: {status}&quot;)
+End If
 </code></pre>
 <p><strong>Request JSON (<code>POST /member/payment/</code>):</strong></p>
 <pre><code class="language-json">{
@@ -186,6 +223,7 @@ Dim resp = Await goappClient.CreatePointPaymentAsync(155999749384776, pointDibak
   &quot;order_amount&quot;: 5000,
   &quot;order_currency&quot;: &quot;idr&quot;,
   &quot;provider_ref&quot;: &quot;TRX-261006090001&quot;,
+  &quot;authorization_code&quot;: &quot;asd123&quot;,
   &quot;store&quot;: {
     &quot;uid&quot;: 138533231320136,
     &quot;name&quot;: &quot;Go DimSum Bogor&quot;,
@@ -199,76 +237,71 @@ Dim resp = Await goappClient.CreatePointPaymentAsync(155999749384776, pointDibak
 }
 </code></pre>
 <hr />
-<h3>D. Push Transaksi (Earning Point)</h3>
-<p>Mencatat total transaksi ke Goapp. Perhitungan berapa poin yang didapat pelanggan <strong>DIHITUNG OLEH SERVER GOAPP</strong>, bukan aplikasi kasir (Misal: Batas maksimal per hari, tidak berlaku kelipatan belanja, dsb diatur di Dashboard CRM Goapp).</p>
-<p><strong>Pemanggilan DLL:</strong></p>
-<pre><code class="language-vb">Dim lines As New List(Of OrderLineItem)
-lines.Add(New OrderLineItem With {.Sku = &quot;ITEM-1&quot;, .Name = &quot;Baju A&quot;, .Quantity = 1, .Price = 100000})
-
-' Pembayaran bisa berisi banyak metode (Gopay, EDC, Tunai, dsb)
-Dim payments As New List(Of Object)
-payments.Add(New With { .payment_method_name = &quot;Cash&quot;, .payment_type = &quot;CASH&quot;, .amount = 100000 })
-
-Dim resp = Await goappClient.PushSalesOrderAsync(
-    orderNo:=&quot;POS-261005&quot;,
-    providerRef:=&quot;POS-261005&quot;,
-    memberUid:=155999749384776,
-    mobileNo:=&quot;087890760858&quot;,
-    lines:=lines,
-    payments:=payments
-)
-
-' Baca poin yang didapat (dihitung oleh Goapp)
-Dim pointDidapat = If(resp.Data.Reward.Count &gt; 0, resp.Data.Reward(0).Amount, 0)
-</code></pre>
-<p><strong>Request JSON (<code>POST /sales/order/</code>):</strong>
-<em>(Bisa menggunakan base channel (tanpa parameter <code>store</code>) jika TIDAK ADA metode pembayaran point <code>POINT</code> di dalamnya. Server Goapp akan otomatis me-mapping ke Store Default.)</em></p>
-<pre><code class="language-json">{
-  &quot;order_no&quot;: &quot;POS-261005-165553&quot;,
-  &quot;provider_ref&quot;: &quot;POS-261005-165553&quot;,
-  &quot;order_date&quot;: &quot;2026-10-05 16:55:53+07:00&quot;,
-  &quot;member&quot;: {
-    &quot;uid&quot;: 155999749384776,
-    &quot;mobile_no&quot;: &quot;081588809090&quot;
-  },
-  &quot;lines&quot;: [
-    {
-      &quot;product&quot;: {
-        &quot;sku&quot;: &quot;ITEM-1&quot;,
-        &quot;name&quot;: &quot;Baju A&quot;
-      },
-      &quot;quantity&quot;: 1,
-      &quot;price&quot;: 100000.0,
-      &quot;price_before_discount&quot;: 100000.0
-    }
-  ],
-  &quot;lines_total&quot;: 100000.0,
-  &quot;lines_tax&quot;: 0.0,
-  &quot;total_incl_tax&quot;: 100000.0,
-  &quot;total_paid&quot;: 100000.0,
-  &quot;payments&quot;: [
-    {
-      &quot;payment_method_name&quot;: &quot;Cash&quot;,
-      &quot;payment_type&quot;: &quot;CASH&quot;,
-      &quot;amount&quot;: 100000.0
-    }
-  ],
-  &quot;completed_at&quot;: &quot;2026-10-05 16:55:53+07:00&quot;,
-  &quot;paid_at&quot;: &quot;2026-10-05 16:55:53+07:00&quot;
-}
-</code></pre>
-<p><strong>Response JSON (Menunjukkan Member tidak dapat poin karena terkena limit dashboard / bukan kelipatan):</strong></p>
-<pre><code class="language-json">{
-  &quot;order_no&quot;: &quot;SO-000902&quot;,
-  &quot;status&quot;: &quot;Invalid&quot;,
-  &quot;reward&quot;: [
-    {
-      &quot;amount&quot;: 0,
-      &quot;est_new_balance&quot;: 109410.0
-    }
-  ]
-}
-</code></pre>
+<h3>E. Alur Push Transaksi POS (Berdasarkan Nilai Burn Point)</h3>
+<p>Alur pengiriman transaksi penjualan dari kasir DreamPOS ke Goapp terbagi menjadi 2 skenario otomatis:</p>
+<ol>
+<li><strong>Skenario A: Dengan Pemotongan Poin (<code>burn_point &gt; 0</code>)</strong></li>
+<li>Menggunakan endpoint: <code>POST {{CHANNEL_API_BASE_URL}}/member/payment/</code></li>
+<li>Memotong poin member sesuai nilai <code>amount</code> dan mencatat total belanja <code>order_amount</code>. Mendukung pengiriman <code>authorization_code</code>.</li>
+</ol>
+<p><strong>Contoh Request JSON (<code>POST /member/payment/</code>):</strong>
+   <code>json
+   {
+     "member": {
+       "uid": 155999749384776
+     },
+     "amount": 5000,
+     "order_amount": 200000.0,
+     "order_currency": "idr",
+     "provider_ref": "TRX-261014-142500",
+     "authorization_code": "asd123",
+     "store": {
+       "name": "Go DimSum Bogor",
+       "store_code": "DS"
+     }
+   }</code></p>
+<ol>
+<li><strong>Skenario B: Tanpa Pemotongan Poin (<code>burn_point = 0</code> / Normal Sales)</strong></li>
+<li>Menggunakan endpoint: <code>POST {{CHANNEL_API_BASE_URL}}/sales/order/</code></li>
+<li>Berfungsi untuk penambahan poin member (<strong>Earning Points</strong>).</li>
+<li>Seluruh nilai pembayaran disatukan menjadi 1 baris payment (<code>payment_method_name: "Total Paid"</code>, <code>amount: billTotal</code>) tanpa memecah detail metode pembayaran lain.</li>
+</ol>
+<p><strong>Contoh Request JSON (<code>POST /sales/order/</code>):</strong>
+   <code>json
+   {
+     "member": {
+       "uid": 155999749384776,
+       "mobile_no": "08123456789"
+     },
+     "provider_ref": "TRX-261014-142500",
+     "order_no": "TRX-261014-142500",
+     "order_date": "2026-10-14 14:25:00+07:00",
+     "lines_total": 200000.0,
+     "lines_tax": 0.0,
+     "total_incl_tax": 200000.0,
+     "total_paid": 200000.0,
+     "paid_at": "2026-10-14 14:25:00+07:00",
+     "completed_at": "2026-10-14 14:25:00+07:00",
+     "lines": [
+       {
+         "product": {
+           "sku": "POS-ITEM-01",
+           "name": "Penjualan DreamPOS"
+         },
+         "quantity": 1,
+         "price_before_discount": 200000.0,
+         "price": 200000.0
+       }
+     ],
+     "payments": [
+       {
+         "payment_method_name": "Total Paid",
+         "payment_type": "CASH",
+         "amount": 200000.0
+       }
+     ]
+   }</code></p>
+<hr />
 <h2>5. Fitur Baru &amp; Improvement Terbaru (Oktober 2026)</h2>
 <p>Beberapa pembaruan fungsional dan teknis yang telah ditambahkan ke dalam aplikasi POS:</p>
 <ol>

@@ -262,44 +262,72 @@ End If
 
 ---
 
-### E. Transaksi Pembayaran / Push Transaksi (Gabung Semua Metode Pembayaran via `member/payment/`)
-Transaksi pembayaran diproses langsung melalui endpoint `{{CHANNEL_API_BASE_URL}}/member/payment/` dengan menggabungkan total nilai belanja (`order_amount`) tanpa perlu memisahkan rincian metode pembayaran (`payment_type`).
+### E. Alur Push Transaksi POS (Berdasarkan Nilai Burn Point)
+Alur pengiriman transaksi penjualan dari kasir DreamPOS ke Goapp terbagi menjadi 2 skenario otomatis:
 
-**Pemanggilan DLL:**
-```vb
-Dim memberUid As Long = 155999749384776
-Dim totalBelanja As Decimal = 200000 ' Total nominal belanja (IDR)
-Dim poinDibakar As Decimal = 0       ' Opsional: isi jika ada pemotongan poin member
-Dim txRef As String = "TRX-" & DateTime.Now.ToString("yyMMdd-HHmmss")
-Dim authCode As String = "asd123"    ' Opsional: kirim authorization_code jika diperlukan
+1. **Skenario A: Dengan Pemotongan Poin (`burn_point > 0`)**
+   - Menggunakan endpoint: `POST {{CHANNEL_API_BASE_URL}}/member/payment/`
+   - Memotong poin member sesuai nilai `amount` dan mencatat total belanja `order_amount`. Mendukung pengiriman `authorization_code`.
+   
+   **Contoh Request JSON (`POST /member/payment/`):**
+   ```json
+   {
+     "member": {
+       "uid": 155999749384776
+     },
+     "amount": 5000,
+     "order_amount": 200000.0,
+     "order_currency": "idr",
+     "provider_ref": "TRX-261014-142500",
+     "authorization_code": "asd123",
+     "store": {
+       "name": "Go DimSum Bogor",
+       "store_code": "DS"
+     }
+   }
+   ```
 
-Dim resp = Await goappClient.CreatePointPaymentAsync(memberUid, poinDibakar, totalBelanja, txRef, authorizationCode:=authCode)
+2. **Skenario B: Tanpa Pemotongan Poin (`burn_point = 0` / Normal Sales)**
+   - Menggunakan endpoint: `POST {{CHANNEL_API_BASE_URL}}/sales/order/`
+   - Berfungsi untuk penambahan poin member (**Earning Points**).
+   - Seluruh nilai pembayaran disatukan menjadi 1 baris payment (`payment_method_name: "Total Paid"`, `amount: billTotal`) tanpa memecah detail metode pembayaran lain.
 
-If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
-    Dim paymentRef = resp.Data.PaymentRef
-    Dim status = resp.Data.Status
-    MessageBox.Show($"Transaksi Berhasil! Ref: {paymentRef}, Status: {status}")
-Else
-    MessageBox.Show($"Transaksi Gagal: {resp.Message}")
-End If
-```
-
-**Request JSON (`POST /member/payment/`):**
-```json
-{
-  "member": {
-    "uid": 155999749384776
-  },
-  "store": {
-    "name": "Go DimSum Bogor",
-    "store_code": "DS"
-  },
-  "provider_ref": "TRX-261014-142500",
-  "order_amount": 200000.0,
-  "order_currency": "idr",
-  "authorization_code": "asd123"
-}
-```
+   **Contoh Request JSON (`POST /sales/order/`):**
+   ```json
+   {
+     "member": {
+       "uid": 155999749384776,
+       "mobile_no": "08123456789"
+     },
+     "provider_ref": "TRX-261014-142500",
+     "order_no": "TRX-261014-142500",
+     "order_date": "2026-10-14 14:25:00+07:00",
+     "lines_total": 200000.0,
+     "lines_tax": 0.0,
+     "total_incl_tax": 200000.0,
+     "total_paid": 200000.0,
+     "paid_at": "2026-10-14 14:25:00+07:00",
+     "completed_at": "2026-10-14 14:25:00+07:00",
+     "lines": [
+       {
+         "product": {
+           "sku": "POS-ITEM-01",
+           "name": "Penjualan DreamPOS"
+         },
+         "quantity": 1,
+         "price_before_discount": 200000.0,
+         "price": 200000.0
+       }
+     ],
+     "payments": [
+       {
+         "payment_method_name": "Total Paid",
+         "payment_type": "CASH",
+         "amount": 200000.0
+       }
+     ]
+   }
+   ```
 
 ---
 
