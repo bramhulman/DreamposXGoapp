@@ -21,6 +21,8 @@ Namespace Forms
         Public Property ReferralCode As String = String.Empty
         Public Property DealCodes As List(Of MemberDealCodeResponse)
         Public Property RawMember As MemberResponse
+        Public Property RedeemedVoucher As RedeemedVoucherInfo
+        Public Property RedeemedPoint As RedeemedPointInfo
 
         Public Sub New()
             DealCodes = New List(Of MemberDealCodeResponse)()

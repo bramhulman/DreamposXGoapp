@@ -21,6 +21,7 @@ Namespace Services
         Private ReadOnly _httpClient As HttpClient
         Private ReadOnly _tokenLock As New SemaphoreSlim(1, 1)
         Private ReadOnly _dbLogger As DatabaseLogger
+        Private ReadOnly _redeemRepo As GoappRedeemRepository
 
         Private _cachedToken As String = String.Empty
         Private _tokenExpiryEpoch As Double = 0
@@ -40,6 +41,7 @@ Namespace Services
             End Get
             Set(value As String)
                 _dbLogger.ConnectionString = value
+                _redeemRepo.ConnectionString = value
                 _config.DbConnectionString = value
             End Set
         End Property
@@ -66,9 +68,28 @@ Namespace Services
             End Get
         End Property
 
+        ''' <summary>
+        ''' Repository untuk pencatatan dan pelacakan status transaksi Redeem Voucher & Burn Point di SQL Server.
+        ''' </summary>
+        Public ReadOnly Property RedeemRepo As GoappRedeemRepository
+            Get
+                Return _redeemRepo
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' Konfigurasi API Goapp yang sedang aktif
+        ''' </summary>
+        Public ReadOnly Property Config As GoappConfig
+            Get
+                Return _config
+            End Get
+        End Property
+
         Public Sub New(Optional config As GoappConfig = Nothing)
             _config = If(config, New GoappConfig())
             _dbLogger = New DatabaseLogger(_config.DbConnectionString, _config.LogTableName)
+            _redeemRepo = New GoappRedeemRepository(_config.DbConnectionString)
 
             ' Pastikan TLS 1.2 aktif (krusial untuk koneksi HTTPS ke API modern)
             Try
@@ -368,25 +389,36 @@ Namespace Services
         ''' <summary>
         ''' Melakukan pemotongan (Burn) poin member untuk pembayaran transaksi POS
         ''' </summary>
-        Public Async Function CreatePointPaymentAsync(memberUid As Long, pointAmount As Decimal, orderAmountIdr As Decimal, providerRef As String, Optional authorizationCode As String = Nothing) As Task(Of ApiResponse(Of PaymentTransactionResponse))
+        Public Async Function CreatePointPaymentAsync(memberUid As Long,
+                                                      pointAmount As Decimal,
+                                                      orderAmountIdr As Decimal,
+                                                      providerRef As String,
+                                                      Optional authorizationCode As String = Nothing,
+                                                      Optional storeName As String = Nothing,
+                                                      Optional storeCode As String = Nothing,
+                                                      Optional totalOrderAmount As Decimal? = Nothing) As Task(Of ApiResponse(Of PaymentTransactionResponse))
             Dim url = $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/member/payment/"
             Dim payload = New PaymentTransactionRequest With {
-                .Member = New PaymentMemberRef With {.Uid = memberUid},
+                .Member = New PaymentMemberRef With {.Uid = memberUid.ToString()},
                 .Amount = pointAmount,
                 .OrderAmount = orderAmountIdr,
+                .TotalOrderAmount = totalOrderAmount,
+                .OrderCurrency = "idr",
                 .ProviderRef = providerRef,
                 .AuthorizationCode = If(String.IsNullOrWhiteSpace(authorizationCode), Nothing, authorizationCode.Trim())
             }
-            
-            If _config.StoreUid.HasValue Then
-                payload.Store = New OrderStoreRef With {
-                    .Uid = _config.StoreUid.Value,
-                    .Name = _config.StoreName,
-                    .StoreCode = If(String.IsNullOrEmpty(_config.StoreCode), Nothing, _config.StoreCode)
-                }
-            End If
 
-            Log($"Melakukan Burn Point: Member UID {memberUid}, Poin: {pointAmount}, Nilai Rp: {orderAmountIdr:N0}, Ref: {providerRef}")
+            ' Tentukan store name & store code dengan fallback berjenjang (Parameter -> Config -> Default)
+            Dim effStoreName As String = If(Not String.IsNullOrWhiteSpace(storeName), storeName.Trim(), If(Not String.IsNullOrWhiteSpace(_config.StoreName), _config.StoreName.Trim(), "POS Store"))
+            Dim effStoreCode As String = If(Not String.IsNullOrWhiteSpace(storeCode), storeCode.Trim(), If(Not String.IsNullOrWhiteSpace(_config.StoreCode), _config.StoreCode.Trim(), "STORE01"))
+
+            payload.Store = New OrderStoreRef With {
+                .Uid = If(_config.StoreUid.HasValue, _config.StoreUid.Value, CType(Nothing, Long?)),
+                .Name = effStoreName,
+                .StoreCode = effStoreCode
+            }
+
+            Log($"Melakukan Burn Point: Member UID {memberUid}, Poin: {pointAmount}, Nilai Rp: {orderAmountIdr:N0}, Total Order: {If(totalOrderAmount.HasValue, totalOrderAmount.Value.ToString("N0"), "-")}, Ref: {providerRef}, Store: {effStoreName} ({effStoreCode})")
             Return Await SendAuthorizedRequestAsync(Of PaymentTransactionResponse)(HttpMethod.Post, url, payload)
         End Function
 
@@ -455,14 +487,31 @@ Namespace Services
                     result.Message = "OK"
                 Else
                     result.IsSuccess = False
-                    ' Coba ekstrak pesan error dari JSON Goapp jika ada field 'detail' atau 'message'
+                    ' Coba ekstrak pesan error dari JSON Goapp jika ada field 'detail', 'message', 'error', atau validation fields
                     Dim errMsg = response.ReasonPhrase
                     Try
-                        Dim jObj = JObject.Parse(responseJson)
-                        If jObj("detail") IsNot Nothing Then
-                            errMsg = jObj("detail").ToString()
-                        ElseIf jObj("message") IsNot Nothing Then
-                            errMsg = jObj("message").ToString()
+                        If Not String.IsNullOrWhiteSpace(responseJson) Then
+                            Dim trimmed = responseJson.Trim()
+                            If trimmed.StartsWith("{") Then
+                                Dim jObj = JObject.Parse(trimmed)
+                                If jObj("detail") IsNot Nothing Then
+                                    errMsg = jObj("detail").ToString()
+                                ElseIf jObj("message") IsNot Nothing Then
+                                    errMsg = jObj("message").ToString()
+                                ElseIf jObj("error") IsNot Nothing Then
+                                    errMsg = jObj("error").ToString()
+                                Else
+                                    Dim errList As New List(Of String)()
+                                    For Each prop In jObj.Properties()
+                                        errList.Add($"{prop.Name}: {prop.Value}")
+                                    Next
+                                    If errList.Count > 0 Then
+                                        errMsg = String.Join("; ", errList)
+                                    End If
+                                End If
+                            ElseIf trimmed.StartsWith("[") Then
+                                errMsg = trimmed
+                            End If
                         End If
                     Catch
                     End Try

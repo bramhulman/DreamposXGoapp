@@ -486,12 +486,12 @@ Public Class FormMain
             Dim orderAmountIdr = burnPt ' 1 poin = 1 Rupiah
             Dim authCode = txtBurnAuthCode.Text.Trim()
 
-            ' Panggil DLL Burn Point (authCode bisa terisi, random, atau kosong)
-            Dim resp = Await _client.CreatePointPaymentAsync(_currentMember.Uid, burnPt, orderAmountIdr, txRef, authorizationCode:=authCode)
+            ' Panggil DLL Burn Point (authCode bisa terisi, random, atau kosong; totalOrderAmount adalah billTotal transaksi)
+            Dim resp = Await _client.CreatePointPaymentAsync(_currentMember.Uid, burnPt, orderAmountIdr, txRef, authorizationCode:=authCode, totalOrderAmount:=billTotal)
             If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
                 _lastPaymentRef = resp.Data.PaymentRef
                 lblLastPaymentRef.Text = $"Last Payment Ref: {_lastPaymentRef} (Status: {resp.Data.Status})"
-                MessageBox.Show($"Burn Point Berhasil!{Environment.NewLine}Ref: {_lastPaymentRef}{Environment.NewLine}Status: {resp.Data.Status}", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                MessageBox.Show($"Burn Point Berhasil!{Environment.NewLine}Ref: {_lastPaymentRef}{Environment.NewLine}Status: {resp.Data.Status}{Environment.NewLine}Order Amount (Poin): Rp {orderAmountIdr:N0}{Environment.NewLine}Total Order Amount: Rp {billTotal:N0}", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
                 ' Refresh data member
                 btnSearchMember.PerformClick()
             Else
@@ -542,84 +542,99 @@ Public Class FormMain
         Dim providerRef = "TRX-" & DateTime.Now.ToString("yyMMdd-HHmmss")
 
         btnPushSalesOrder.Enabled = False
+        txtOrderRawJson.Clear()
+
         Try
+            ' 1. SELALU KIRIM TRANSAKSI / SALES ORDER KE POST /sales/order/
+            ' Seluruh payment dibuat 1 saja ('Total Paid' / total_amount)
+            Dim orderReq As New PushOrderRequest With {
+                .OrderNo = providerRef,
+                .ProviderRef = providerRef,
+                .OrderDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
+                .LinesTotal = billTotal,
+                .LinesTax = 0,
+                .TotalInclTax = billTotal,
+                .TotalPaid = billTotal,
+                .PaidAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
+                .CompletedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
+                .Member = New OrderMemberRef With {
+                    .Uid = _currentMember.Uid,
+                    .MobileNo = _currentMember.MobileNo
+                },
+                .Lines = New List(Of OrderLineItem) From {
+                    New OrderLineItem With {
+                        .Product = New OrderProductInfo With {
+                            .Sku = "POS-ITEM-01",
+                            .Name = "Penjualan DreamPOS"
+                        },
+                        .Quantity = 1,
+                        .PriceBeforeDiscount = billTotal,
+                        .Price = billTotal
+                    }
+                },
+                .Payments = New List(Of OrderPaymentItem) From {
+                    New OrderPaymentItem With {
+                        .PaymentMethodName = "Total Paid",
+                        .PaymentType = "CASH",
+                        .Amount = billTotal
+                    }
+                }
+            }
+
+            Dim orderReqJson = Newtonsoft.Json.JsonConvert.SerializeObject(orderReq, Newtonsoft.Json.Formatting.Indented, New Newtonsoft.Json.JsonSerializerSettings With {.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore})
+            txtOrderRawJson.Text = "=== [1/2] REQUEST JSON (POST /sales/order/) ===" & Environment.NewLine & orderReqJson & Environment.NewLine & Environment.NewLine
+
+            Dim salesOrderResp = Await _client.PushSalesOrderAsync(orderReq)
+            txtOrderRawJson.Text &= "=== [1/2] RESPONSE JSON (POST /sales/order/) ===" & Environment.NewLine & FormatJson(salesOrderResp.RawJson) & Environment.NewLine & Environment.NewLine
+
+            Dim msgBuilder As New System.Text.StringBuilder()
+
+            If salesOrderResp.IsSuccess AndAlso salesOrderResp.Data IsNot Nothing Then
+                Dim earnedPts = If(salesOrderResp.Data.Reward IsNot Nothing AndAlso salesOrderResp.Data.Reward.Count > 0, salesOrderResp.Data.Reward(0).Amount, 0)
+                msgBuilder.AppendLine($"Transaksi Penjualan Sukses Dikirim ke /sales/order/!")
+                msgBuilder.AppendLine($"Order UID: {salesOrderResp.Data.Uid}")
+                msgBuilder.AppendLine($"Total Paid: Rp {billTotal:N0}")
+                msgBuilder.AppendLine($"Poin Diperoleh (Earning): {earnedPts:N0} Pts")
+            Else
+                msgBuilder.AppendLine($"Transaksi /sales/order/ Gagal: {salesOrderResp.Message}")
+            End If
+
+            ' 2. JIKA ADA BURN POINT (burnPoint > 0) -> HIT JUGA API POST /member/payment/
             If burnPoint > 0 Then
-                ' SKENARIO A: Ada Burn Point (> 0) -> Gunakan API POST /member/payment/
-                Dim reqObj As New PaymentTransactionRequest With {
+                Dim paymentReqObj As New PaymentTransactionRequest With {
                     .Member = New PaymentMemberRef With {.Uid = _currentMember.Uid},
                     .Amount = burnPoint,
-                    .OrderAmount = billTotal,
+                    .OrderAmount = burnPoint,
+                    .TotalOrderAmount = billTotal,
                     .OrderCurrency = "idr",
                     .ProviderRef = providerRef,
                     .AuthorizationCode = If(String.IsNullOrWhiteSpace(authCode), Nothing, authCode)
                 }
 
-                Dim requestJson = Newtonsoft.Json.JsonConvert.SerializeObject(reqObj, Newtonsoft.Json.Formatting.Indented, New Newtonsoft.Json.JsonSerializerSettings With {.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore})
-                txtOrderRawJson.Text = "=== REQUEST JSON (POST /member/payment/) ===" & Environment.NewLine & requestJson & Environment.NewLine & Environment.NewLine
+                Dim payReqJson = Newtonsoft.Json.JsonConvert.SerializeObject(paymentReqObj, Newtonsoft.Json.Formatting.Indented, New Newtonsoft.Json.JsonSerializerSettings With {.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore})
+                txtOrderRawJson.Text &= "=== [2/2] REQUEST JSON (POST /member/payment/) ===" & Environment.NewLine & payReqJson & Environment.NewLine & Environment.NewLine
 
-                Dim resp = Await _client.CreatePointPaymentAsync(_currentMember.Uid, burnPoint, billTotal, providerRef, authorizationCode:=authCode)
-                If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
-                    _lastPaymentRef = resp.Data.PaymentRef
-                    lblLastPaymentRef.Text = $"Last Payment Ref: {_lastPaymentRef} (Status: {resp.Data.Status})"
-                    MessageBox.Show($"Transaksi Burn Point Berhasil Dikirim ke Goapp!{Environment.NewLine}Payment Ref: {_lastPaymentRef}{Environment.NewLine}Status: {resp.Data.Status}{Environment.NewLine}Order Amount: Rp {billTotal:N0}{Environment.NewLine}Burn Point: {burnPoint:N0} Pts", "Sukses Burn Point", MessageBoxButtons.OK, MessageBoxIcon.Information)
-                    ' Refresh data member
-                    btnSearchMember.PerformClick()
+                Dim payResp = Await _client.CreatePointPaymentAsync(_currentMember.Uid, burnPoint, burnPoint, providerRef, authorizationCode:=authCode, totalOrderAmount:=billTotal)
+                txtOrderRawJson.Text &= "=== [2/2] RESPONSE JSON (POST /member/payment/) ===" & Environment.NewLine & FormatJson(payResp.RawJson) & Environment.NewLine
+
+                msgBuilder.AppendLine()
+                If payResp.IsSuccess AndAlso payResp.Data IsNot Nothing Then
+                    _lastPaymentRef = payResp.Data.PaymentRef
+                    lblLastPaymentRef.Text = $"Last Payment Ref: {_lastPaymentRef} (Status: {payResp.Data.Status})"
+                    msgBuilder.AppendLine($"Burn Point ({burnPoint:N0} Pts) Berhasil Dikirim ke /member/payment/!")
+                    msgBuilder.AppendLine($"Payment Ref: {_lastPaymentRef} (Status: {payResp.Data.Status})")
                 Else
-                    MessageBox.Show($"Gagal mengirim transaksi payment/burn point:{Environment.NewLine}{resp.Message}", "Gagal Push Transaksi", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    msgBuilder.AppendLine($"Burn Point Gagal Dikirim ke /member/payment/: {payResp.Message}")
                 End If
-                txtOrderRawJson.Text &= "=== RESPONSE JSON ===" & Environment.NewLine & FormatJson(resp.RawJson)
-
-            Else
-                ' SKENARIO B: Tanpa Burn Point (burnPoint = 0) -> Gunakan API POST /sales/order/
-                ' Payment dibuat 1 saja (semua digabung ke total_paid)
-                Dim orderReq As New PushOrderRequest With {
-                    .OrderNo = providerRef,
-                    .ProviderRef = providerRef,
-                    .OrderDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
-                    .LinesTotal = billTotal,
-                    .LinesTax = 0,
-                    .TotalInclTax = billTotal,
-                    .TotalPaid = billTotal,
-                    .PaidAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
-                    .CompletedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
-                    .Member = New OrderMemberRef With {
-                        .Uid = _currentMember.Uid,
-                        .MobileNo = _currentMember.MobileNo
-                    },
-                    .Lines = New List(Of OrderLineItem) From {
-                        New OrderLineItem With {
-                            .Product = New OrderProductInfo With {
-                                .Sku = "POS-ITEM-01",
-                                .Name = "Penjualan DreamPOS"
-                            },
-                            .Quantity = 1,
-                            .PriceBeforeDiscount = billTotal,
-                            .Price = billTotal
-                        }
-                    },
-                    .Payments = New List(Of OrderPaymentItem) From {
-                        New OrderPaymentItem With {
-                            .PaymentMethodName = "Total Paid",
-                            .PaymentType = "CASH",
-                            .Amount = billTotal
-                        }
-                    }
-                }
-
-                Dim requestJson = Newtonsoft.Json.JsonConvert.SerializeObject(orderReq, Newtonsoft.Json.Formatting.Indented, New Newtonsoft.Json.JsonSerializerSettings With {.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore})
-                txtOrderRawJson.Text = "=== REQUEST JSON (POST /sales/order/) ===" & Environment.NewLine & requestJson & Environment.NewLine & Environment.NewLine
-
-                Dim resp = Await _client.PushSalesOrderAsync(orderReq)
-                If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
-                    Dim earnedPts = If(resp.Data.Reward IsNot Nothing AndAlso resp.Data.Reward.Count > 0, resp.Data.Reward(0).Amount, 0)
-                    MessageBox.Show($"Transaksi Berhasil Dikirim ke /sales/order/!{Environment.NewLine}Order UID: {resp.Data.Uid}{Environment.NewLine}Total Paid: Rp {billTotal:N0}{Environment.NewLine}Poin Diperoleh (Earning): {earnedPts:N0} Pts", "Sukses Sales Order", MessageBoxButtons.OK, MessageBoxIcon.Information)
-                    ' Refresh data member
-                    btnSearchMember.PerformClick()
-                Else
-                    MessageBox.Show($"Gagal mengirim transaksi /sales/order/:{Environment.NewLine}{resp.Message}", "Gagal Push Order", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                End If
-                txtOrderRawJson.Text &= "=== RESPONSE JSON ===" & Environment.NewLine & FormatJson(resp.RawJson)
             End If
+
+            ' Tampilkan pesan hasil & refresh data member
+            Dim isAllOk = salesOrderResp.IsSuccess AndAlso (burnPoint <= 0 OrElse _lastPaymentRef IsNot Nothing)
+            MessageBox.Show(msgBuilder.ToString(), If(isAllOk, "Sukses Transaksi", "Hasil Transaksi"), MessageBoxButtons.OK, If(isAllOk, MessageBoxIcon.Information, MessageBoxIcon.Warning))
+            btnSearchMember.PerformClick()
+
+        Catch ex As Exception
+            MessageBox.Show($"Terjadi exception saat proses transaksi:{Environment.NewLine}{ex.Message}", "Error Transaksi", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Finally
             btnPushSalesOrder.Enabled = True
         End Try

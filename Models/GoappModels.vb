@@ -639,7 +639,10 @@ Namespace Models
         Public Property Amount As Decimal? ' Point amount
 
         <JsonProperty("order_amount")>
-        Public Property OrderAmount As Decimal ' IDR amount
+        Public Property OrderAmount As Decimal ' IDR amount (Nilai pemotongan poin / order amount)
+
+        <JsonProperty("total_order_amount", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property TotalOrderAmount As Decimal? ' Total nilai transaksi belanja POS
 
         <JsonProperty("order_currency")>
         Public Property OrderCurrency As String = "idr"
@@ -656,7 +659,7 @@ Namespace Models
 
     Public Class PaymentMemberRef
         <JsonProperty("uid")>
-        Public Property Uid As Long
+        Public Property Uid As Object
     End Class
 
     Public Class PaymentTransactionResponse
@@ -835,6 +838,28 @@ Namespace Models
 
         <JsonProperty("deal")>
         Public Property Deal As DirectDealInfo
+    End Class
+
+    Public Class RedeemedVoucherInfo
+        Public Property VoucherCode As String
+        Public Property VoucherName As String
+        Public Property DiscountType As String
+        Public Property ItemSku As String
+        Public Property RawSku As String
+        Public Property Quantity As Integer = 1
+        Public Property Price As Decimal = 0D
+        Public Property DiscountRate As Decimal = 0D
+        Public Property DiscountAmount As Decimal = 0D
+        Public Property MinPurchase As Decimal = 0D
+        Public Property RawRewardData As RewardDataInfo
+    End Class
+
+    Public Class RedeemedPointInfo
+        Public Property PaymentRef As String
+        Public Property ProviderRef As String
+        Public Property PointAmount As Decimal = 0D
+        Public Property OrderAmountIdr As Decimal = 0D
+        Public Property Status As String
     End Class
 
 End Namespace

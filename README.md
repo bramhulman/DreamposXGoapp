@@ -216,16 +216,18 @@ Dim resp = Await goappClient.CancelVoucherAsync("0M9NO", "TRX-261006095015", 155
 **Catatan Penting:** 
 1. Endpoint ini **menolak** penggunaan `Channel UID`. Harus mengirimkan parameter `store` lengkap dengan `Store UID` fisik dan `store_code`.
 2. Jika alur auto-confirm memerlukan kode otorisasi dari member (misal OTP/PIN/Authorization Code dari app Goapp), kirimkan parameter `authorizationCode`.
-3. Rasio perhitungan pemotongan di DLL sudah dikunci `1 Poin = 1 Rupiah` (Bukan dikali 1000).
+3. Rasio perhitungan pemotongan di DLL sudah dikunci `1 Poin = 1 Rupiah`.
+4. Menyertakan field `total_order_amount` untuk mencatat total nilai belanja keseluruhan pada transaksi POS saat sebagian dibayar menggunakan poin (`order_amount`).
 
 **Pemanggilan DLL:**
 ```vb
-Dim pointDibakar As Decimal = 5000
-Dim orderAmountIdr As Decimal = 5000
-Dim txRef As String = "TRX-261006090001"
-Dim authCode As String = "asd123" ' Opsional: isi jika butuh validasi authorization_code
+Dim pointDibakar As Decimal = 20000      ' Poin yang dipotong
+Dim orderAmountIdr As Decimal = 20000    ' Nilai Rupiah dari pemotongan poin
+Dim totalBelanjaPos As Decimal = 100000  ' Total nilai tagihan transaksi POS
+Dim txRef As String = "TRX/23/232233"
+Dim authCode As String = "asd123"        ' Opsional: isi jika butuh validasi authorization_code
 
-Dim resp = Await goappClient.CreatePointPaymentAsync(155999749384776, pointDibakar, orderAmountIdr, txRef, authorizationCode:=authCode)
+Dim resp = Await goappClient.CreatePointPaymentAsync(110270830028872, pointDibakar, orderAmountIdr, txRef, authorizationCode:=authCode, totalOrderAmount:=totalBelanjaPos)
 
 If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
     Dim paymentRef = resp.Data.PaymentRef
@@ -238,18 +240,17 @@ End If
 ```json
 {
   "member": {
-    "uid": 155999749384776
+    "uid": "110270830028872"
   },
-  "amount": 5000,
-  "order_amount": 5000,
-  "order_currency": "idr",
-  "provider_ref": "TRX-261006090001",
-  "authorization_code": "asd123",
   "store": {
-    "uid": 138533231320136,
-    "name": "Go DimSum Bogor",
-    "store_code": "DS"
-  }
+    "name": "JOBB Jakarta",
+    "store_code": "JOBBJKT"
+  },
+  "provider_ref": "TRX/23/232233",
+  "order_amount": "20000",
+  "order_currency": "idr",
+  "total_order_amount": "100000",
+  "authorization_code": "asd123"
 }
 ```
 
@@ -262,35 +263,12 @@ End If
 
 ---
 
-### E. Alur Push Transaksi POS (Berdasarkan Nilai Burn Point)
-Alur pengiriman transaksi penjualan dari kasir DreamPOS ke Goapp terbagi menjadi 2 skenario otomatis:
+### E. Alur Push Transaksi POS (Sales Order & Burn Point)
+Alur pengiriman transaksi penjualan dari kasir DreamPOS ke Goapp diatur dengan ketentuan:
 
-1. **Skenario A: Dengan Pemotongan Poin (`burn_point > 0`)**
-   - Menggunakan endpoint: `POST {{CHANNEL_API_BASE_URL}}/member/payment/`
-   - Memotong poin member sesuai nilai `amount` dan mencatat total belanja `order_amount`. Mendukung pengiriman `authorization_code`.
-   
-   **Contoh Request JSON (`POST /member/payment/`):**
-   ```json
-   {
-     "member": {
-       "uid": 155999749384776
-     },
-     "amount": 5000,
-     "order_amount": 200000.0,
-     "order_currency": "idr",
-     "provider_ref": "TRX-261014-142500",
-     "authorization_code": "asd123",
-     "store": {
-       "name": "Go DimSum Bogor",
-       "store_code": "DS"
-     }
-   }
-   ```
-
-2. **Skenario B: Tanpa Pemotongan Poin (`burn_point = 0` / Normal Sales)**
-   - Menggunakan endpoint: `POST {{CHANNEL_API_BASE_URL}}/sales/order/`
-   - Berfungsi untuk penambahan poin member (**Earning Points**).
-   - Seluruh nilai pembayaran disatukan menjadi 1 baris payment (`payment_method_name: "Total Paid"`, `amount: billTotal`) tanpa memecah detail metode pembayaran lain.
+1. **Seluruh Transaksi Penjualan SELALU Dikirim ke `POST {{CHANNEL_API_BASE_URL}}/sales/order/`:**
+   - Berfungsi untuk mencatat pesanan penjualan dan penambahan poin (**Earning Points**).
+   - Seluruh nilai pembayaran disatukan menjadi **1 baris payment saja** (`payment_method_name: "Total Paid"`, `amount: billTotal`) tanpa memecah rincian metode pembayaran lain.
 
    **Contoh Request JSON (`POST /sales/order/`):**
    ```json
@@ -326,6 +304,28 @@ Alur pengiriman transaksi penjualan dari kasir DreamPOS ke Goapp terbagi menjadi
          "amount": 200000.0
        }
      ]
+   }
+   ```
+
+2. **Jika Terdapat Burn Point (`burn_point > 0`), Sistem JUGA Memanggil `POST {{CHANNEL_API_BASE_URL}}/member/payment/`:**
+   - Setelah / bersamaan dengan sales order, request pemotongan poin dikirim ke endpoint payment.
+   - Mengirimkan nilai `order_amount` sebesar nilai poin yang dibakar (misal Rp 20.000), `total_order_amount` sebesar total belanja kasir (misal Rp 100.000), dan menyertakan `authorization_code` jika ada proteksi OTP.
+
+   **Contoh Request JSON Tambahan (`POST /member/payment/`):**
+   ```json
+   {
+     "member": {
+       "uid": "110270830028872"
+     },
+     "store": {
+       "name": "JOBB Jakarta",
+       "store_code": "JOBBJKT"
+     },
+     "provider_ref": "TRX/23/232233",
+     "order_amount": "20000",
+     "order_currency": "idr",
+     "total_order_amount": "100000",
+     "authorization_code": "asd123"
    }
    ```
 

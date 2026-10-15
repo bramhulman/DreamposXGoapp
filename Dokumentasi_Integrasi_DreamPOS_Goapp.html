@@ -199,14 +199,16 @@ Dim resp = Await goappClient.CancelVoucherAsync(&quot;0M9NO&quot;, &quot;TRX-261
 <p><strong>Catatan Penting:</strong> 
 1. Endpoint ini <strong>menolak</strong> penggunaan <code>Channel UID</code>. Harus mengirimkan parameter <code>store</code> lengkap dengan <code>Store UID</code> fisik dan <code>store_code</code>.
 2. Jika alur auto-confirm memerlukan kode otorisasi dari member (misal OTP/PIN/Authorization Code dari app Goapp), kirimkan parameter <code>authorizationCode</code>.
-3. Rasio perhitungan pemotongan di DLL sudah dikunci <code>1 Poin = 1 Rupiah</code> (Bukan dikali 1000).</p>
+3. Rasio perhitungan pemotongan di DLL sudah dikunci <code>1 Poin = 1 Rupiah</code>.
+4. Menyertakan field <code>total_order_amount</code> untuk mencatat total nilai belanja keseluruhan pada transaksi POS saat sebagian dibayar menggunakan poin (<code>order_amount</code>).</p>
 <p><strong>Pemanggilan DLL:</strong></p>
-<pre><code class="language-vb">Dim pointDibakar As Decimal = 5000
-Dim orderAmountIdr As Decimal = 5000
-Dim txRef As String = &quot;TRX-261006090001&quot;
-Dim authCode As String = &quot;asd123&quot; ' Opsional: isi jika butuh validasi authorization_code
+<pre><code class="language-vb">Dim pointDibakar As Decimal = 20000      ' Poin yang dipotong
+Dim orderAmountIdr As Decimal = 20000    ' Nilai Rupiah dari pemotongan poin
+Dim totalBelanjaPos As Decimal = 100000  ' Total nilai tagihan transaksi POS
+Dim txRef As String = &quot;TRX/23/232233&quot;
+Dim authCode As String = &quot;asd123&quot;        ' Opsional: isi jika butuh validasi authorization_code
 
-Dim resp = Await goappClient.CreatePointPaymentAsync(155999749384776, pointDibakar, orderAmountIdr, txRef, authorizationCode:=authCode)
+Dim resp = Await goappClient.CreatePointPaymentAsync(110270830028872, pointDibakar, orderAmountIdr, txRef, authorizationCode:=authCode, totalOrderAmount:=totalBelanjaPos)
 
 If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
     Dim paymentRef = resp.Data.PaymentRef
@@ -217,18 +219,17 @@ End If
 <p><strong>Request JSON (<code>POST /member/payment/</code>):</strong></p>
 <pre><code class="language-json">{
   &quot;member&quot;: {
-    &quot;uid&quot;: 155999749384776
+    &quot;uid&quot;: &quot;110270830028872&quot;
   },
-  &quot;amount&quot;: 5000,
-  &quot;order_amount&quot;: 5000,
-  &quot;order_currency&quot;: &quot;idr&quot;,
-  &quot;provider_ref&quot;: &quot;TRX-261006090001&quot;,
-  &quot;authorization_code&quot;: &quot;asd123&quot;,
   &quot;store&quot;: {
-    &quot;uid&quot;: 138533231320136,
-    &quot;name&quot;: &quot;Go DimSum Bogor&quot;,
-    &quot;store_code&quot;: &quot;DS&quot;
-  }
+    &quot;name&quot;: &quot;JOBB Jakarta&quot;,
+    &quot;store_code&quot;: &quot;JOBBJKT&quot;
+  },
+  &quot;provider_ref&quot;: &quot;TRX/23/232233&quot;,
+  &quot;order_amount&quot;: &quot;20000&quot;,
+  &quot;order_currency&quot;: &quot;idr&quot;,
+  &quot;total_order_amount&quot;: &quot;100000&quot;,
+  &quot;authorization_code&quot;: &quot;asd123&quot;
 }
 </code></pre>
 <p><strong>Contoh Response Error (400) Jika Dashboard Belum Dikonfigurasi:</strong></p>
@@ -237,34 +238,12 @@ End If
 }
 </code></pre>
 <hr />
-<h3>E. Alur Push Transaksi POS (Berdasarkan Nilai Burn Point)</h3>
-<p>Alur pengiriman transaksi penjualan dari kasir DreamPOS ke Goapp terbagi menjadi 2 skenario otomatis:</p>
+<h3>E. Alur Push Transaksi POS (Sales Order &amp; Burn Point)</h3>
+<p>Alur pengiriman transaksi penjualan dari kasir DreamPOS ke Goapp diatur dengan ketentuan:</p>
 <ol>
-<li><strong>Skenario A: Dengan Pemotongan Poin (<code>burn_point &gt; 0</code>)</strong></li>
-<li>Menggunakan endpoint: <code>POST {{CHANNEL_API_BASE_URL}}/member/payment/</code></li>
-<li>Memotong poin member sesuai nilai <code>amount</code> dan mencatat total belanja <code>order_amount</code>. Mendukung pengiriman <code>authorization_code</code>.</li>
-</ol>
-<p><strong>Contoh Request JSON (<code>POST /member/payment/</code>):</strong>
-   <code>json
-   {
-     "member": {
-       "uid": 155999749384776
-     },
-     "amount": 5000,
-     "order_amount": 200000.0,
-     "order_currency": "idr",
-     "provider_ref": "TRX-261014-142500",
-     "authorization_code": "asd123",
-     "store": {
-       "name": "Go DimSum Bogor",
-       "store_code": "DS"
-     }
-   }</code></p>
-<ol>
-<li><strong>Skenario B: Tanpa Pemotongan Poin (<code>burn_point = 0</code> / Normal Sales)</strong></li>
-<li>Menggunakan endpoint: <code>POST {{CHANNEL_API_BASE_URL}}/sales/order/</code></li>
-<li>Berfungsi untuk penambahan poin member (<strong>Earning Points</strong>).</li>
-<li>Seluruh nilai pembayaran disatukan menjadi 1 baris payment (<code>payment_method_name: "Total Paid"</code>, <code>amount: billTotal</code>) tanpa memecah detail metode pembayaran lain.</li>
+<li><strong>Seluruh Transaksi Penjualan SELALU Dikirim ke <code>POST {{CHANNEL_API_BASE_URL}}/sales/order/</code>:</strong></li>
+<li>Berfungsi untuk mencatat pesanan penjualan dan penambahan poin (<strong>Earning Points</strong>).</li>
+<li>Seluruh nilai pembayaran disatukan menjadi <strong>1 baris payment saja</strong> (<code>payment_method_name: "Total Paid"</code>, <code>amount: billTotal</code>) tanpa memecah rincian metode pembayaran lain.</li>
 </ol>
 <p><strong>Contoh Request JSON (<code>POST /sales/order/</code>):</strong>
    <code>json
@@ -300,6 +279,27 @@ End If
          "amount": 200000.0
        }
      ]
+   }</code></p>
+<ol>
+<li><strong>Jika Terdapat Burn Point (<code>burn_point &gt; 0</code>), Sistem JUGA Memanggil <code>POST {{CHANNEL_API_BASE_URL}}/member/payment/</code>:</strong></li>
+<li>Setelah / bersamaan dengan sales order, request pemotongan poin dikirim ke endpoint payment.</li>
+<li>Mengirimkan nilai <code>order_amount</code> sebesar nilai poin yang dibakar (misal Rp 20.000), <code>total_order_amount</code> sebesar total belanja kasir (misal Rp 100.000), dan menyertakan <code>authorization_code</code> jika ada proteksi OTP.</li>
+</ol>
+<p><strong>Contoh Request JSON Tambahan (<code>POST /member/payment/</code>):</strong>
+   <code>json
+   {
+     "member": {
+       "uid": "110270830028872"
+     },
+     "store": {
+       "name": "JOBB Jakarta",
+       "store_code": "JOBBJKT"
+     },
+     "provider_ref": "TRX/23/232233",
+     "order_amount": "20000",
+     "order_currency": "idr",
+     "total_order_amount": "100000",
+     "authorization_code": "asd123"
    }</code></p>
 <hr />
 <h2>5. Fitur Baru &amp; Improvement Terbaru (Oktober 2026)</h2>

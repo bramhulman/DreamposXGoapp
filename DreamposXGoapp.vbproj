@@ -73,6 +73,7 @@
     <Compile Include="Models\GoappConfig.vb" />
     <Compile Include="Models\GoappModels.vb" />
     <Compile Include="Services\DatabaseLogger.vb" />
+    <Compile Include="Services\GoappRedeemRepository.vb" />
     <Compile Include="Services\GoappApiClient.vb" />
     <Compile Include="Services\ReceiptGenerator.vb" />
     <Compile Include="Forms\MemberDataEventArgs.vb" />
@@ -81,6 +82,30 @@
     </Compile>
     <Compile Include="Forms\FormSearchMember.Designer.vb">
       <DependentUpon>FormSearchMember.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FormRedeemVoucher.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FormRedeemVoucher.Designer.vb">
+      <DependentUpon>FormRedeemVoucher.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FormRedeemPoint.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FormRedeemPoint.Designer.vb">
+      <DependentUpon>FormRedeemPoint.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FormMessageBox.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FormMessageBox.Designer.vb">
+      <DependentUpon>FormMessageBox.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FormActiveRedeem.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FormActiveRedeem.Designer.vb">
+      <DependentUpon>FormActiveRedeem.vb</DependentUpon>
     </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
@@ -99,6 +124,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Forms\FormRedeemPoint.resx">
+      <DependentUpon>FormRedeemPoint.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\FormSearchMember.resx">
       <DependentUpon>FormSearchMember.vb</DependentUpon>
     </EmbeddedResource>
