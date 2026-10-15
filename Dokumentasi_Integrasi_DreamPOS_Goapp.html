@@ -237,34 +237,12 @@ End If
 }
 </code></pre>
 <hr />
-<h3>E. Alur Push Transaksi POS (Berdasarkan Nilai Burn Point)</h3>
-<p>Alur pengiriman transaksi penjualan dari kasir DreamPOS ke Goapp terbagi menjadi 2 skenario otomatis:</p>
+<h3>E. Alur Push Transaksi POS (Sales Order &amp; Burn Point)</h3>
+<p>Alur pengiriman transaksi penjualan dari kasir DreamPOS ke Goapp diatur dengan ketentuan:</p>
 <ol>
-<li><strong>Skenario A: Dengan Pemotongan Poin (<code>burn_point &gt; 0</code>)</strong></li>
-<li>Menggunakan endpoint: <code>POST {{CHANNEL_API_BASE_URL}}/member/payment/</code></li>
-<li>Memotong poin member sesuai nilai <code>amount</code> dan mencatat total belanja <code>order_amount</code>. Mendukung pengiriman <code>authorization_code</code>.</li>
-</ol>
-<p><strong>Contoh Request JSON (<code>POST /member/payment/</code>):</strong>
-   <code>json
-   {
-     "member": {
-       "uid": 155999749384776
-     },
-     "amount": 5000,
-     "order_amount": 200000.0,
-     "order_currency": "idr",
-     "provider_ref": "TRX-261014-142500",
-     "authorization_code": "asd123",
-     "store": {
-       "name": "Go DimSum Bogor",
-       "store_code": "DS"
-     }
-   }</code></p>
-<ol>
-<li><strong>Skenario B: Tanpa Pemotongan Poin (<code>burn_point = 0</code> / Normal Sales)</strong></li>
-<li>Menggunakan endpoint: <code>POST {{CHANNEL_API_BASE_URL}}/sales/order/</code></li>
-<li>Berfungsi untuk penambahan poin member (<strong>Earning Points</strong>).</li>
-<li>Seluruh nilai pembayaran disatukan menjadi 1 baris payment (<code>payment_method_name: "Total Paid"</code>, <code>amount: billTotal</code>) tanpa memecah detail metode pembayaran lain.</li>
+<li><strong>Seluruh Transaksi Penjualan SELALU Dikirim ke <code>POST {{CHANNEL_API_BASE_URL}}/sales/order/</code>:</strong></li>
+<li>Berfungsi untuk mencatat pesanan penjualan dan penambahan poin (<strong>Earning Points</strong>).</li>
+<li>Seluruh nilai pembayaran disatukan menjadi <strong>1 baris payment saja</strong> (<code>payment_method_name: "Total Paid"</code>, <code>amount: billTotal</code>) tanpa memecah rincian metode pembayaran lain.</li>
 </ol>
 <p><strong>Contoh Request JSON (<code>POST /sales/order/</code>):</strong>
    <code>json
@@ -300,6 +278,27 @@ End If
          "amount": 200000.0
        }
      ]
+   }</code></p>
+<ol>
+<li><strong>Jika Terdapat Burn Point (<code>burn_point &gt; 0</code>), Sistem JUGA Memanggil <code>POST {{CHANNEL_API_BASE_URL}}/member/payment/</code>:</strong></li>
+<li>Setelah / bersamaan dengan sales order, request pemotongan poin dikirim ke endpoint payment.</li>
+<li>Mengirimkan nilai <code>amount</code> sebesar poin yang dibakar, <code>order_amount</code> sebesar total belanja, dan menyertakan <code>authorization_code</code> jika ada proteksi OTP.</li>
+</ol>
+<p><strong>Contoh Request JSON Tambahan (<code>POST /member/payment/</code>):</strong>
+   <code>json
+   {
+     "member": {
+       "uid": 155999749384776
+     },
+     "amount": 5000,
+     "order_amount": 200000.0,
+     "order_currency": "idr",
+     "provider_ref": "TRX-261014-142500",
+     "authorization_code": "asd123",
+     "store": {
+       "name": "Go DimSum Bogor",
+       "store_code": "DS"
+     }
    }</code></p>
 <hr />
 <h2>5. Fitur Baru &amp; Improvement Terbaru (Oktober 2026)</h2>
