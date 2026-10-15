@@ -722,6 +722,12 @@ Namespace Models
         <JsonProperty("payments")>
         Public Property Payments As List(Of OrderPaymentItem) = New List(Of OrderPaymentItem)()
 
+        <JsonProperty("service_fee", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property ServiceFee As Decimal? ' Total Tax + Service fee
+
+        <JsonProperty("lines_discount", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property LinesDiscount As Decimal? ' Total poin yang digunakan + voucher diskon ke total order
+
         <JsonProperty("completed_at", NullValueHandling:=NullValueHandling.Ignore)>
         Public Property CompletedAt As String
 
