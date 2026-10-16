@@ -18,6 +18,8 @@ Namespace Forms
         Private _memberDeals As List(Of MemberDealCodeResponse)
         Private _isMemberActive As Boolean = True
         Private _activeLogs As New List(Of GoappRedeemLogItem)()
+        Private WithEvents _ttDeals As New ToolTip()
+        Private _lastHoverIndex As Integer = -1
 
         ''' <summary>
         ''' Event yang ditembakkan ke aplikasi POS pemanggil saat kasir memilih member.
@@ -287,7 +289,7 @@ Namespace Forms
                 End If
 
                 ' 1. Badge Kode Voucher (Kiri)
-                Dim codeBadgeRect As New Rectangle(bounds.Left + 8, bounds.Top + 8, 120, 42)
+                Dim codeBadgeRect As New Rectangle(bounds.Left + 8, bounds.Top + 5, 118, 38)
                 Using badgeBrush As New SolidBrush(If(isSelected, Color.FromArgb(13, 110, 253), Color.FromArgb(235, 240, 250)))
                     g.FillRectangle(badgeBrush, codeBadgeRect)
                 End Using
@@ -304,19 +306,19 @@ Namespace Forms
                 End Using
 
                 ' 2. Nama Voucher & Info Reward (Tengah)
-                Dim textLeft = bounds.Left + 138
-                Dim textWidth = bounds.Width - 146 - 80
-                Dim nameRect As New Rectangle(textLeft, bounds.Top + 8, textWidth, 22)
-                Dim descRect As New Rectangle(textLeft, bounds.Top + 30, textWidth, 20)
+                Dim textLeft = bounds.Left + 134
+                Dim textWidth = bounds.Width - 134 - 76
+                Dim nameRect As New Rectangle(textLeft, bounds.Top + 5, textWidth, 20)
+                Dim descRect As New Rectangle(textLeft, bounds.Top + 25, textWidth, 18)
 
-                Using nameFont As New Font("Segoe UI", 10.5!, FontStyle.Bold)
+                Using nameFont As New Font("Segoe UI", 10.0!, FontStyle.Bold)
                     Using nameBrush As New SolidBrush(Color.FromArgb(30, 40, 55))
                         Dim sfName As New StringFormat With {.Trimming = StringTrimming.EllipsisCharacter, .FormatFlags = StringFormatFlags.NoWrap}
                         g.DrawString(dealName, nameFont, nameBrush, nameRect, sfName)
                     End Using
                 End Using
 
-                Using descFont As New Font("Segoe UI", 9.0!, FontStyle.Regular)
+                Using descFont As New Font("Segoe UI", 8.5!, FontStyle.Regular)
                     Using descBrush As New SolidBrush(Color.FromArgb(90, 100, 115))
                         Dim sfDesc As New StringFormat With {.Trimming = StringTrimming.EllipsisCharacter, .FormatFlags = StringFormatFlags.NoWrap}
                         g.DrawString(rewardDesc, descFont, descBrush, descRect, sfDesc)
@@ -324,7 +326,7 @@ Namespace Forms
                 End Using
 
                 ' 3. Tombol Visual "PILIH 👉" (Kanan)
-                Dim btnRect As New Rectangle(bounds.Right - 76, bounds.Top + 14, 68, 30)
+                Dim btnRect As New Rectangle(bounds.Right - 72, bounds.Top + 10, 66, 28)
                 Using btnBgBrush As New SolidBrush(If(isSelected, Color.FromArgb(25, 135, 84), Color.FromArgb(240, 243, 248)))
                     g.FillRectangle(btnBgBrush, btnRect)
                 End Using
@@ -358,6 +360,28 @@ Namespace Forms
             If Not isSelected AndAlso bgBrush IsNot Nothing AndAlso bgBrush IsNot Brushes.White Then
                 bgBrush.Dispose()
             End If
+        End Sub
+
+        Private Sub lstDeals_MouseMove(sender As Object, e As MouseEventArgs) Handles lstDeals.MouseMove
+            Try
+                Dim idx = lstDeals.IndexFromPoint(e.Location)
+                If idx >= 0 AndAlso idx < lstDeals.Items.Count Then
+                    If idx <> _lastHoverIndex Then
+                        _lastHoverIndex = idx
+                        If _memberDeals IsNot Nothing AndAlso idx < _memberDeals.Count Then
+                            Dim d = _memberDeals(idx)
+                            Dim dealName = If(d.Deal IsNot Nothing, d.Deal.Name, "")
+                            _ttDeals.SetToolTip(lstDeals, $"[{d.Code}] {dealName}")
+                        Else
+                            _ttDeals.SetToolTip(lstDeals, lstDeals.Items(idx).ToString())
+                        End If
+                    End If
+                Else
+                    _ttDeals.SetToolTip(lstDeals, "")
+                    _lastHoverIndex = -1
+                End If
+            Catch ex As Exception
+            End Try
         End Sub
 
         Private Sub lstDeals_SelectedIndexChanged(sender As Object, e As EventArgs) Handles lstDeals.SelectedIndexChanged
@@ -517,7 +541,7 @@ Namespace Forms
                 Dim isVoucher = String.Equals(itm.Jenis, "RedeemVoucher", StringComparison.OrdinalIgnoreCase)
                 Dim badgeColor = If(isVoucher, Color.FromArgb(253, 126, 20), Color.FromArgb(25, 135, 84))
                 Dim badgeText = If(isVoucher, "🎟 VOUCHER", "⭐ POIN")
-                Dim badgeRect As New Rectangle(bounds.Left + 6, bounds.Top + 8, 80, 44)
+                Dim badgeRect As New Rectangle(bounds.Left + 6, bounds.Top + 6, 80, 32)
 
                 Using bBrush As New SolidBrush(If(isSelected, badgeColor, Color.FromArgb(240, 243, 248)))
                     g.FillRectangle(bBrush, badgeRect)
@@ -536,8 +560,8 @@ Namespace Forms
                 ' 2. Info Detail (Kode, Nama, Nilai)
                 Dim textLeft = bounds.Left + 92
                 Dim textWidth = bounds.Width - 98
-                Dim titleRect As New Rectangle(textLeft, bounds.Top + 8, textWidth, 22)
-                Dim descRect As New Rectangle(textLeft, bounds.Top + 30, textWidth, 22)
+                Dim titleRect As New Rectangle(textLeft, bounds.Top + 4, textWidth, 18)
+                Dim descRect As New Rectangle(textLeft, bounds.Top + 22, textWidth, 18)
 
                 Dim titleText = $"[{itm.Kode}] {itm.NamaVoucher}"
                 Dim nilaiDesc = If(itm.NilaiPoint > 0, $"Nilai: Rp {itm.NilaiPoint:N0}", "Reward: Free Item")
