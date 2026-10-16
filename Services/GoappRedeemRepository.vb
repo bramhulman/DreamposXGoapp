@@ -152,6 +152,7 @@ Namespace Services
                         Dim insertedId = cmd.ExecuteScalar()
                         If insertedId IsNot Nothing AndAlso Not Convert.IsDBNull(insertedId) Then
                             item.Id = Convert.ToInt64(insertedId)
+                            LogRetention.Cleanup(conn, Me.TableName, "[Waktu]")
                             Return item.Id
                         End If
                     End Using
@@ -347,6 +348,7 @@ Namespace Services
                         Dim insertedId = Await cmd.ExecuteScalarAsync().ConfigureAwait(False)
                         If insertedId IsNot Nothing AndAlso Not Convert.IsDBNull(insertedId) Then
                             item.Id = Convert.ToInt64(insertedId)
+                            Await LogRetention.CleanupAsync(conn, Me.TableName, "[Waktu]").ConfigureAwait(False)
                             Return item.Id
                         End If
                     End Using

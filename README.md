@@ -365,3 +365,14 @@ Beberapa pembaruan fungsional dan teknis yang telah ditambahkan ke dalam aplikas
    - Semua benefit dan promo (seperti voucher diskon atau free item) yang dimiliki oleh member tersebut akan langsung dirender ke dalam ListBox, mempermudah kasir menginformasikan penawaran yang tersedia kepada pelanggan.
 
 
+
+## Retensi log SQL (3 bulan)
+
+Setelah insert berhasil, DLL membersihkan log yang lebih tua dari `DATEADD(MONTH, -3, GETDATE())` menurut waktu SQL Server:
+
+- `dbo.GoappApiLog`: berdasarkan `LogDateTime`.
+- `dbo.GoappRedeemLog`: berdasarkan `Waktu`, pada insert sinkron maupun asinkron.
+
+Data tepat pada batas 3 bulan tetap disimpan. Berlaku juga untuk nama tabel kustom. Pembersihan pertama berjalan pada insert pertama, lalu maksimal sekali setiap 24 jam per koneksi/tabel selama proses aplikasi hidup. Saat aplikasi tidak digunakan, pembersihan menunggu insert berikutnya. Delete dilakukan per batch 1.000 baris. Jika gagal, insert tetap berhasil dan pembersihan dicoba kembali pada insert setelah 5 menit. Akun SQL aplikasi memerlukan izin DELETE pada kedua tabel.
+
+Penghapusan membebaskan ruang untuk dipakai ulang SQL Server; ukuran fisik file database tidak otomatis mengecil.

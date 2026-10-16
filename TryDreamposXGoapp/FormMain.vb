@@ -948,6 +948,10 @@ Public Class FormMain
     Private Sub lblMemberPoints_Click(sender As Object, e As EventArgs) Handles lblMemberPoints.Click
 
     End Sub
+
+    Private Sub grpAuth_Enter(sender As Object, e As EventArgs) Handles grpAuth.Enter
+
+    End Sub
 End Class
 
 

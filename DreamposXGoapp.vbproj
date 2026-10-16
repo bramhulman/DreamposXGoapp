@@ -69,10 +69,10 @@
     <Import Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.vb" />
     <Compile Include="Models\GoappConfig.vb" />
     <Compile Include="Models\GoappModels.vb" />
     <Compile Include="Services\DatabaseLogger.vb" />
+    <Compile Include="Services\LogRetention.vb" />
     <Compile Include="Services\GoappRedeemRepository.vb" />
     <Compile Include="Services\GoappApiClient.vb" />
     <Compile Include="Services\ReceiptGenerator.vb" />
