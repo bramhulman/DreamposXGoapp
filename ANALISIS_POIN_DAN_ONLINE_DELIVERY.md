@@ -64,7 +64,7 @@ Transaksi uji ini tetap ada di Goapp agar bukti penerimaan dapat diperiksa. Peng
 
 ## Cara menggunakan
 
-Buka `TryDreamposXGoapp/bin/Release/TryDreamposXGoapp.exe`, pilih tab **3. Transaksi POS**, lalu **Uji Transaksi Tanpa Member**. Isi nomor struk asli, nominal, metode bayar, dan nama produk. SKU dibuat otomatis saat transaksi baru dan tetap sama untuk pengiriman ulang. Hasil menampilkan HTTP, reward, warning rekonsiliasi, kedua status log, request, serta respons. Gunakan nomor yang sama untuk transaksi sama. Tombol nomor baru hanya untuk transaksi baru.
+Buka `TryDreamposXGoapp/bin/Release/TryDreamposXGoapp.exe`, pilih tab **3. Transaksi POS**, centang **Ijinkan tanpa member**, lalu gunakan tombol **Kirim Transaksi Selesai** yang sama. Tidak ada form terpisah. Member tidak dikirim dan burn point diabaikan saat opsi dicentang, termasuk bila sebelumnya sudah memilih member. Tiga SKU data uji dibuat otomatis; total harga sesuai nominal transaksi dan SKU tetap sama untuk referensi yang sama. Gunakan Transaksi baru hanya untuk transaksi baru.
 
 Contoh pemanggilan DLL setelah order berisi detail produk, pembayaran, serta total:
 
@@ -81,7 +81,7 @@ Dim result = Await client.PushGuestSalesOrderAsync(order)
 
 ## Validasi
 
-Build Release DLL dan aplikasi test berhasil. Ada lima warning XML documentation lama saat kompilasi penuh; tidak ada error kompilasi. Sebanyak 22 assertion otomatis berhasil: jumlah seluruh reward, duplicate/concurrent order, payload berubah, timeout/500/parsing, retry 401, validasi guest, dua log SQL, status redeem, serta retensi tiga bulan. Pengujian SQL otomatis memakai tabel sementara bernama khusus uji dan membersihkannya, bukan menghapus log produksi.
+Build Release DLL dan aplikasi test berhasil. Ada lima warning XML documentation lama saat kompilasi penuh; tidak ada error kompilasi. Sebanyak 25 assertion otomatis berhasil: jumlah seluruh reward, duplicate/concurrent order, payload berubah, timeout/500/parsing, retry 401, validasi guest, dua log SQL, status redeem, serta retensi tiga bulan. Pengujian SQL otomatis memakai tabel sementara bernama khusus uji dan membersihkannya, bukan menghapus log produksi.
 
 Lima assertion uji langsung berhasil: penerimaan HTTP 201, reward 0, kedua log tersimpan, pengulangan dicegah, dan satu POST pada SQL. Metadata endpoint juga berhasil dibaca dengan OPTIONS 200.
 
@@ -95,4 +95,8 @@ Jalankan pengujian dari root repository menggunakan MSBuild Visual Studio:
 Opsi `--preflight` hanya membaca metadata API. Opsi `--live-guest` membuat satu transaksi nyata di Goapp dan hanya digunakan bila pengiriman uji memang dikehendaki. Pengujian SQL memakai konfigurasi `POSDatabase` dari App.config; kredensial tidak disalin ke source test.
 ## Pembaruan tampilan dan identitas transaksi
 
-Form, request baru, serta log baru menggunakan identitas transaksi umum: judul Uji Transaksi Tanpa Member, referensi TRX, SKU otomatis, nama produk Penjualan DreamPOS, dan pembayaran CASH. GoappRedeemLog menggunakan Jenis=SalesOrder untuk transaksi dengan maupun tanpa member. Bukti transaksi uji lama pada tabel di atas dipertahankan sebagai catatan historis; baris lama di SQL/Goapp tidak diubah.
+Proses pada form utama menggunakan identitas transaksi umum: referensi TRX, beberapa SKU otomatis dengan nama Produk 1–3, dan pembayaran CASH. Form transaksi tanpa member terpisah telah dihapus. GoappRedeemLog menggunakan Jenis=SalesOrder untuk transaksi dengan maupun tanpa member. Bukti transaksi uji lama pada tabel di atas dipertahankan sebagai catatan historis; baris lama di SQL/Goapp tidak diubah.
+
+## Uji ulang proses terpadu pada form utama
+
+Uji langsung berikutnya menggunakan generator tiga SKU yang sama dengan form utama, tanpa member: `TEST-TRX-261016-135217-acc127`, nominal Rp150.000, Goapp order UID `158172153091144`. Hasil HTTP 201, reward 0, kedua log tersimpan, serta satu POST saja saat referensi yang sama dipanggil ulang. Sebanyak 25 assertion otomatis lulus, termasuk jumlah SKU, ketepatan total harga, dan konsistensi SKU untuk kirim ulang.
