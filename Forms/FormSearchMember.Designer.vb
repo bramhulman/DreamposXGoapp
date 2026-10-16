@@ -421,7 +421,7 @@ Namespace Forms
             Me.grpMemberInfo.ForeColor = System.Drawing.Color.FromArgb(CType(CType(50, Byte), Integer), CType(CType(60, Byte), Integer), CType(CType(75, Byte), Integer))
             Me.grpMemberInfo.Location = New System.Drawing.Point(6, 6)
             Me.grpMemberInfo.Name = "grpMemberInfo"
-            Me.grpMemberInfo.Size = New System.Drawing.Size(486, 165)
+            Me.grpMemberInfo.Size = New System.Drawing.Size(506, 146)
             Me.grpMemberInfo.TabIndex = 0
             Me.grpMemberInfo.TabStop = False
             Me.grpMemberInfo.Text = "Informasi Profil Member"
@@ -509,7 +509,7 @@ Namespace Forms
             Me.lblPointsTitle.AutoSize = True
             Me.lblPointsTitle.Font = New System.Drawing.Font("Segoe UI", 8.5!)
             Me.lblPointsTitle.ForeColor = System.Drawing.Color.FromArgb(CType(CType(110, Byte), Integer), CType(CType(120, Byte), Integer), CType(CType(135, Byte), Integer))
-            Me.lblPointsTitle.Location = New System.Drawing.Point(10, 112)
+            Me.lblPointsTitle.Location = New System.Drawing.Point(10, 106)
             Me.lblPointsTitle.Name = "lblPointsTitle"
             Me.lblPointsTitle.Size = New System.Drawing.Size(150, 20)
             Me.lblPointsTitle.TabIndex = 6
@@ -518,9 +518,9 @@ Namespace Forms
             'lblMemberPoints
             '
             Me.lblMemberPoints.AutoSize = True
-            Me.lblMemberPoints.Font = New System.Drawing.Font("Segoe UI", 12.0!, System.Drawing.FontStyle.Bold)
+            Me.lblMemberPoints.Font = New System.Drawing.Font("Segoe UI", 11.5!, System.Drawing.FontStyle.Bold)
             Me.lblMemberPoints.ForeColor = System.Drawing.Color.FromArgb(CType(CType(13, Byte), Integer), CType(CType(110, Byte), Integer), CType(CType(253, Byte), Integer))
-            Me.lblMemberPoints.Location = New System.Drawing.Point(10, 130)
+            Me.lblMemberPoints.Location = New System.Drawing.Point(10, 122)
             Me.lblMemberPoints.Name = "lblMemberPoints"
             Me.lblMemberPoints.Size = New System.Drawing.Size(122, 28)
             Me.lblMemberPoints.TabIndex = 7
@@ -534,9 +534,9 @@ Namespace Forms
             Me.btnUsePoint.FlatStyle = System.Windows.Forms.FlatStyle.Flat
             Me.btnUsePoint.Font = New System.Drawing.Font("Segoe UI", 9.5!, System.Drawing.FontStyle.Bold)
             Me.btnUsePoint.ForeColor = System.Drawing.Color.White
-            Me.btnUsePoint.Location = New System.Drawing.Point(165, 122)
+            Me.btnUsePoint.Location = New System.Drawing.Point(165, 114)
             Me.btnUsePoint.Name = "btnUsePoint"
-            Me.btnUsePoint.Size = New System.Drawing.Size(160, 40)
+            Me.btnUsePoint.Size = New System.Drawing.Size(160, 32)
             Me.btnUsePoint.TabIndex = 9
             Me.btnUsePoint.Text = "⭐ Gunakan Point"
             Me.btnUsePoint.UseVisualStyleBackColor = False
@@ -548,10 +548,10 @@ Namespace Forms
             Me.grpBenefits.Dock = System.Windows.Forms.DockStyle.Top
             Me.grpBenefits.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Bold)
             Me.grpBenefits.ForeColor = System.Drawing.Color.FromArgb(CType(CType(50, Byte), Integer), CType(CType(60, Byte), Integer), CType(CType(75, Byte), Integer))
-            Me.grpBenefits.Location = New System.Drawing.Point(6, 171)
+            Me.grpBenefits.Location = New System.Drawing.Point(6, 152)
             Me.grpBenefits.Name = "grpBenefits"
             Me.grpBenefits.Padding = New System.Windows.Forms.Padding(8)
-            Me.grpBenefits.Size = New System.Drawing.Size(486, 205)
+            Me.grpBenefits.Size = New System.Drawing.Size(506, 280)
             Me.grpBenefits.TabIndex = 1
             Me.grpBenefits.TabStop = False
             Me.grpBenefits.Text = "Daftar Benefit / Voucher Member"
@@ -564,10 +564,11 @@ Namespace Forms
             Me.lstDeals.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed
             Me.lstDeals.Font = New System.Drawing.Font("Segoe UI", 10.0!)
             Me.lstDeals.FormattingEnabled = True
-            Me.lstDeals.ItemHeight = 46
+            Me.lstDeals.IntegralHeight = False
+            Me.lstDeals.ItemHeight = 48
             Me.lstDeals.Location = New System.Drawing.Point(8, 28)
             Me.lstDeals.Name = "lstDeals"
-            Me.lstDeals.Size = New System.Drawing.Size(470, 131)
+            Me.lstDeals.Size = New System.Drawing.Size(490, 208)
             Me.lstDeals.TabIndex = 0
             '
             'btnUseSelectedVoucher
@@ -579,9 +580,9 @@ Namespace Forms
             Me.btnUseSelectedVoucher.FlatStyle = System.Windows.Forms.FlatStyle.Flat
             Me.btnUseSelectedVoucher.Font = New System.Drawing.Font("Segoe UI", 9.5!, System.Drawing.FontStyle.Bold)
             Me.btnUseSelectedVoucher.ForeColor = System.Drawing.Color.White
-            Me.btnUseSelectedVoucher.Location = New System.Drawing.Point(8, 159)
+            Me.btnUseSelectedVoucher.Location = New System.Drawing.Point(8, 236)
             Me.btnUseSelectedVoucher.Name = "btnUseSelectedVoucher"
-            Me.btnUseSelectedVoucher.Size = New System.Drawing.Size(470, 38)
+            Me.btnUseSelectedVoucher.Size = New System.Drawing.Size(490, 36)
             Me.btnUseSelectedVoucher.TabIndex = 1
             Me.btnUseSelectedVoucher.Text = "🎫 GUNAKAN VOUCHER"
             Me.btnUseSelectedVoucher.UseVisualStyleBackColor = False
@@ -594,10 +595,10 @@ Namespace Forms
             Me.grpActiveRedeems.Dock = System.Windows.Forms.DockStyle.Fill
             Me.grpActiveRedeems.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Bold)
             Me.grpActiveRedeems.ForeColor = System.Drawing.Color.FromArgb(CType(CType(50, Byte), Integer), CType(CType(60, Byte), Integer), CType(CType(75, Byte), Integer))
-            Me.grpActiveRedeems.Location = New System.Drawing.Point(6, 376)
+            Me.grpActiveRedeems.Location = New System.Drawing.Point(6, 432)
             Me.grpActiveRedeems.Name = "grpActiveRedeems"
             Me.grpActiveRedeems.Padding = New System.Windows.Forms.Padding(8)
-            Me.grpActiveRedeems.Size = New System.Drawing.Size(486, 142)
+            Me.grpActiveRedeems.Size = New System.Drawing.Size(506, 132)
             Me.grpActiveRedeems.TabIndex = 2
             Me.grpActiveRedeems.TabStop = False
             Me.grpActiveRedeems.Text = "📋 Voucher & Poin Terpakai (0)"
@@ -661,9 +662,9 @@ Namespace Forms
             Me.pnlBottom.Controls.Add(Me.btnSelect)
             Me.pnlBottom.Controls.Add(Me.btnCancel)
             Me.pnlBottom.Dock = System.Windows.Forms.DockStyle.Bottom
-            Me.pnlBottom.Location = New System.Drawing.Point(0, 584)
+            Me.pnlBottom.Location = New System.Drawing.Point(0, 631)
             Me.pnlBottom.Name = "pnlBottom"
-            Me.pnlBottom.Size = New System.Drawing.Size(820, 66)
+            Me.pnlBottom.Size = New System.Drawing.Size(840, 64)
             Me.pnlBottom.TabIndex = 3
             '
             'lblSearchStatus
@@ -672,7 +673,7 @@ Namespace Forms
             Me.lblSearchStatus.ForeColor = System.Drawing.Color.FromArgb(CType(CType(100, Byte), Integer), CType(CType(110, Byte), Integer), CType(CType(125, Byte), Integer))
             Me.lblSearchStatus.Location = New System.Drawing.Point(12, 10)
             Me.lblSearchStatus.Name = "lblSearchStatus"
-            Me.lblSearchStatus.Size = New System.Drawing.Size(210, 44)
+            Me.lblSearchStatus.Size = New System.Drawing.Size(220, 44)
             Me.lblSearchStatus.TabIndex = 3
             Me.lblSearchStatus.Text = "Silakan masukkan nomor handphone"
             Me.lblSearchStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
@@ -684,7 +685,7 @@ Namespace Forms
             Me.btnScanQrVoucher.FlatStyle = System.Windows.Forms.FlatStyle.Flat
             Me.btnScanQrVoucher.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Bold)
             Me.btnScanQrVoucher.ForeColor = System.Drawing.Color.White
-            Me.btnScanQrVoucher.Location = New System.Drawing.Point(230, 12)
+            Me.btnScanQrVoucher.Location = New System.Drawing.Point(245, 11)
             Me.btnScanQrVoucher.Name = "btnScanQrVoucher"
             Me.btnScanQrVoucher.Size = New System.Drawing.Size(175, 42)
             Me.btnScanQrVoucher.TabIndex = 2
@@ -699,9 +700,9 @@ Namespace Forms
             Me.btnSelect.FlatStyle = System.Windows.Forms.FlatStyle.Flat
             Me.btnSelect.Font = New System.Drawing.Font("Segoe UI", 9.5!, System.Drawing.FontStyle.Bold)
             Me.btnSelect.ForeColor = System.Drawing.Color.White
-            Me.btnSelect.Location = New System.Drawing.Point(415, 12)
+            Me.btnSelect.Location = New System.Drawing.Point(428, 11)
             Me.btnSelect.Name = "btnSelect"
-            Me.btnSelect.Size = New System.Drawing.Size(240, 42)
+            Me.btnSelect.Size = New System.Drawing.Size(250, 42)
             Me.btnSelect.TabIndex = 1
             Me.btnSelect.Text = "✓ PILIH MEMBER"
             Me.btnSelect.UseVisualStyleBackColor = False
@@ -713,7 +714,7 @@ Namespace Forms
             Me.btnCancel.FlatStyle = System.Windows.Forms.FlatStyle.Flat
             Me.btnCancel.Font = New System.Drawing.Font("Segoe UI", 9.5!)
             Me.btnCancel.ForeColor = System.Drawing.Color.White
-            Me.btnCancel.Location = New System.Drawing.Point(665, 12)
+            Me.btnCancel.Location = New System.Drawing.Point(686, 11)
             Me.btnCancel.Name = "btnCancel"
             Me.btnCancel.Size = New System.Drawing.Size(145, 42)
             Me.btnCancel.TabIndex = 0
@@ -725,7 +726,7 @@ Namespace Forms
             Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 20.0!)
             Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
             Me.BackColor = System.Drawing.Color.FromArgb(CType(CType(245, Byte), Integer), CType(CType(247, Byte), Integer), CType(CType(250, Byte), Integer))
-            Me.ClientSize = New System.Drawing.Size(820, 650)
+            Me.ClientSize = New System.Drawing.Size(840, 695)
             Me.Controls.Add(Me.pnlMiddle)
             Me.Controls.Add(Me.pnlLeft)
             Me.Controls.Add(Me.pnlBottom)
