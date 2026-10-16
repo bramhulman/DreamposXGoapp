@@ -546,7 +546,7 @@ Partial Class FormMain
         Me.lblVoucherAuthCode.AutoSize = True
         Me.lblVoucherAuthCode.Location = New System.Drawing.Point(20, 102)
         Me.lblVoucherAuthCode.Name = "lblVoucherAuthCode"
-        Me.lblVoucherAuthCode.Size = New System.Drawing.Size(137, 20)
+        Me.lblVoucherAuthCode.Size = New System.Drawing.Size(141, 20)
         Me.lblVoucherAuthCode.TabIndex = 5
         Me.lblVoucherAuthCode.Text = "Authorization Code:"
         '
@@ -655,7 +655,7 @@ Partial Class FormMain
         Me.lblBurnAuthCode.AutoSize = True
         Me.lblBurnAuthCode.Location = New System.Drawing.Point(20, 105)
         Me.lblBurnAuthCode.Name = "lblBurnAuthCode"
-        Me.lblBurnAuthCode.Size = New System.Drawing.Size(137, 20)
+        Me.lblBurnAuthCode.Size = New System.Drawing.Size(141, 20)
         Me.lblBurnAuthCode.TabIndex = 4
         Me.lblBurnAuthCode.Text = "Authorization Code:"
         '

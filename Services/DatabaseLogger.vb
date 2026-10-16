@@ -42,6 +42,7 @@ Public Class DatabaseLogger
 
                     Await cmd.ExecuteNonQueryAsync()
                 End Using
+                Await LogRetention.CleanupAsync(conn, targetTable, "[LogDateTime]").ConfigureAwait(False)
             End Using
         Catch ex As Exception
             ' Silently ignore or log to file if DB logging fails
