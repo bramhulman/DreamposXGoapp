@@ -16,7 +16,7 @@ Namespace Services
     ''' Menangani autentikasi otomatis, caching token, auto-retry, pencarian member,
     ''' push transaksi, burn point, dan voucher.
     ''' </summary>
-    Public Class GoappApiClient
+    Public Partial Class GoappApiClient
         Private ReadOnly _config As GoappConfig
         Private ReadOnly _httpClient As HttpClient
         Private ReadOnly _tokenLock As New SemaphoreSlim(1, 1)
@@ -87,6 +87,10 @@ Namespace Services
         End Property
 
         Public Sub New(Optional config As GoappConfig = Nothing)
+            Me.New(config, Nothing)
+        End Sub
+
+        Public Sub New(config As GoappConfig, messageHandler As HttpMessageHandler)
             _config = If(config, New GoappConfig())
             _dbLogger = New DatabaseLogger(_config.DbConnectionString, _config.LogTableName)
             _redeemRepo = New GoappRedeemRepository(_config.DbConnectionString)
@@ -104,7 +108,7 @@ Namespace Services
             Catch
             End Try
 
-            Dim handler As New HttpClientHandler()
+            Dim handler As HttpMessageHandler = If(messageHandler, New HttpClientHandler())
             _httpClient = New HttpClient(handler) With {
                 .Timeout = TimeSpan.FromSeconds(_config.TimeoutSeconds)
             }
@@ -441,19 +445,7 @@ Namespace Services
         ''' Mengirim data transaksi selesai ke Goapp untuk proses penambahan poin (Earning Point)
         ''' </summary>
         Public Async Function PushSalesOrderAsync(order As PushOrderRequest) As Task(Of ApiResponse(Of PushOrderResponse))
-            Dim url = $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/sales/order/"
-
-            ' Lengkapi identitas store dari App.config jika belum terisi di objek order
-            If order.Store Is Nothing Then
-                order.Store = New OrderStoreRef With {
-                    .Uid = If(_config.StoreUid.HasValue, _config.StoreUid.Value, CType(Nothing, Long?)),
-                    .Name = If(Not String.IsNullOrWhiteSpace(_config.StoreName), _config.StoreName.Trim(), Nothing),
-                    .StoreCode = If(Not String.IsNullOrWhiteSpace(_config.StoreCode), _config.StoreCode.Trim(), Nothing)
-                }
-            End If
-
-            Log($"Mengirim transaksi {order.OrderNo} ke Goapp untuk Earning Point (Store: {If(order.Store IsNot Nothing, order.Store.StoreCode, "-")})...")
-            Return Await SendAuthorizedRequestAsync(Of PushOrderResponse)(HttpMethod.Post, url, order)
+            Return Await SubmitSalesOrderAsync(order, False)
         End Function
 
 #End Region
@@ -466,81 +458,95 @@ Namespace Services
             Dim requestJson As String = ""
             Dim responseJson As String = ""
             Dim errMsgForLog As String = ""
+            Dim logTask As Task(Of Boolean) = Nothing
+            Dim retryUnauthorized As Boolean = False
 
             Try
                 Dim token = Await GetValidTokenAsync()
-                Dim request As New HttpRequestMessage(method, url)
-                request.Headers.Authorization = New AuthenticationHeaderValue("Bearer", token)
+                Using request As New HttpRequestMessage(method, url)
+                    request.Headers.Authorization = New AuthenticationHeaderValue("Bearer", token)
 
-                If payload IsNot Nothing Then
-                    requestJson = JsonConvert.SerializeObject(payload)
-                    request.Content = New StringContent(requestJson, Encoding.UTF8, "application/json")
-                End If
-
-                Dim response = Await _httpClient.SendAsync(request)
-                responseJson = Await response.Content.ReadAsStringAsync()
-                result.StatusCode = CInt(response.StatusCode)
-                result.RawJson = responseJson
-
-                ' Jika token kadaluarsa (401 Unauthorized), auto-refresh token dan ulangi 1 kali
-                If response.StatusCode = HttpStatusCode.Unauthorized AndAlso retryOn401 Then
-                    Log("Token tidak valid/kedaluwarsa (401). Mengambil token baru dan mencoba ulang...")
-                    Await GetValidTokenAsync(forceRefresh:=True)
-                    Return Await SendAuthorizedRequestAsync(Of T)(method, url, payload, retryOn401:=False)
-                End If
-
-                If response.IsSuccessStatusCode Then
-                    result.IsSuccess = True
-                    If Not String.IsNullOrWhiteSpace(responseJson) Then
-                        result.Data = JsonConvert.DeserializeObject(Of T)(responseJson)
+                    If payload IsNot Nothing Then
+                        requestJson = JsonConvert.SerializeObject(payload)
+                        request.Content = New StringContent(requestJson, Encoding.UTF8, "application/json")
                     End If
-                    result.Message = "OK"
-                Else
-                    result.IsSuccess = False
-                    ' Coba ekstrak pesan error dari JSON Goapp jika ada field 'detail', 'message', 'error', atau validation fields
-                    Dim errMsg = response.ReasonPhrase
-                    Try
-                        If Not String.IsNullOrWhiteSpace(responseJson) Then
-                            Dim trimmed = responseJson.Trim()
-                            If trimmed.StartsWith("{") Then
-                                Dim jObj = JObject.Parse(trimmed)
-                                If jObj("detail") IsNot Nothing Then
-                                    errMsg = jObj("detail").ToString()
-                                ElseIf jObj("message") IsNot Nothing Then
-                                    errMsg = jObj("message").ToString()
-                                ElseIf jObj("error") IsNot Nothing Then
-                                    errMsg = jObj("error").ToString()
-                                Else
-                                    Dim errList As New List(Of String)()
-                                    For Each prop In jObj.Properties()
-                                        errList.Add($"{prop.Name}: {prop.Value}")
-                                    Next
-                                    If errList.Count > 0 Then
-                                        errMsg = String.Join("; ", errList)
+
+                    Using response = Await _httpClient.SendAsync(request)
+                        responseJson = Await response.Content.ReadAsStringAsync()
+                        result.StatusCode = CInt(response.StatusCode)
+                        result.RawJson = responseJson
+
+                        ' Jika token kadaluarsa (401 Unauthorized), auto-refresh token dan ulangi 1 kali
+                        If response.StatusCode = HttpStatusCode.Unauthorized AndAlso retryOn401 Then
+                            Log("Token tidak valid/kedaluwarsa (401). Mengambil token baru dan mencoba ulang...")
+                            retryUnauthorized = True
+                        End If
+
+                        If response.IsSuccessStatusCode Then
+                            result.IsSuccess = True
+                            If Not String.IsNullOrWhiteSpace(responseJson) Then
+                                result.Data = JsonConvert.DeserializeObject(Of T)(responseJson)
+                            End If
+                            result.Message = "OK"
+                        Else
+                            result.IsSuccess = False
+                            ' Coba ekstrak pesan error dari JSON Goapp jika ada field 'detail', 'message', 'error', atau validation fields
+                            Dim errMsg = response.ReasonPhrase
+                            Try
+                                If Not String.IsNullOrWhiteSpace(responseJson) Then
+                                    Dim trimmed = responseJson.Trim()
+                                    If trimmed.StartsWith("{") Then
+                                        Dim jObj = JObject.Parse(trimmed)
+                                        If jObj("detail") IsNot Nothing Then
+                                            errMsg = jObj("detail").ToString()
+                                        ElseIf jObj("message") IsNot Nothing Then
+                                            errMsg = jObj("message").ToString()
+                                        ElseIf jObj("error") IsNot Nothing Then
+                                            errMsg = jObj("error").ToString()
+                                        Else
+                                            Dim errList As New List(Of String)()
+                                            For Each prop In jObj.Properties()
+                                                errList.Add($"{prop.Name}: {prop.Value}")
+                                            Next
+                                            If errList.Count > 0 Then
+                                                errMsg = String.Join("; ", errList)
+                                            End If
+                                        End If
+                                    ElseIf trimmed.StartsWith("[") Then
+                                        errMsg = trimmed
                                     End If
                                 End If
-                            ElseIf trimmed.StartsWith("[") Then
-                                errMsg = trimmed
-                            End If
+                            Catch
+                            End Try
+                            result.Message = $"[{result.StatusCode}] {errMsg}"
+                            errMsgForLog = result.Message
                         End If
-                    Catch
-                    End Try
-                    result.Message = $"[{result.StatusCode}] {errMsg}"
-                    errMsgForLog = result.Message
-                End If
+                    End Using
+                End Using
 
             Catch ex As Exception
                 result.IsSuccess = False
-                result.StatusCode = 0
+                result.RequiresReconciliation = (method = HttpMethod.Post)
                 result.Message = $"Exception: {ex.Message}"
                 errMsgForLog = ex.Message
                 Log($"HTTP Request Error ({url}): {ex.Message}")
             Finally
                 sw.Stop()
-                ' Log to Database asynchronously (fire and forget) dengan passing connection string
-                Dim logTask = _dbLogger.LogApiAsync(method.Method, url, requestJson, responseJson, result.StatusCode, result.IsSuccess, errMsgForLog, CInt(sw.ElapsedMilliseconds), Me.DbConnectionString)
+                ' Tunggu audit di bawah sebelum mengembalikan respons atau retry 401.
+                logTask = _dbLogger.LogApiWithResultAsync(method.Method, url, requestJson, responseJson, result.StatusCode, result.IsSuccess, errMsgForLog, CInt(sw.ElapsedMilliseconds), Me.DbConnectionString)
             End Try
 
+            result.RequestJson = requestJson
+            result.ApiLogSaved = Await logTask
+            If retryUnauthorized Then
+                Try
+                    Await GetValidTokenAsync(forceRefresh:=True)
+                Catch ex As Exception
+                    result.Message = "Refresh token gagal: " & ex.Message
+                    Return result
+                End Try
+                Return Await SendAuthorizedRequestAsync(Of T)(method, url, payload, retryOn401:=False)
+            End If
             Return result
         End Function
 

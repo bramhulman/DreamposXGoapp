@@ -376,3 +376,9 @@ Setelah insert berhasil, DLL membersihkan log yang lebih tua dari `DATEADD(MONTH
 Data tepat pada batas 3 bulan tetap disimpan. Berlaku juga untuk nama tabel kustom. Pembersihan pertama berjalan pada insert pertama, lalu maksimal sekali setiap 24 jam per koneksi/tabel selama proses aplikasi hidup. Saat aplikasi tidak digunakan, pembersihan menunggu insert berikutnya. Delete dilakukan per batch 1.000 baris. Jika gagal, insert tetap berhasil dan pembersihan dicoba kembali pada insert setelah 5 menit. Akun SQL aplikasi memerlukan izin DELETE pada kedua tabel.
 
 Penghapusan membebaskan ruang untuk dipakai ulang SQL Server; ukuran fisik file database tidak otomatis mengecil.
+## Transaksi tanpa member dan analisis poin
+
+Tersedia `GoappApiClient.PushGuestSalesOrderAsync(order)` untuk transaksi biasa tanpa member. Gunakan `Member = Nothing`, pembayaran selain POINT, dan nomor `ProviderRef` tetap. Method mewajibkan koneksi SQL, menyimpan audit ke `GoappApiLog` serta jurnal `SalesOrder` ke `GoappRedeemLog`, dan mencegah pengiriman ulang referensi sama. Migrasi kolom jurnal/index otomatis memerlukan izin ALTER tabel/CREATE INDEX. Hasil tidak pasti harus direkonsiliasi sebelum dikirim ulang.
+
+Form test tersedia di aplikasi TryDreamposXGoapp → tab 3. Transaksi POS → Uji Transaksi Tanpa Member. Analisis kasus poin berlebih, bukti uji langsung HTTP 201 dengan reward 0, detail migrasi, batas anti-duplikat, dan cara penggunaan ada di [ANALISIS_POIN_DAN_ONLINE_DELIVERY.md](ANALISIS_POIN_DAN_ONLINE_DELIVERY.md).
+Form transaksi tanpa member menggunakan referensi umum TRX, metode bayar CASH, nama produk Penjualan DreamPOS, serta SKU yang dibuat otomatis saat memulai transaksi baru. SKU tetap sama saat transaksi tersebut dikirim ulang. Pencatatan memakai Jenis=SalesOrder tanpa penanda online/delivery.

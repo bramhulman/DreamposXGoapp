@@ -351,7 +351,7 @@ Partial Class FormMain
         Me.txtInputMember.Name = "txtInputMember"
         Me.txtInputMember.Size = New System.Drawing.Size(180, 27)
         Me.txtInputMember.TabIndex = 1
-        Me.txtInputMember.Text = "081588809090"
+        Me.txtInputMember.Text = "157557895826504"
         '
         'btnSearchMember
         '

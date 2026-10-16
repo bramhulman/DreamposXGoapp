@@ -75,6 +75,8 @@
     <Compile Include="Services\LogRetention.vb" />
     <Compile Include="Services\GoappRedeemRepository.vb" />
     <Compile Include="Services\GoappApiClient.vb" />
+    <Compile Include="Services\GoappOrderClient.vb" />
+    <Compile Include="Services\OrderSubmissionJournal.vb" />
     <Compile Include="Services\ReceiptGenerator.vb" />
     <Compile Include="Forms\MemberDataEventArgs.vb" />
     <Compile Include="Forms\FormSearchMember.vb">

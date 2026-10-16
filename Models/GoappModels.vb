@@ -12,6 +12,12 @@ Namespace Models
         Public Property Message As String
         Public Property Data As T
         Public Property RawJson As String
+        Public Property RequestJson As String
+        Public Property IsDuplicate As Boolean
+        Public Property RequiresReconciliation As Boolean
+        Public Property ApiLogSaved As Boolean
+        Public Property TransactionLogSaved As Boolean
+        Public Property WarningMessage As String
     End Class
 
     ''' <summary>
@@ -825,9 +831,23 @@ Namespace Models
 
         <JsonProperty("reward")>
         Public Property Reward As List(Of OrderRewardItem)
+
+        <JsonIgnore>
+        Public ReadOnly Property TotalEarnedPoints As Decimal
+            Get
+                If Reward Is Nothing Then Return 0D
+                Return Reward.Sum(Function(item) item.Amount)
+            End Get
+        End Property
     End Class
 
     Public Class OrderRewardItem
+        <JsonProperty("member")>
+        Public Property Member As OrderMemberRef
+
+        <JsonProperty("account")>
+        Public Property Account As MemberAccount
+
         <JsonProperty("amount")>
         Public Property Amount As Decimal ' Poin yang diperoleh (Earned Points)
 
