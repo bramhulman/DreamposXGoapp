@@ -1,6 +1,7 @@
 Imports System
 Imports System.Collections.Generic
 Imports System.Drawing
+Imports System.Linq
 Imports System.Threading.Tasks
 Imports System.Windows.Forms
 Imports DreamposXGoapp.Models
@@ -26,6 +27,11 @@ Namespace Forms
         ''' POS dapat menangkapnya via: AddHandler g_frmLoyal.sendMemberData, AddressOf GetLoyalID_MemberData
         ''' </summary>
         Public Event sendMemberData(sender As Object, e As MemberDataEventArgs)
+
+        ''' <summary>
+        ''' Event yang ditembakkan ke aplikasi POS saat kasir membatalkan voucher/poin terpakai dari daftar.
+        ''' </summary>
+        Public Event ItemCancelled(sender As Object, item As GoappRedeemLogItem)
 
         ''' <summary>
         ''' Data member terpilih (jika POS ingin membaca langsung dari properti)
@@ -87,6 +93,11 @@ Namespace Forms
         Public Property RedeemedPoint As RedeemedPointInfo = Nothing
 
         ''' <summary>
+        ''' Nomor HP member awal untuk langsung dicari saat form dimuat (misal jika member sudah terpasang di POS)
+        ''' </summary>
+        Public Property InitialPhoneNumber As String = String.Empty
+
+        ''' <summary>
         ''' Inisialisasi FormSearchMember dengan passing instance GoappApiClient dari POS
         ''' </summary>
         Public Sub New(client As GoappApiClient)
@@ -128,6 +139,11 @@ Namespace Forms
             ResetDisplay()
             txtPhoneNo.Focus()
             Await RefreshActiveRedeemBadgeAsync()
+
+            If Not String.IsNullOrEmpty(Me.InitialPhoneNumber) Then
+                txtPhoneNo.Text = Me.InitialPhoneNumber.Trim()
+                btnSearch_Click(btnSearch, EventArgs.Empty)
+            End If
         End Sub
 
         Private Sub OnNumberButtonClick(sender As Object, e As EventArgs)
@@ -472,22 +488,41 @@ Namespace Forms
                     Dim activeLogs = Await _client.RedeemRepo.GetActiveLogsByTxRefAsync(Me.TransactionRef)
                     _activeLogs = If(activeLogs, New List(Of GoappRedeemLogItem)())
                     Dim count = _activeLogs.Count
+                    Dim unappliedCount = _activeLogs.Where(Function(x) x.StatusPos = 0).Count()
+                    Dim inPosCount = _activeLogs.Where(Function(x) x.StatusPos = 1).Count()
 
                     grpActiveRedeems.Text = $"📋 Voucher & Poin Terpakai ({count})"
-                    lblActiveRedeemsInfo.Text = If(count > 0, $"{count} item siap masuk ke POS. Pilih item untuk membatalkan.", "Belum ada voucher atau poin terpakai pada transaksi ini.")
+                    If unappliedCount > 0 Then
+                        lblActiveRedeemsInfo.Text = $"{unappliedCount} item siap masuk ke POS ({inPosCount} sudah di POS). Pilih item untuk membatalkan."
+                    ElseIf inPosCount > 0 Then
+                        lblActiveRedeemsInfo.Text = $"{inPosCount} item sudah terpasang di POS. Pilih item jika ingin membatalkannya dari POS."
+                    Else
+                        lblActiveRedeemsInfo.Text = "Belum ada voucher atau poin terpakai pada transaksi ini."
+                    End If
 
                     lstActiveRedeems.Items.Clear()
                     If count > 0 Then
                         For Each itm In _activeLogs
                             lstActiveRedeems.Items.Add(itm)
                         Next
-                        btnSelect.Text = "✓ MASUKKAN KE POS"
-                        btnSelect.Enabled = True
 
-                        ' Jika ada item terpakai (> 0), tombol Cancel tidak bisa digunakan
-                        btnCancel.Enabled = False
-                        btnCancel.BackColor = Color.FromArgb(200, 205, 210)
-                        btnCancel.ForeColor = Color.FromArgb(140, 145, 150)
+                        If unappliedCount > 0 Then
+                            btnSelect.Text = "✓ MASUKKAN KE POS"
+                            btnSelect.Enabled = True
+
+                            ' Jika masih ada item baru (StatusPos = 0), tombol Cancel dinonaktifkan agar tidak menggantung
+                            btnCancel.Enabled = False
+                            btnCancel.BackColor = Color.FromArgb(200, 205, 210)
+                            btnCancel.ForeColor = Color.FromArgb(140, 145, 150)
+                        Else
+                            ' Semua item terpakai sudah masuk ke POS, kasir bebas menutup form
+                            btnCancel.Enabled = True
+                            btnCancel.BackColor = Color.FromArgb(108, 117, 125)
+                            btnCancel.ForeColor = Color.White
+
+                            btnSelect.Text = "✓ PILIH MEMBER"
+                            btnSelect.Enabled = (_currentMember IsNot Nothing)
+                        End If
                     Else
                         lstActiveRedeems.Items.Add("(Belum ada voucher atau poin terpakai)")
                         btnCancel.Enabled = True
@@ -565,7 +600,8 @@ Namespace Forms
 
                 Dim titleText = $"[{itm.Kode}] {itm.NamaVoucher}"
                 Dim nilaiDesc = If(itm.NilaiPoint > 0, $"Nilai: Rp {itm.NilaiPoint:N0}", "Reward: Free Item")
-                Dim descText = $"{nilaiDesc} | {itm.Waktu:HH:mm:ss}"
+                Dim posStatus = If(itm.StatusPos = 1, "✓ Di POS", "Siap Masuk POS")
+                Dim descText = $"{nilaiDesc} | {posStatus} | {itm.Waktu:HH:mm:ss}"
 
                 Using titleFont As New Font("Segoe UI", 9.5!, FontStyle.Bold)
                     Using titleBrush As New SolidBrush(Color.FromArgb(30, 40, 55))
@@ -619,16 +655,17 @@ Namespace Forms
 
             Dim selected = _activeLogs(lstActiveRedeems.SelectedIndex)
             If Not selected.CanCancelFromDll Then
-                FormMessageBox.Show(Me, "Item ini sudah masuk ke transaksi POS atau sudah dibatalkan sebelumnya sehingga tidak dapat dibatalkan lagi dari form ini.", "Tidak Dapat Dibatalkan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                FormMessageBox.Show(Me, "Item ini sudah dibatalkan sebelumnya sehingga tidak dapat dibatalkan lagi dari form ini.", "Tidak Dapat Dibatalkan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                 Return
             End If
 
             ' Konfirmasi pembatalan
+            Dim posMsg = If(selected.StatusPos = 1, "Item ini sudah ada di transaksi POS dan akan dihapus dari transaksi POS.", "Item akan dibatalkan dari sistem Goapp dan tidak akan masuk ke POS.")
             Dim confirmText = $"Apakah Anda yakin ingin membatalkan penggunaan {If(selected.Jenis = "RedeemVoucher", "Voucher", "Poin")} berikut?{Environment.NewLine}{Environment.NewLine}" &
                               $"- Kode: {selected.Kode}{Environment.NewLine}" &
                               $"- Nama: {selected.NamaVoucher}{Environment.NewLine}" &
                               $"- Nilai: {If(selected.NilaiPoint > 0, "Rp " & selected.NilaiPoint.ToString("N0"), "-")}{Environment.NewLine}{Environment.NewLine}" &
-                              $"Item akan dibatalkan dari sistem Goapp dan tidak akan masuk ke POS."
+                              posMsg
 
             If FormMessageBox.Show(Me, confirmText, "Konfirmasi Pembatalan", MessageBoxButtons.YesNo, MessageBoxIcon.Question) <> DialogResult.Yes Then
                 Return
@@ -646,7 +683,7 @@ Namespace Forms
                     isSuccess = cancelResp.IsSuccess
                     errMsg = cancelResp.Message
                 Else
-                    Dim cancelResp = Await _client.CancelPointPaymentAsync(selected.Kode, "Dibatalkan kasir di DLL sebelum masuk POS")
+                    Dim cancelResp = Await _client.CancelPointPaymentAsync(selected.Kode, "Dibatalkan kasir di DLL")
                     isSuccess = cancelResp.IsSuccess
                     errMsg = cancelResp.Message
                 End If
@@ -654,7 +691,8 @@ Namespace Forms
                 If isSuccess Then
                     Await _client.RedeemRepo.UpdateStatusCancelAsync(selected.Kode, selected.Jenis)
                     OnItemCancelledFromActiveRedeem(Me, selected)
-                    FormMessageBox.Show(Me, $"Penggunaan {selected.Kode} berhasil dibatalkan dari Goapp CRM!", "Sukses Dibatalkan", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                    RaiseEvent ItemCancelled(Me, selected)
+                    FormMessageBox.Show(Me, $"Penggunaan {selected.Kode} berhasil dibatalkan dari Goapp CRM" & If(selected.StatusPos = 1, " dan dihapus dari transaksi POS!", "!"), "Sukses Dibatalkan", MessageBoxButtons.OK, MessageBoxIcon.Information)
                     Await RefreshActiveRedeemBadgeAsync()
                 Else
                     FormMessageBox.Show(Me, $"Gagal membatalkan item di Goapp CRM:{Environment.NewLine}{errMsg}", "Gagal Batal", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -735,10 +773,11 @@ Namespace Forms
             Try
                 If _client IsNot Nothing AndAlso _client.RedeemRepo IsNot Nothing AndAlso Not String.IsNullOrEmpty(Me.TransactionRef) Then
                     Dim activeLogs = Await _client.RedeemRepo.GetActiveLogsByTxRefAsync(Me.TransactionRef)
-                    If activeLogs IsNot Nothing AndAlso activeLogs.Count > 0 Then
+                    If activeLogs IsNot Nothing AndAlso activeLogs.Any(Function(x) x.StatusPos = 0) Then
+                        Dim unappliedCount = activeLogs.Where(Function(x) x.StatusPos = 0).Count()
                         FormMessageBox.Show(Me,
-                            $"Tombol Batal tidak dapat digunakan karena masih ada {activeLogs.Count} voucher / poin yang sedang di-redeem.{Environment.NewLine}{Environment.NewLine}" &
-                            $"Silakan batalkan item terlebih dahulu pada daftar '📋 Voucher & Poin Terpakai' di bawah sebelum membatalkan form, " &
+                            $"Tombol Batal tidak dapat digunakan karena masih ada {unappliedCount} voucher / poin yang baru di-redeem tetapi belum dimasukkan ke POS.{Environment.NewLine}{Environment.NewLine}" &
+                            $"Silakan batalkan item terlebih dahulu pada daftar '📋 Voucher & Poin Terpakai' di samping sebelum membatalkan form, " &
                             $"atau klik '✓ MASUKKAN KE POS' untuk menerapkan item ke transaksi POS.",
                             "Tidak Dapat Dibatalkan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                         Return
