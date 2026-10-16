@@ -13,6 +13,9 @@ Public Class FormMain
     Private _client As GoappApiClient
     Private _currentMember As MemberResponse
     Private _lastPaymentRef As String = String.Empty
+    Private ReadOnly _salesRef As New TextBox With {.Location = New Point(450, 22), .Size = New Size(250, 27), .MaxLength = 50}
+    Private ReadOnly _allowWithoutMember As New CheckBox With {.Text = "Ijinkan tanpa member", .Location = New Point(440, 153), .AutoSize = True}
+    Private _salesOrderTime As String = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:sszzz")
 
     Private Class SchemeComboItem
         Public Property Uid As Long
@@ -32,6 +35,23 @@ Public Class FormMain
         txtApiKey.Text = System.Configuration.ConfigurationManager.AppSettings("Goapp.ApiKey")
         txtApiSecret.Text = System.Configuration.ConfigurationManager.AppSettings("Goapp.ApiSecret")
         InitClient()
+        _salesRef.Text = "TRX-" & Guid.NewGuid().ToString("N")
+        tabTransaction.Controls.Add(New Label With {.Text = "Nomor struk tetap:", .Location = New Point(325, 25), .AutoSize = True})
+        tabTransaction.Controls.Add(_salesRef)
+        Dim newSales As New Button With {.Text = "Transaksi baru", .Location = New Point(715, 20), .Size = New Size(180, 30)}
+        AddHandler newSales.Click, Sub()
+                                      _salesRef.Text = "TRX-" & Guid.NewGuid().ToString("N")
+                                      _salesOrderTime = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:sszzz")
+                                  End Sub
+        tabTransaction.Controls.Add(newSales)
+        tabTransaction.Controls.Add(_allowWithoutMember)
+        AddHandler _allowWithoutMember.CheckedChanged, Sub()
+                                                         txtBurnPoint.Enabled = Not _allowWithoutMember.Checked
+                                                         txtBurnAuthCode.Enabled = Not _allowWithoutMember.Checked
+                                                         btnBurnPoint.Enabled = Not _allowWithoutMember.Checked
+                                                         btnCancelBurnPoint.Enabled = Not _allowWithoutMember.Checked
+                                                     End Sub
+        btnPushSalesOrder.Text = "Kirim Transaksi Selesai"
         AppendLog("Test Harness DreamPOS x Goapp siap digunakan.")
         Await LoadSchemesAsync()
     End Sub
@@ -526,26 +546,53 @@ Public Class FormMain
         End Try
     End Sub
 
+    ' Data uji memakai SKU deterministik agar referensi sama selalu menghasilkan payload sama.
+    Private Shared Function CreateTestOrderLines(total As Decimal, transactionRef As String) As List(Of OrderLineItem)
+        Dim lines As New List(Of OrderLineItem)()
+        Dim count = If(total >= 3D, 3, 1)
+        Dim unitPrice = Decimal.Truncate(total / count)
+        For index = 1 To count
+            Dim price = If(index = count, total - unitPrice * (count - 1), unitPrice)
+            Dim sku As String
+            Using sha = System.Security.Cryptography.SHA256.Create()
+                sku = "SKU-" & BitConverter.ToString(sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(transactionRef & "|" & index))).Replace("-", "").Substring(0, 12)
+            End Using
+            lines.Add(New OrderLineItem With {
+                .Product = New OrderProductInfo With {.Sku = sku, .Name = "Produk " & index},
+                .Quantity = 1, .Price = price, .PriceBeforeDiscount = price
+            })
+        Next
+        Return lines
+    End Function
+
     Private Async Sub btnPushSalesOrder_Click(sender As Object, e As EventArgs) Handles btnPushSalesOrder.Click
-        If _currentMember Is Nothing Then
+        Dim withoutMember = _allowWithoutMember.Checked
+        Dim member = _currentMember
+        If Not withoutMember AndAlso member Is Nothing Then
             MessageBox.Show("Silakan cari dan pilih member terlebih dahulu!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Return
         End If
 
         Dim billTotal As Decimal
         Decimal.TryParse(txtBillTotal.Text, billTotal)
-        If billTotal <= 0 Then billTotal = 50000D
+        If billTotal <= 0 Then
+            MessageBox.Show("Nilai transaksi harus lebih dari 0.")
+            Return
+        End If
 
         Dim burnPoint As Decimal = 0
-        Decimal.TryParse(txtBurnPoint.Text, burnPoint)
+        If Not withoutMember Then Decimal.TryParse(txtBurnPoint.Text, burnPoint)
 
         Dim authCode = txtBurnAuthCode.Text.Trim()
-        Dim providerRef = "TRX-" & DateTime.Now.ToString("yyMMdd-HHmmss")
+        Dim providerRef = _salesRef.Text.Trim()
+        Dim memberBefore As ApiResponse(Of MemberResponse) = Nothing
 
         btnPushSalesOrder.Enabled = False
+        _allowWithoutMember.Enabled = False
         txtOrderRawJson.Clear()
 
         Try
+            If Not withoutMember Then memberBefore = Await _client.GetMemberAsync(member.Uid.ToString())
             ' 1. SELALU KIRIM TRANSAKSI / SALES ORDER KE POST /sales/order/
             ' Seluruh payment dibuat 1 saja ('Total Paid' / total_amount)
             ' Hitung diskon poin & voucher
@@ -580,43 +627,41 @@ Public Class FormMain
                 },
                 .OrderNo = providerRef,
                 .ProviderRef = providerRef,
-                .OrderDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
+                .OrderDate = _salesOrderTime,
                 .LinesTotal = billTotal,
                 .LinesTax = 0,
                 .TotalInclTax = billTotal,
                 .TotalPaid = cashPaid,
-                .PaidAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
-                .CompletedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
+                .PaidAt = _salesOrderTime,
+                .CompletedAt = _salesOrderTime,
                 .ServiceFee = 0,
                 .LinesDiscount = If(linesDiscountTotal > 0, linesDiscountTotal, CType(Nothing, Decimal?)),
-                .Member = New OrderMemberRef With {
-                    .Uid = _currentMember.Uid,
-                    .MobileNo = _currentMember.MobileNo
-                },
-                .Lines = New List(Of OrderLineItem) From {
-                    New OrderLineItem With {
-                        .Product = New OrderProductInfo With {
-                            .Sku = "POS-ITEM-01",
-                            .Name = "Penjualan DreamPOS"
-                        },
-                        .Quantity = 1,
-                        .PriceBeforeDiscount = billTotal,
-                        .Price = billTotal
-                    }
-                },
+                .Member = If(withoutMember, Nothing, New OrderMemberRef With {
+                    .Uid = If(member Is Nothing, 0, member.Uid),
+                    .MobileNo = If(member Is Nothing, Nothing, member.MobileNo)
+                }),
+                .Lines = CreateTestOrderLines(billTotal, providerRef),
                 .Payments = paymentItems
             }
 
             Dim orderReqJson = Newtonsoft.Json.JsonConvert.SerializeObject(orderReq, Newtonsoft.Json.Formatting.Indented, New Newtonsoft.Json.JsonSerializerSettings With {.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore})
             txtOrderRawJson.Text = "=== [1/2] REQUEST JSON (POST /sales/order/) ===" & Environment.NewLine & orderReqJson & Environment.NewLine & Environment.NewLine
 
-            Dim salesOrderResp = Await _client.PushSalesOrderAsync(orderReq)
+            Dim salesOrderResp As ApiResponse(Of PushOrderResponse)
+            If withoutMember Then
+                salesOrderResp = Await _client.PushGuestSalesOrderAsync(orderReq)
+            Else
+                salesOrderResp = Await _client.PushSalesOrderAsync(orderReq)
+            End If
             txtOrderRawJson.Text &= "=== [1/2] RESPONSE JSON (POST /sales/order/) ===" & Environment.NewLine & FormatJson(salesOrderResp.RawJson) & Environment.NewLine & Environment.NewLine
 
             Dim msgBuilder As New System.Text.StringBuilder()
+            msgBuilder.AppendLine($"HTTP: {salesOrderResp.StatusCode}; GoappApiLog: {salesOrderResp.ApiLogSaved}; GoappRedeemLog: {salesOrderResp.TransactionLogSaved}")
+            If salesOrderResp.IsDuplicate Then msgBuilder.AppendLine("Transaksi sudah terkirim; POST tidak diulang.")
+            If Not String.IsNullOrWhiteSpace(salesOrderResp.WarningMessage) Then msgBuilder.AppendLine(salesOrderResp.WarningMessage)
 
             If salesOrderResp.IsSuccess AndAlso salesOrderResp.Data IsNot Nothing Then
-                Dim earnedPts = If(salesOrderResp.Data.Reward IsNot Nothing AndAlso salesOrderResp.Data.Reward.Count > 0, salesOrderResp.Data.Reward(0).Amount, 0)
+                Dim earnedPts = salesOrderResp.Data.TotalEarnedPoints
                 msgBuilder.AppendLine($"Transaksi Penjualan Sukses Dikirim ke /sales/order/!")
                 msgBuilder.AppendLine($"Order UID: {salesOrderResp.Data.Uid}")
                 msgBuilder.AppendLine($"Total Paid (Bersih): Rp {cashPaid:N0}")
@@ -629,9 +674,10 @@ Public Class FormMain
             End If
 
             ' 2. JIKA ADA BURN POINT (burnPoint > 0) -> HIT JUGA API POST /member/payment/
-            If burnPoint > 0 Then
+            Dim burnSucceeded As Boolean = (burnPoint <= 0)
+            If burnPoint > 0 AndAlso salesOrderResp.IsSuccess AndAlso Not salesOrderResp.IsDuplicate Then
                 Dim paymentReqObj As New PaymentTransactionRequest With {
-                    .Member = New PaymentMemberRef With {.Uid = _currentMember.Uid},
+                    .Member = New PaymentMemberRef With {.Uid = member.Uid},
                     .Amount = burnPoint,
                     .OrderAmount = burnPoint,
                     .TotalOrderAmount = billTotal,
@@ -643,11 +689,12 @@ Public Class FormMain
                 Dim payReqJson = Newtonsoft.Json.JsonConvert.SerializeObject(paymentReqObj, Newtonsoft.Json.Formatting.Indented, New Newtonsoft.Json.JsonSerializerSettings With {.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore})
                 txtOrderRawJson.Text &= "=== [2/2] REQUEST JSON (POST /member/payment/) ===" & Environment.NewLine & payReqJson & Environment.NewLine & Environment.NewLine
 
-                Dim payResp = Await _client.CreatePointPaymentAsync(_currentMember.Uid, burnPoint, burnPoint, providerRef, authorizationCode:=authCode, totalOrderAmount:=billTotal)
+                Dim payResp = Await _client.CreatePointPaymentAsync(member.Uid, burnPoint, burnPoint, providerRef, authorizationCode:=authCode, totalOrderAmount:=billTotal)
                 txtOrderRawJson.Text &= "=== [2/2] RESPONSE JSON (POST /member/payment/) ===" & Environment.NewLine & FormatJson(payResp.RawJson) & Environment.NewLine
 
                 msgBuilder.AppendLine()
                 If payResp.IsSuccess AndAlso payResp.Data IsNot Nothing Then
+                    burnSucceeded = True
                     _lastPaymentRef = payResp.Data.PaymentRef
                     lblLastPaymentRef.Text = $"Last Payment Ref: {_lastPaymentRef} (Status: {payResp.Data.Status})"
                     msgBuilder.AppendLine($"Burn Point ({burnPoint:N0} Pts) Berhasil Dikirim ke /member/payment/!")
@@ -658,14 +705,28 @@ Public Class FormMain
             End If
 
             ' Tampilkan pesan hasil & refresh data member
-            Dim isAllOk = salesOrderResp.IsSuccess AndAlso (burnPoint <= 0 OrElse _lastPaymentRef IsNot Nothing)
+            Dim isAllOk = salesOrderResp.IsSuccess AndAlso burnSucceeded
             MessageBox.Show(msgBuilder.ToString(), If(isAllOk, "Sukses Transaksi", "Hasil Transaksi"), MessageBoxButtons.OK, If(isAllOk, MessageBoxIcon.Information, MessageBoxIcon.Warning))
-            btnSearchMember.PerformClick()
+            If withoutMember Then Return
+            Dim memberAfter = Await _client.GetMemberAsync(member.Uid.ToString())
+            If memberBefore.IsSuccess AndAlso memberBefore.Data IsNot Nothing AndAlso memberAfter.IsSuccess AndAlso memberAfter.Data IsNot Nothing Then
+                Dim delta = memberAfter.Data.AvailablePoints - memberBefore.Data.AvailablePoints
+                Dim expectedEarn = If(salesOrderResp.Data Is Nothing, 0D, salesOrderResp.Data.TotalEarnedPoints)
+                Dim detail = $"[AUDIT POIN] Ref={providerRef}; Sebelum={memberBefore.Data.AvailablePoints}; Sesudah={memberAfter.Data.AvailablePoints}; Selisih aktual={delta}; Reward respons={expectedEarn}; Burn diminta={burnPoint}; Duplicate={salesOrderResp.IsDuplicate}"
+                txtOrderRawJson.AppendText(Environment.NewLine & detail)
+                AppendLog(detail)
+                _currentMember = memberAfter.Data
+                lblMemberPoints.Text = $"Sisa Poin : {_currentMember.AvailablePoints:N0} Pts"
+                If burnPoint = 0 AndAlso salesOrderResp.IsSuccess AndAlso Not salesOrderResp.IsDuplicate AndAlso delta <> expectedEarn Then
+                    MessageBox.Show(detail & Environment.NewLine & "Saldo dari server berbeda dari reward respons. Periksa ledger/rule Goapp; jangan kirim ulang transaksi.", "Selisih Poin", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                End If
+            End If
 
         Catch ex As Exception
             MessageBox.Show($"Terjadi exception saat proses transaksi:{Environment.NewLine}{ex.Message}", "Error Transaksi", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Finally
             btnPushSalesOrder.Enabled = True
+            _allowWithoutMember.Enabled = True
         End Try
     End Sub
 

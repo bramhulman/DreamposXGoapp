@@ -16,8 +16,12 @@ Public Class DatabaseLogger
     ''' atau otomatis fallback ke properti Me.ConnectionString.
     ''' </summary>
     Public Async Function LogApiAsync(method As String, endpoint As String, requestJson As String, responseJson As String, statusCode As Integer, isSuccess As Boolean, errorMessage As String, durationMs As Integer, Optional customConnectionString As String = Nothing) As Task
+        Await LogApiWithResultAsync(method, endpoint, requestJson, responseJson, statusCode, isSuccess, errorMessage, durationMs, customConnectionString).ConfigureAwait(False)
+    End Function
+
+    Public Async Function LogApiWithResultAsync(method As String, endpoint As String, requestJson As String, responseJson As String, statusCode As Integer, isSuccess As Boolean, errorMessage As String, durationMs As Integer, Optional customConnectionString As String = Nothing) As Task(Of Boolean)
         Dim effectiveConnStr = If(Not String.IsNullOrWhiteSpace(customConnectionString), customConnectionString, Me.ConnectionString)
-        If String.IsNullOrWhiteSpace(effectiveConnStr) Then Return ' Lewati jika tidak ada DB yang dikonfigurasi
+        If String.IsNullOrWhiteSpace(effectiveConnStr) Then Return False
 
         Dim targetTable = If(String.IsNullOrWhiteSpace(Me.TableName), "[dbo].[GoappApiLog]", Me.TableName)
         Dim query = $"INSERT INTO {targetTable} " &
@@ -47,7 +51,9 @@ Public Class DatabaseLogger
         Catch ex As Exception
             ' Silently ignore or log to file if DB logging fails
             Console.WriteLine("DB Logging failed: " & ex.Message)
+            Return False
         End Try
+        Return True
     End Function
 
     ''' <summary>

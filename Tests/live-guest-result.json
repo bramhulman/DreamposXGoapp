@@ -1,0 +1,14 @@
+{
+  "provider_ref": "TEST-OD-261016-123514-f0a699",
+  "http": 201,
+  "success": true,
+  "message": "OK",
+  "warning": null,
+  "api_log_saved": true,
+  "transaction_log_saved": true,
+  "requires_reconciliation": false,
+  "earned_points": 0.0,
+  "order_uid": 158169786030664,
+  "sales_post_log_count": 1,
+  "duplicate_prevented": true
+}

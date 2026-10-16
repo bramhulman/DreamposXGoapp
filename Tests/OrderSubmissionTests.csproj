@@ -1,0 +1,10 @@
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion><OutputPath>bin\</OutputPath><AssemblyName>OrderSubmissionTests</AssemblyName><AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects></PropertyGroup>
+  <ItemGroup><Reference Include="System"/><Reference Include="System.Core"/><Reference Include="System.Data"/><Reference Include="System.Xml.Linq"/><Reference Include="System.Xml"/><Reference Include="System.Net.Http"/><Reference Include="System.Windows.Forms"/><Reference Include="System.Drawing"/>
+    <Reference Include="Newtonsoft.Json"><HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath></Reference>
+  </ItemGroup>
+  <ItemGroup><Compile Include="OrderSubmissionTests.cs"/></ItemGroup>
+  <ItemGroup><ProjectReference Include="..\DreamposXGoapp.vbproj"><Name>DreamposXGoapp</Name></ProjectReference><ProjectReference Include="..\TryDreamposXGoapp\TryDreamposXGoapp.vbproj"><Name>TryDreamposXGoapp</Name></ProjectReference></ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
+</Project>
