@@ -9,6 +9,7 @@ Imports DreamposXGoapp.Services
 Imports Newtonsoft.Json
 
 Public Class FormMain
+    Private _config As GoappConfig
     Private _client As GoappApiClient
     Private _currentMember As MemberResponse
     Private _lastPaymentRef As String = String.Empty
@@ -106,7 +107,7 @@ Public Class FormMain
             dbConnStr = connStrSetting.ConnectionString
         End If
 
-        Dim config As New GoappConfig With {
+        _config = New GoappConfig With {
             .DbConnectionString = dbConnStr,
             .ApiKey = apiKey,
             .ApiSecret = apiSecret,
@@ -121,7 +122,7 @@ Public Class FormMain
             .RetryDelayMilliseconds = 1500
         }
 
-        _client = New GoappApiClient(config)
+        _client = New GoappApiClient(_config)
         _client.DbConnectionString = dbConnStr
         AddHandler _client.OnLog, AddressOf OnClientLog
     End Sub
@@ -547,16 +548,47 @@ Public Class FormMain
         Try
             ' 1. SELALU KIRIM TRANSAKSI / SALES ORDER KE POST /sales/order/
             ' Seluruh payment dibuat 1 saja ('Total Paid' / total_amount)
+            ' Hitung diskon poin & voucher
+            Dim pointDiscount = burnPoint
+            Dim linesDiscountTotal = pointDiscount ' Jika ada voucher diskon total order, ditambahkan ke sini
+
+            ' Hitung total bayar kasir (bersih setelah dipotong poin)
+            Dim cashPaid = billTotal - pointDiscount
+            If cashPaid < 0 Then cashPaid = 0
+
+            Dim paymentItems As New List(Of OrderPaymentItem)()
+            If cashPaid > 0 OrElse pointDiscount = 0 Then
+                paymentItems.Add(New OrderPaymentItem With {
+                    .PaymentMethodName = "CASH",
+                    .PaymentType = "CASH",
+                    .Amount = cashPaid
+                })
+            End If
+            If pointDiscount > 0 Then
+                paymentItems.Add(New OrderPaymentItem With {
+                    .PaymentMethodName = "Point",
+                    .PaymentType = "POINT",
+                    .Amount = pointDiscount
+                })
+            End If
+
             Dim orderReq As New PushOrderRequest With {
+                .Store = New OrderStoreRef With {
+                    .Uid = If(_config.StoreUid.HasValue, _config.StoreUid.Value, CType(Nothing, Long?)),
+                    .Name = _config.StoreName,
+                    .StoreCode = _config.StoreCode
+                },
                 .OrderNo = providerRef,
                 .ProviderRef = providerRef,
                 .OrderDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
                 .LinesTotal = billTotal,
                 .LinesTax = 0,
                 .TotalInclTax = billTotal,
-                .TotalPaid = billTotal,
+                .TotalPaid = cashPaid,
                 .PaidAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
                 .CompletedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
+                .ServiceFee = 0,
+                .LinesDiscount = If(linesDiscountTotal > 0, linesDiscountTotal, CType(Nothing, Decimal?)),
                 .Member = New OrderMemberRef With {
                     .Uid = _currentMember.Uid,
                     .MobileNo = _currentMember.MobileNo
@@ -572,13 +604,7 @@ Public Class FormMain
                         .Price = billTotal
                     }
                 },
-                .Payments = New List(Of OrderPaymentItem) From {
-                    New OrderPaymentItem With {
-                        .PaymentMethodName = "Total Paid",
-                        .PaymentType = "CASH",
-                        .Amount = billTotal
-                    }
-                }
+                .Payments = paymentItems
             }
 
             Dim orderReqJson = Newtonsoft.Json.JsonConvert.SerializeObject(orderReq, Newtonsoft.Json.Formatting.Indented, New Newtonsoft.Json.JsonSerializerSettings With {.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore})
@@ -593,7 +619,10 @@ Public Class FormMain
                 Dim earnedPts = If(salesOrderResp.Data.Reward IsNot Nothing AndAlso salesOrderResp.Data.Reward.Count > 0, salesOrderResp.Data.Reward(0).Amount, 0)
                 msgBuilder.AppendLine($"Transaksi Penjualan Sukses Dikirim ke /sales/order/!")
                 msgBuilder.AppendLine($"Order UID: {salesOrderResp.Data.Uid}")
-                msgBuilder.AppendLine($"Total Paid: Rp {billTotal:N0}")
+                msgBuilder.AppendLine($"Total Paid (Bersih): Rp {cashPaid:N0}")
+                If linesDiscountTotal > 0 Then
+                    msgBuilder.AppendLine($"Diskon Poin/Lines: Rp {linesDiscountTotal:N0}")
+                End If
                 msgBuilder.AppendLine($"Poin Diperoleh (Earning): {earnedPts:N0} Pts")
             Else
                 msgBuilder.AppendLine($"Transaksi /sales/order/ Gagal: {salesOrderResp.Message}")

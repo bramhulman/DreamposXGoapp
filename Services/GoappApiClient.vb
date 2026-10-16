@@ -442,7 +442,17 @@ Namespace Services
         ''' </summary>
         Public Async Function PushSalesOrderAsync(order As PushOrderRequest) As Task(Of ApiResponse(Of PushOrderResponse))
             Dim url = $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/sales/order/"
-            Log($"Mengirim transaksi {order.OrderNo} ke Goapp untuk Earning Point...")
+
+            ' Lengkapi identitas store dari App.config jika belum terisi di objek order
+            If order.Store Is Nothing Then
+                order.Store = New OrderStoreRef With {
+                    .Uid = If(_config.StoreUid.HasValue, _config.StoreUid.Value, CType(Nothing, Long?)),
+                    .Name = If(Not String.IsNullOrWhiteSpace(_config.StoreName), _config.StoreName.Trim(), Nothing),
+                    .StoreCode = If(Not String.IsNullOrWhiteSpace(_config.StoreCode), _config.StoreCode.Trim(), Nothing)
+                }
+            End If
+
+            Log($"Mengirim transaksi {order.OrderNo} ke Goapp untuk Earning Point (Store: {If(order.Store IsNot Nothing, order.Store.StoreCode, "-")})...")
             Return Await SendAuthorizedRequestAsync(Of PushOrderResponse)(HttpMethod.Post, url, order)
         End Function
 
