@@ -488,6 +488,33 @@ End If"""
         "ESC/POS (GS ( k) atau generate barcode bitmap menggunakan library ZXing.NET sebelum dikirim ke port printer."
     )
 
+    # Update koleksi Channel API tanggal 21 Oktober 2026.
+    pdf.add_page()
+    pdf.chapter_title("8", "Update Sales Order - Ringkasan Estimasi Poin")
+    pdf.body_p("Mulai 21 Oktober 2026, default push sales order meminta ringkasan poin melalui parameter query calculate_estimate_point=1. Sumber kontrak: Channel API.postman_collection21Okt2026.json, contoh Calculate estimated points earned.")
+    pdf.code_block("POST {{CHANNEL_API_BASE_URL}}/sales/order/?calculate_estimate_point=1")
+    pdf.body_p("Nilai 1 mengaktifkan reward_summary; nilai 0 menonaktifkannya. Body JSON mengikuti pola transaksi sebelumnya. POST tetap membuat transaksi nyata dan dapat menghasilkan poin: parameter ini bukan dry-run.")
+    pdf.section_title("Model respons dan pembacaan total")
+    pdf.code_block('\n'.join([
+        '"reward": [{"amount": 5000, "est_new_balance": 213600}],',
+        '"reward_summary": {"amount": 7500, "est_new_balance": 216100}'
+    ]))
+    pdf.body_p("TotalEarnedPoints memakai reward_summary.amount jika tersedia, termasuk nilai 0. Pada contoh, total adalah 7.500, bukan 12.500. TotalRewardDetailPoints tetap menampilkan rincian 5.000. Jangan menjumlahkan rincian dengan ringkasan. EstimatedNewBalance memakai saldo ringkasan; untuk respons lama fallback hanya jika ada satu item reward.")
+    pdf.section_title("Pemanggilan DLL dan konfigurasi")
+    pdf.code_block('\n'.join([
+        'Dim result = Await client.PushSalesOrderAsync(order)',
+        'Dim result = Await client.PushSalesOrderAsync(order, calculateEstimatePoint:=True)',
+        'Dim guest = Await client.PushGuestSalesOrderAsync(order, True)',
+        '<add key="Goapp.CalculateEstimatePoint" value="true" />'
+    ]))
+    pdf.body_p("Method satu parameter tetap tersedia, dengan default GoappConfig.CalculateEstimatePoint=True. Overload Boolean memilih query 1 atau 0 per request. App.config dibaca aplikasi Try lalu diteruskan ke DLL, mengikuti pola konfigurasi yang sudah ada.")
+    pdf.section_title("Form Try, logging, dan anti-duplikat")
+    pdf.body_p("Pada tab 3. Transaksi POS, checkbox Hitung estimasi poin berada di form yang sama dengan Ijinkan tanpa member. Panel JSON menampilkan URL dengan query; hasil menampilkan rincian, total ringkasan, dan estimasi saldo. GoappApiLog mencatat URL lengkap dan respons; GoappRedeemLog menyimpan respons lengkap serta total ringkasan pada NilaiPoint. Tidak ada migrasi baru.")
+    pdf.body_p("Mengubah flag pada provider_ref yang sudah terkirim tidak melakukan POST ulang. Hasil tersimpan digunakan; bila belum ada ringkasan, gunakan fallback dengan warning. Retensi tiga bulan dan perlindungan pengiriman ganda tetap berlaku. Pengujian menggunakan fixture koleksi baru serta integrasi SQL; bukti uji langsung ada pada laporan analisis.")
+
+    pdf.section_title("Bukti uji langsung 21 Oktober 2026")
+    pdf.body_p("Member dan tanpa member diterima HTTP 201 dengan query 1, tiga SKU, dan kedua log SQL tersimpan. Pada uji member Rp150.000, reward_summary.amount=5.000 dan estimasi saldo=29.800. Saldo sebelum 24.800, GET segera sesudah POST masih 24.800, kemudian GET ulang menjadi 29.800 (+5.000). Hanya satu POST per referensi; perubahan flag tidak mengirim ulang. Sebanyak 43 pemeriksaan otomatis serta pemeriksaan visual form lulus.")
+
     pdf.output(output_path)
     print("PDF Generated successfully at:", output_path)
 

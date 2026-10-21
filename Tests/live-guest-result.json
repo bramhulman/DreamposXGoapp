@@ -1,6 +1,7 @@
 {
-  "provider_ref": "TEST-TRX-261016-135217-acc127",
+  "provider_ref": "TEST-TRX-261021-100341-13fc3e",
   "lines_count": 3,
+  "calculate_estimate_point": 1,
   "http": 201,
   "success": true,
   "message": "OK",
@@ -9,7 +10,7 @@
   "transaction_log_saved": true,
   "requires_reconciliation": false,
   "earned_points": 0.0,
-  "order_uid": 158172153091144,
+  "order_uid": 158386291108424,
   "sales_post_log_count": 1,
   "duplicate_prevented": true
 }

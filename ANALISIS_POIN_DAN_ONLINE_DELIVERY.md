@@ -100,3 +100,16 @@ Proses pada form utama menggunakan identitas transaksi umum: referensi TRX, bebe
 ## Uji ulang proses terpadu pada form utama
 
 Uji langsung berikutnya menggunakan generator tiga SKU yang sama dengan form utama, tanpa member: `TEST-TRX-261016-135217-acc127`, nominal Rp150.000, Goapp order UID `158172153091144`. Hasil HTTP 201, reward 0, kedua log tersimpan, serta satu POST saja saat referensi yang sama dipanggil ulang. Sebanyak 25 assertion otomatis lulus, termasuk jumlah SKU, ketepatan total harga, dan konsistensi SKU untuk kirim ulang.
+
+## Pembaruan 21 Oktober 2026: calculate_estimate_point
+
+Koleksi baru menambahkan query `calculate_estimate_point=1` dan `reward_summary` pada POST sales order yang tetap menyimpan transaksi. Contoh koleksi: rincian reward 5.000, ringkasan total 7.500, estimasi saldo ringkasan 216.100. Implementasi baru memakai ringkasan sebagai total jika tersedia, tanpa menambahkannya ke rincian reward; respons lama tetap didukung melalui fallback.
+
+Default DLL meminta query 1, overload Boolean dan checkbox Hitung estimasi poin pada form Try dapat memilih query 0. Perubahan flag pada referensi yang sudah tersimpan tidak mengirim order lagi. URL lengkap dan ringkasan respons mengikuti kedua log SQL yang sudah ada. Ini memperbaiki cara membaca total respons baru; tidak membuktikan bahwa penyebab selisih saldo historis tanggal 16 Oktober sudah diperbaiki di server Goapp.
+
+### Bukti uji langsung 21 Oktober 2026
+
+- Tanpa member: `TEST-TRX-261021-100341-13fc3e`, tiga SKU, Rp150.000, HTTP 201, order UID `158386291108424`, poin 0. Kedua log SQL tersimpan dan pengulangan dicegah.
+- Dengan member uji: `TEST-EST-261021-100352-414314`, tiga SKU, Rp150.000, HTTP 201, order UID `158386296021064`. Rincian reward 5.000; reward_summary.amount 5.000; reward_summary.est_new_balance 29.800. Saldo sebelum 24.800, GET segera sesudah POST masih 24.800, lalu GET ulang menunjukkan 29.800 (+5.000), sesuai ringkasan. Jangan POST ulang hanya karena saldo aktual belum langsung berubah.
+- Masing-masing memakai query `calculate_estimate_point=1`, tersimpan di kedua tabel, dan hanya satu POST per referensi, termasuk ketika pemanggilan berikutnya mengubah flag.
+- Sebanyak 43 pemeriksaan otomatis (HTTP tiruan dan SQL terpisah) serta pemeriksaan render form lulus. Bukti JSON ada di `Tests/live-estimate-result.json` dan `Tests/live-guest-result.json`. Halaman PDF pembaruan dan form Try telah diperiksa secara visual.

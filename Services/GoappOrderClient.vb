@@ -16,7 +16,12 @@ Namespace Services
         ''' Identitas member harus kosong; Goapp menentukan dukungan claim dan reward pada server.
         ''' </summary>
         Public Async Function PushGuestSalesOrderAsync(order As PushOrderRequest) As Task(Of ApiResponse(Of PushOrderResponse))
-            Return Await SubmitSalesOrderAsync(order, True)
+            Return Await PushGuestSalesOrderAsync(order, _config.CalculateEstimatePoint)
+        End Function
+
+        ''' <summary>Mengirim transaksi tanpa member dengan pilihan ringkasan estimasi poin.</summary>
+        Public Async Function PushGuestSalesOrderAsync(order As PushOrderRequest, calculateEstimatePoint As Boolean) As Task(Of ApiResponse(Of PushOrderResponse))
+            Return Await SubmitSalesOrderAsync(order, True, calculateEstimatePoint)
         End Function
 
         Private Shared Function SubmissionHash(value As String) As String
@@ -25,7 +30,7 @@ Namespace Services
             End Using
         End Function
 
-        Private Async Function SubmitSalesOrderAsync(input As PushOrderRequest, guest As Boolean) As Task(Of ApiResponse(Of PushOrderResponse))
+        Private Async Function SubmitSalesOrderAsync(input As PushOrderRequest, guest As Boolean, calculateEstimatePoint As Boolean) As Task(Of ApiResponse(Of PushOrderResponse))
             If input Is Nothing Then Return OrderError("Data transaksi wajib diisi.")
             ' Snapshot mencegah perubahan input oleh pemanggil saat request sedang berjalan.
             Dim order = JsonConvert.DeserializeObject(Of PushOrderRequest)(JsonConvert.SerializeObject(input))
@@ -81,13 +86,15 @@ Namespace Services
                         .TransactionLogSaved = (journal IsNot Nothing), .ApiLogSaved = entry.ApiLogSaved
                     }
                     cached.Data = JsonConvert.DeserializeObject(Of PushOrderResponse)(entry.ResponseJson)
+                    AddRewardSummaryWarning(cached, calculateEstimatePoint, guest)
                     Return cached
                 End If
                 Return OrderError("Transaksi sudah pernah dicoba (" & entry.State & "). Periksa log/Goapp sebelum mengirim ulang; tidak ada retry otomatis.", True)
             End If
 
             Log($"Mengirim sales order Ref={order.ProviderRef}, Mode={If(guest, "TanpaMember", "Member")}, Submission={key}.")
-            Dim result = Await SendAuthorizedRequestAsync(Of PushOrderResponse)(HttpMethod.Post, $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/sales/order/", order)
+            Dim url = $"{_config.ChannelBaseUrl.TrimEnd("/"c)}/sales/order/?calculate_estimate_point={If(calculateEstimatePoint, "1", "0")}"
+            Dim result = Await SendAuthorizedRequestAsync(Of PushOrderResponse)(HttpMethod.Post, url, order)
             result.RequiresReconciliation = result.RequiresReconciliation OrElse result.StatusCode = 0 OrElse result.StatusCode >= 500
             If result.IsSuccess AndAlso result.Data Is Nothing Then
                 result.RequiresReconciliation = True
@@ -116,8 +123,17 @@ Namespace Services
             If Not result.ApiLogSaved AndAlso Not String.IsNullOrWhiteSpace(DbConnectionString) Then
                 result.WarningMessage = (If(result.WarningMessage, "") & " Log request/response API belum tersimpan. Jangan kirim ulang transaksi untuk memperbaiki log.").Trim()
             End If
+            AddRewardSummaryWarning(result, calculateEstimatePoint, guest)
             Return result
         End Function
+
+        Private Shared Sub AddRewardSummaryWarning(result As ApiResponse(Of PushOrderResponse), requested As Boolean, guest As Boolean)
+            If Not requested OrElse guest OrElse Not result.IsSuccess OrElse result.Data Is Nothing Then Return
+            If result.Data.RewardSummary IsNot Nothing AndAlso result.Data.RewardSummary.Amount.HasValue Then Return
+            Dim warning = "reward_summary tidak tersedia; total poin memakai rincian reward."
+            If result.IsDuplicate Then warning &= " Respons tersimpan dipakai tanpa POST ulang."
+            result.WarningMessage = (If(result.WarningMessage, "") & " " & warning).Trim()
+        End Sub
 
         Private Shared Function OrderError(message As String, Optional duplicate As Boolean = False) As ApiResponse(Of PushOrderResponse)
             Return New ApiResponse(Of PushOrderResponse) With {.IsSuccess = False, .StatusCode = If(duplicate, 409, 400), .Message = message, .IsDuplicate = duplicate, .RequiresReconciliation = duplicate}

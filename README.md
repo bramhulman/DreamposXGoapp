@@ -266,11 +266,11 @@ End If
 ### E. Alur Push Transaksi POS (Sales Order & Burn Point)
 Alur pengiriman transaksi penjualan dari kasir DreamPOS ke Goapp diatur dengan ketentuan:
 
-1. **Seluruh Transaksi Penjualan SELALU Dikirim ke `POST {{CHANNEL_API_BASE_URL}}/sales/order/`:**
+1. **Seluruh Transaksi Penjualan Dikirim ke `POST {{CHANNEL_API_BASE_URL}}/sales/order/?calculate_estimate_point=1` (default terbaru):**
    - Berfungsi untuk mencatat pesanan penjualan dan penambahan poin (**Earning Points**).
    - Seluruh nilai pembayaran disatukan menjadi **1 baris payment saja** (`payment_method_name: "Total Paid"`, `amount: billTotal`) tanpa memecah rincian metode pembayaran lain.
 
-   **Contoh Request JSON (`POST /sales/order/`):**
+   **Contoh Request JSON (`POST /sales/order/?calculate_estimate_point=1`):**
    ```json
    {
      "member": {
@@ -382,3 +382,76 @@ Tersedia `GoappApiClient.PushGuestSalesOrderAsync(order)` untuk transaksi biasa 
 
 Gunakan aplikasi TryDreamposXGoapp → tab 3. Transaksi POS → centang Ijinkan tanpa member → Kirim Transaksi Selesai. Form terpisah telah dihapus. Analisis kasus poin berlebih, bukti uji langsung HTTP 201 dengan reward 0, detail migrasi, batas anti-duplikat, dan cara penggunaan ada di [ANALISIS_POIN_DAN_ONLINE_DELIVERY.md](ANALISIS_POIN_DAN_ONLINE_DELIVERY.md).
 Proses transaksi pada form utama menggunakan referensi umum TRX dan pembayaran CASH. Data uji otomatis berisi tiga produk dengan SKU berbeda serta pembagian nilai yang tepat sesuai total transaksi (satu produk untuk nominal di bawah Rp3). SKU tetap sama saat transaksi tersebut dikirim ulang. Pencatatan memakai Jenis=SalesOrder tanpa penanda online/delivery.
+
+
+## Update 21 Oktober 2026: ringkasan estimasi poin sales order
+
+Mengikuti `Channel API.postman_collection21Okt2026.json`, kedua metode push transaksi sekarang menggunakan:
+
+```http
+POST {{CHANNEL_API_BASE_URL}}/sales/order/?calculate_estimate_point=1
+```
+
+Parameter query `calculate_estimate_point` mendukung `1` (aktif) dan `0` (nonaktif). Parameter ini meminta tambahan `reward_summary` pada respons. **Ini tetap POST transaksi nyata yang menyimpan order dan dapat menghasilkan poin, bukan simulasi/dry-run.** Body JSON transaksi mengikuti pola sebelumnya; parameter tidak dimasukkan ke body.
+
+Contoh tambahan respons dari koleksi terbaru:
+
+```json
+{
+  "reward": [{ "amount": 5000, "est_new_balance": 213600 }],
+  "reward_summary": { "amount": 7500, "est_new_balance": 216100 }
+}
+```
+
+- `PushOrderResponse.RewardSummary.Amount`: total estimasi poin dari server, pada contoh 7.500.
+- `PushOrderResponse.RewardSummary.EstNewBalance`: estimasi saldo baru dari server, pada contoh 216.100.
+- `TotalEarnedPoints`: memakai `reward_summary.amount` jika nilainya tersedia; fallback ke jumlah rincian `reward[].amount` untuk respons lama. Nilai ringkasan 0 tetap 0.
+- `TotalRewardDetailPoints`: jumlah rincian reward, pada contoh 5.000. **Jangan menjumlahkan reward 5.000 dengan ringkasan 7.500.**
+- `EstimatedNewBalance`: memakai saldo ringkasan jika tersedia; fallback ke `est_new_balance` jika respons lama berisi tepat satu item reward. Saldo aktual tetap dapat diperiksa melalui GET member.
+
+### Pemanggilan DLL
+
+Method lama satu parameter tetap tersedia. Default `GoappConfig.CalculateEstimatePoint = True`; aplikasi pemanggil dapat mengubah default melalui konfigurasi yang dioper ke DLL, atau memilih per request melalui overload baru:
+
+```vb
+' Default terbaru, sesuai GoappConfig.CalculateEstimatePoint (True):
+Dim result = Await client.PushSalesOrderAsync(order)
+
+' Pilihan eksplisit per transaksi:
+Dim withSummary = Await client.PushSalesOrderAsync(order, calculateEstimatePoint:=True)
+Dim withoutSummary = Await client.PushSalesOrderAsync(orderLain, calculateEstimatePoint:=False)
+
+' Tanpa member: tetap tidak mengirim identitas atau melakukan burn point.
+orderTanpaMember.Member = Nothing
+Dim guest = Await client.PushGuestSalesOrderAsync(orderTanpaMember, calculateEstimatePoint:=True)
+
+If result.IsSuccess AndAlso result.Data IsNot Nothing Then
+    Dim totalPoin = result.Data.TotalEarnedPoints
+    Dim saldoEstimasi As Decimal? = result.Data.EstimatedNewBalance
+End If
+```
+
+Gunakan data/nomor struk berbeda hanya untuk transaksi yang memang berbeda. Mengubah flag estimasi pada nomor transaksi yang sudah terkirim **tidak** membuat POST ulang: hasil sebelumnya dikembalikan dari jurnal/cache. Jika respons tersimpan belum berisi ringkasan, DLL memberi warning dan memakai fallback, bukan mengirim ulang demi mendapatkan ringkasan baru.
+
+### Form Try dan konfigurasi
+
+Di tab **3. Transaksi POS**, pilihan **Hitung estimasi poin** ditambahkan pada form yang sama, berdampingan dengan **Ijinkan tanpa member**. Default aktif; lepas centang untuk mengirim query `0`. Request/response panel menampilkan URL lengkap termasuk query. Pesan hasil menampilkan rincian reward, total dari ringkasan atau fallback, serta estimasi saldo baru.
+
+Aplikasi Try membaca pengaturan berikut dari App.config, lalu meneruskannya ke GoappConfig. DLL tetap tidak membaca App.config sendiri:
+
+```xml
+<add key="Goapp.CalculateEstimatePoint" value="true" />
+```
+
+URL lengkap dan raw respons termasuk `reward_summary` disimpan pada `GoappApiLog`. `GoappRedeemLog.OrderResponseJson` menyimpan respons lengkap dan `NilaiPoint` memakai `TotalEarnedPoints`, sehingga mengikuti ringkasan bila tersedia. Tidak ada tabel atau migrasi SQL baru untuk pembaruan ini; retensi 3 bulan serta perlindungan kirim ganda tetap berlaku.
+
+### Pengujian
+
+Test fixture berasal dari contoh **Calculate estimated points earned** di koleksi 21 Oktober, termasuk angka 5.000/7.500/216.100. Pengujian memeriksa query 1/0, kedua overload, null/0/string decimal, fallback respons lama, flag saat retry 401, penyimpanan SQL, dan replay transaksi dengan perubahan flag tanpa POST tambahan. Jalankan `Tests/OrderSubmissionTests.exe` setelah build proyek test. Pengujian langsung Goapp dilakukan terpisah dengan referensi uji baru dan dicatat pada laporan analisis.
+
+### Bukti uji langsung 21 Oktober 2026
+
+- Tanpa member: `TEST-TRX-261021-100341-13fc3e`, tiga SKU, Rp150.000, HTTP 201, order UID `158386291108424`, poin 0. Kedua log SQL tersimpan dan pengulangan dicegah.
+- Dengan member uji: `TEST-EST-261021-100352-414314`, tiga SKU, Rp150.000, HTTP 201, order UID `158386296021064`. Rincian reward 5.000; reward_summary.amount 5.000; reward_summary.est_new_balance 29.800. Saldo sebelum 24.800, GET segera sesudah POST masih 24.800, lalu GET ulang menunjukkan 29.800 (+5.000), sesuai ringkasan. Jangan POST ulang hanya karena saldo aktual belum langsung berubah.
+- Masing-masing memakai query `calculate_estimate_point=1`, tersimpan di kedua tabel, dan hanya satu POST per referensi, termasuk ketika pemanggilan berikutnya mengubah flag.
+- Sebanyak 43 pemeriksaan otomatis (HTTP tiruan dan SQL terpisah) serta pemeriksaan render form lulus. Bukti JSON ada di `Tests/live-estimate-result.json` dan `Tests/live-guest-result.json`. Halaman PDF pembaruan dan form Try telah diperiksa secara visual.

@@ -33,6 +33,9 @@ Namespace Models
         ''' <summary>Timeout HTTP request dalam detik.</summary>
         Public Property TimeoutSeconds As Integer = 30
 
+        ''' <summary>Minta reward_summary pada POST sales order (calculate_estimate_point=1).</summary>
+        Public Property CalculateEstimatePoint As Boolean = True
+
         ''' <summary>Jumlah maksimal percobaan ulang saat request gagal.</summary>
         Public Property MaxRetryAttempts As Integer = 3
 

@@ -1,0 +1,22 @@
+{
+  "provider_ref": "TEST-EST-261021-100352-414314",
+  "calculate_estimate_point": 1,
+  "http": 201,
+  "success": true,
+  "order_uid": 158386296021064,
+  "reward_detail_points": 5000.0,
+  "total_points": 5000.0,
+  "reward_summary": {
+    "amount": 5000.0,
+    "est_new_balance": 29800.0
+  },
+  "balance_before": 24800.0,
+  "balance_after": 24800.0,
+  "api_log_saved": true,
+  "transaction_log_saved": true,
+  "warning": null,
+  "sales_post_log_count": 1,
+  "duplicate_prevented": true,
+  "balance_after_later": 29800.00,
+  "observed_balance_change": 5000.00
+}

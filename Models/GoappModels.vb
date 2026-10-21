@@ -832,13 +832,42 @@ Namespace Models
         <JsonProperty("reward")>
         Public Property Reward As List(Of OrderRewardItem)
 
+        <JsonProperty("reward_summary")>
+        Public Property RewardSummary As OrderRewardSummary
+
+        ''' <summary>Total dari reward_summary; fallback rincian reward untuk respons lama. Jangan dijumlahkan keduanya.</summary>
         <JsonIgnore>
         Public ReadOnly Property TotalEarnedPoints As Decimal
             Get
-                If Reward Is Nothing Then Return 0D
-                Return Reward.Sum(Function(item) item.Amount)
+                If RewardSummary IsNot Nothing AndAlso RewardSummary.Amount.HasValue Then Return RewardSummary.Amount.Value
+                Return TotalRewardDetailPoints
             End Get
         End Property
+
+        <JsonIgnore>
+        Public ReadOnly Property TotalRewardDetailPoints As Decimal
+            Get
+                If Reward Is Nothing Then Return 0D
+                Return Reward.Where(Function(item) item IsNot Nothing).Sum(Function(item) item.Amount)
+            End Get
+        End Property
+
+        <JsonIgnore>
+        Public ReadOnly Property EstimatedNewBalance As Decimal?
+            Get
+                If RewardSummary IsNot Nothing AndAlso RewardSummary.EstNewBalance.HasValue Then Return RewardSummary.EstNewBalance
+                If Reward IsNot Nothing AndAlso Reward.Count = 1 AndAlso Reward(0) IsNot Nothing Then Return Reward(0).EstNewBalance
+                Return Nothing
+            End Get
+        End Property
+    End Class
+
+    Public Class OrderRewardSummary
+        <JsonProperty("amount")>
+        Public Property Amount As Decimal?
+
+        <JsonProperty("est_new_balance")>
+        Public Property EstNewBalance As Decimal?
     End Class
 
     Public Class OrderRewardItem

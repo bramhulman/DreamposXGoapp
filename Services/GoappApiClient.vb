@@ -445,7 +445,12 @@ Namespace Services
         ''' Mengirim data transaksi selesai ke Goapp untuk proses penambahan poin (Earning Point)
         ''' </summary>
         Public Async Function PushSalesOrderAsync(order As PushOrderRequest) As Task(Of ApiResponse(Of PushOrderResponse))
-            Return Await SubmitSalesOrderAsync(order, False)
+            Return Await PushSalesOrderAsync(order, _config.CalculateEstimatePoint)
+        End Function
+
+        ''' <summary>Mengirim transaksi dengan pilihan calculate_estimate_point (1 atau 0).</summary>
+        Public Async Function PushSalesOrderAsync(order As PushOrderRequest, calculateEstimatePoint As Boolean) As Task(Of ApiResponse(Of PushOrderResponse))
+            Return Await SubmitSalesOrderAsync(order, False, calculateEstimatePoint)
         End Function
 
 #End Region

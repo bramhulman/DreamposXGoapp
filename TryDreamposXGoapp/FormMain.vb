@@ -15,6 +15,7 @@ Public Class FormMain
     Private _lastPaymentRef As String = String.Empty
     Private ReadOnly _salesRef As New TextBox With {.Location = New Point(450, 22), .Size = New Size(250, 27), .MaxLength = 50}
     Private ReadOnly _allowWithoutMember As New CheckBox With {.Text = "Ijinkan tanpa member", .Location = New Point(440, 153), .AutoSize = True}
+    Private ReadOnly _calculateEstimatePoint As New CheckBox With {.Name = "chkCalculateEstimatePoint", .Text = "Hitung estimasi poin", .Location = New Point(665, 153), .AutoSize = True, .Checked = True}
     Private _salesOrderTime As String = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:sszzz")
 
     Private Class SchemeComboItem
@@ -35,6 +36,12 @@ Public Class FormMain
         txtApiKey.Text = System.Configuration.ConfigurationManager.AppSettings("Goapp.ApiKey")
         txtApiSecret.Text = System.Configuration.ConfigurationManager.AppSettings("Goapp.ApiSecret")
         InitClient()
+        InitializeSalesControls()
+        AppendLog("Test Harness DreamPOS x Goapp siap digunakan.")
+        Await LoadSchemesAsync()
+    End Sub
+
+    Private Sub InitializeSalesControls()
         _salesRef.Text = "TRX-" & Guid.NewGuid().ToString("N")
         tabTransaction.Controls.Add(New Label With {.Text = "Nomor struk tetap:", .Location = New Point(325, 25), .AutoSize = True})
         tabTransaction.Controls.Add(_salesRef)
@@ -45,6 +52,8 @@ Public Class FormMain
                                   End Sub
         tabTransaction.Controls.Add(newSales)
         tabTransaction.Controls.Add(_allowWithoutMember)
+        tabTransaction.Controls.Add(_calculateEstimatePoint)
+        _calculateEstimatePoint.Checked = _config.CalculateEstimatePoint
         AddHandler _allowWithoutMember.CheckedChanged, Sub()
                                                          txtBurnPoint.Enabled = Not _allowWithoutMember.Checked
                                                          txtBurnAuthCode.Enabled = Not _allowWithoutMember.Checked
@@ -52,8 +61,6 @@ Public Class FormMain
                                                          btnCancelBurnPoint.Enabled = Not _allowWithoutMember.Checked
                                                      End Sub
         btnPushSalesOrder.Text = "Kirim Transaksi Selesai"
-        AppendLog("Test Harness DreamPOS x Goapp siap digunakan.")
-        Await LoadSchemesAsync()
     End Sub
 
     Private Async Function LoadSchemesAsync() As Task
@@ -127,6 +134,11 @@ Public Class FormMain
             dbConnStr = connStrSetting.ConnectionString
         End If
 
+        Dim calculateEstimatePoint As Boolean = True
+        Dim estimateSetting = System.Configuration.ConfigurationManager.AppSettings("Goapp.CalculateEstimatePoint")
+        Dim parsedEstimate As Boolean
+        If Boolean.TryParse(estimateSetting, parsedEstimate) Then calculateEstimatePoint = parsedEstimate
+
         _config = New GoappConfig With {
             .DbConnectionString = dbConnStr,
             .ApiKey = apiKey,
@@ -137,6 +149,7 @@ Public Class FormMain
             .StoreUid = finalStoreUid,
             .StoreName = storeName,
             .StoreCode = storeCode,
+            .CalculateEstimatePoint = calculateEstimatePoint,
             .TimeoutSeconds = 30,
             .MaxRetryAttempts = 3,
             .RetryDelayMilliseconds = 1500
@@ -566,7 +579,9 @@ Public Class FormMain
     End Function
 
     Private Async Sub btnPushSalesOrder_Click(sender As Object, e As EventArgs) Handles btnPushSalesOrder.Click
-        Dim withoutMember = _allowWithoutMember.Checked
+        Dim withoutMember = _allowWithoutMember.Checked OrElse _currentMember Is Nothing
+        Dim calculateEstimatePoint = _calculateEstimatePoint.Checked
+        Dim orderEndpoint = "/sales/order/?calculate_estimate_point=" & If(calculateEstimatePoint, "1", "0")
         Dim member = _currentMember
         'If Not withoutMember AndAlso member Is Nothing Then
         '    MessageBox.Show("Silakan cari dan pilih member terlebih dahulu!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
@@ -589,6 +604,7 @@ Public Class FormMain
 
         btnPushSalesOrder.Enabled = False
         _allowWithoutMember.Enabled = False
+        _calculateEstimatePoint.Enabled = False
         txtOrderRawJson.Clear()
 
         Try
@@ -645,15 +661,15 @@ Public Class FormMain
             }
 
             Dim orderReqJson = Newtonsoft.Json.JsonConvert.SerializeObject(orderReq, Newtonsoft.Json.Formatting.Indented, New Newtonsoft.Json.JsonSerializerSettings With {.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore})
-            txtOrderRawJson.Text = "=== [1/2] REQUEST JSON (POST /sales/order/) ===" & Environment.NewLine & orderReqJson & Environment.NewLine & Environment.NewLine
+            txtOrderRawJson.Text = "=== [1/2] REQUEST JSON (POST " & orderEndpoint & ") ===" & Environment.NewLine & orderReqJson & Environment.NewLine & Environment.NewLine
 
             Dim salesOrderResp As ApiResponse(Of PushOrderResponse)
             If withoutMember Then
-                salesOrderResp = Await _client.PushGuestSalesOrderAsync(orderReq)
+                salesOrderResp = Await _client.PushGuestSalesOrderAsync(orderReq, calculateEstimatePoint)
             Else
-                salesOrderResp = Await _client.PushSalesOrderAsync(orderReq)
+                salesOrderResp = Await _client.PushSalesOrderAsync(orderReq, calculateEstimatePoint)
             End If
-            txtOrderRawJson.Text &= "=== [1/2] RESPONSE JSON (POST /sales/order/) ===" & Environment.NewLine & FormatJson(salesOrderResp.RawJson) & Environment.NewLine & Environment.NewLine
+            txtOrderRawJson.Text &= "=== [1/2] RESPONSE JSON (POST " & orderEndpoint & ") ===" & Environment.NewLine & FormatJson(salesOrderResp.RawJson) & Environment.NewLine & Environment.NewLine
 
             Dim msgBuilder As New System.Text.StringBuilder()
             msgBuilder.AppendLine($"HTTP: {salesOrderResp.StatusCode}; GoappApiLog: {salesOrderResp.ApiLogSaved}; GoappRedeemLog: {salesOrderResp.TransactionLogSaved}")
@@ -668,7 +684,11 @@ Public Class FormMain
                 If linesDiscountTotal > 0 Then
                     msgBuilder.AppendLine($"Diskon Poin/Lines: Rp {linesDiscountTotal:N0}")
                 End If
-                msgBuilder.AppendLine($"Poin Diperoleh (Earning): {earnedPts:N0} Pts")
+                msgBuilder.AppendLine($"Rincian reward: {salesOrderResp.Data.TotalRewardDetailPoints:N0} Pts")
+                msgBuilder.AppendLine($"Total Poin ({If(salesOrderResp.Data.RewardSummary IsNot Nothing AndAlso salesOrderResp.Data.RewardSummary.Amount.HasValue, "reward_summary", "reward")}): {earnedPts:N0} Pts")
+                If salesOrderResp.Data.EstimatedNewBalance.HasValue Then
+                    msgBuilder.AppendLine($"Estimasi Saldo Baru: {salesOrderResp.Data.EstimatedNewBalance.Value:N0} Pts")
+                End If
             Else
                 msgBuilder.AppendLine($"Transaksi /sales/order/ Gagal: {salesOrderResp.Message}")
             End If
@@ -712,13 +732,13 @@ Public Class FormMain
             If memberBefore.IsSuccess AndAlso memberBefore.Data IsNot Nothing AndAlso memberAfter.IsSuccess AndAlso memberAfter.Data IsNot Nothing Then
                 Dim delta = memberAfter.Data.AvailablePoints - memberBefore.Data.AvailablePoints
                 Dim expectedEarn = If(salesOrderResp.Data Is Nothing, 0D, salesOrderResp.Data.TotalEarnedPoints)
-                Dim detail = $"[AUDIT POIN] Ref={providerRef}; Sebelum={memberBefore.Data.AvailablePoints}; Sesudah={memberAfter.Data.AvailablePoints}; Selisih aktual={delta}; Reward respons={expectedEarn}; Burn diminta={burnPoint}; Duplicate={salesOrderResp.IsDuplicate}"
+                Dim detail = $"[AUDIT POIN] Ref={providerRef}; Sebelum={memberBefore.Data.AvailablePoints}; Sesudah={memberAfter.Data.AvailablePoints}; Selisih aktual={delta}; Total poin respons={expectedEarn}; Burn diminta={burnPoint}; Duplicate={salesOrderResp.IsDuplicate}"
                 txtOrderRawJson.AppendText(Environment.NewLine & detail)
                 AppendLog(detail)
                 _currentMember = memberAfter.Data
                 lblMemberPoints.Text = $"Sisa Poin : {_currentMember.AvailablePoints:N0} Pts"
                 If burnPoint = 0 AndAlso salesOrderResp.IsSuccess AndAlso Not salesOrderResp.IsDuplicate AndAlso delta <> expectedEarn Then
-                    MessageBox.Show(detail & Environment.NewLine & "Saldo dari server berbeda dari reward respons. Periksa ledger/rule Goapp; jangan kirim ulang transaksi.", "Selisih Poin", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                    MessageBox.Show(detail & Environment.NewLine & "Saldo GET saat ini berbeda dari total poin respons. Pemrosesan saldo Goapp dapat berlangsung asinkron; periksa GET member kembali. Jangan kirim ulang transaksi.", "Selisih Poin", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                 End If
             End If
 
@@ -727,6 +747,7 @@ Public Class FormMain
         Finally
             btnPushSalesOrder.Enabled = True
             _allowWithoutMember.Enabled = True
+            _calculateEstimatePoint.Enabled = True
         End Try
     End Sub
 
