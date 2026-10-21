@@ -568,10 +568,10 @@ Public Class FormMain
     Private Async Sub btnPushSalesOrder_Click(sender As Object, e As EventArgs) Handles btnPushSalesOrder.Click
         Dim withoutMember = _allowWithoutMember.Checked
         Dim member = _currentMember
-        If Not withoutMember AndAlso member Is Nothing Then
-            MessageBox.Show("Silakan cari dan pilih member terlebih dahulu!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            Return
-        End If
+        'If Not withoutMember AndAlso member Is Nothing Then
+        '    MessageBox.Show("Silakan cari dan pilih member terlebih dahulu!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+        '    Return
+        'End If
 
         Dim billTotal As Decimal
         Decimal.TryParse(txtBillTotal.Text, billTotal)

@@ -37,7 +37,7 @@ Namespace Services
 
         Public ReadOnly Property CanCancelFromDll As Boolean
             Get
-                Return (Status = 0 AndAlso StatusPos = 0)
+                Return (Status = 0)
             End Get
         End Property
     End Class
@@ -177,7 +177,7 @@ Namespace Services
 
             Dim sql = $"SELECT [Id], [Waktu], [Jenis], [Kode], [NamaVoucher], [NilaiPoint], [Status], [StatusPos], [TransactionRef], [MemberUid], [MemberName], [CreatedAt], [UpdatedAt] " &
                       $"FROM {Me.TableName} " &
-                      "WHERE [Status] = 0 AND [StatusPos] = 0 " &
+                      "WHERE [Status] = 0 " &
                       If(Not String.IsNullOrEmpty(txRef), "AND [TransactionRef] = @TransactionRef ", "") &
                       "ORDER BY [Id] DESC"
 
@@ -229,7 +229,7 @@ Namespace Services
 
             Dim sql = $"UPDATE {Me.TableName} " &
                       "SET [Status] = 1, [UpdatedAt] = GETDATE() " &
-                      "WHERE [Kode] = @Kode AND [StatusPos] = 0 " &
+                      "WHERE [Kode] = @Kode AND [Status] = 0 " &
                       If(Not String.IsNullOrEmpty(jenis), "AND [Jenis] = @Jenis", "")
 
             Try
@@ -373,7 +373,7 @@ Namespace Services
 
             Dim sql = $"SELECT [Id], [Waktu], [Jenis], [Kode], [NamaVoucher], [NilaiPoint], [Status], [StatusPos], [TransactionRef], [MemberUid], [MemberName], [CreatedAt], [UpdatedAt] " &
                       $"FROM {Me.TableName} " &
-                      "WHERE [Status] = 0 AND [StatusPos] = 0 " &
+                      "WHERE [Status] = 0 " &
                       If(Not String.IsNullOrEmpty(txRef), "AND [TransactionRef] = @TransactionRef ", "") &
                       "ORDER BY [Id] DESC"
 
@@ -425,7 +425,7 @@ Namespace Services
 
             Dim sql = $"UPDATE {Me.TableName} " &
                       "SET [Status] = 1, [UpdatedAt] = GETDATE() " &
-                      "WHERE [Kode] = @Kode AND [StatusPos] = 0 " &
+                      "WHERE [Kode] = @Kode AND [Status] = 0 " &
                       If(Not String.IsNullOrEmpty(jenis), "AND [Jenis] = @Jenis", "")
 
             Try
