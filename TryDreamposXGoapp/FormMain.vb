@@ -16,6 +16,7 @@ Public Class FormMain
     Private ReadOnly _salesRef As New TextBox With {.Location = New Point(450, 22), .Size = New Size(250, 27), .MaxLength = 50}
     Private ReadOnly _allowWithoutMember As New CheckBox With {.Text = "Ijinkan tanpa member", .Location = New Point(440, 153), .AutoSize = True}
     Private ReadOnly _calculateEstimatePoint As New CheckBox With {.Name = "chkCalculateEstimatePoint", .Text = "Hitung estimasi poin", .Location = New Point(665, 153), .AutoSize = True, .Checked = True}
+    Private ReadOnly _withXlb As New CheckBox With {.Name = "chkWithXlb", .Text = "dengan xlb", .Location = New Point(335, 65), .AutoSize = True}
     Private _salesOrderTime As String = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:sszzz")
 
     Private Class SchemeComboItem
@@ -53,6 +54,7 @@ Public Class FormMain
         tabTransaction.Controls.Add(newSales)
         tabTransaction.Controls.Add(_allowWithoutMember)
         tabTransaction.Controls.Add(_calculateEstimatePoint)
+        tabTransaction.Controls.Add(_withXlb)
         _calculateEstimatePoint.Checked = _config.CalculateEstimatePoint
         AddHandler _allowWithoutMember.CheckedChanged, Sub()
                                                          txtBurnPoint.Enabled = Not _allowWithoutMember.Checked
@@ -561,17 +563,27 @@ Public Class FormMain
 
     ' Data uji memakai SKU deterministik agar referensi sama selalu menghasilkan payload sama.
     Private Shared Function CreateTestOrderLines(total As Decimal, transactionRef As String) As List(Of OrderLineItem)
+        Return CreateTestOrderLinesWithXlb(total, transactionRef, False)
+    End Function
+
+    Private Shared Function CreateTestOrderLinesWithXlb(total As Decimal, transactionRef As String, withXlb As Boolean) As List(Of OrderLineItem)
         Dim lines As New List(Of OrderLineItem)()
         Dim count = If(total >= 3D, 3, 1)
         Dim unitPrice = Decimal.Truncate(total / count)
+        Dim xlbItems = If(withXlb, XlbTestCatalog.SelectProducts(transactionRef, count), New List(Of OrderProductInfo)())
         For index = 1 To count
             Dim price = If(index = count, total - unitPrice * (count - 1), unitPrice)
             Dim sku As String
             Using sha = System.Security.Cryptography.SHA256.Create()
                 sku = "SKU-" & BitConverter.ToString(sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(transactionRef & "|" & index))).Replace("-", "").Substring(0, 12)
             End Using
+            Dim product = New OrderProductInfo With {.Sku = sku, .Name = "Produk " & index}
+            If index <= xlbItems.Count Then product = xlbItems(index - 1)
+            If Not withXlb AndAlso XlbTestCatalog.Contains(product.Sku) Then
+                Throw New InvalidOperationException("SKU XLB tidak boleh masuk saat opsi dengan xlb tidak dicentang.")
+            End If
             lines.Add(New OrderLineItem With {
-                .Product = New OrderProductInfo With {.Sku = sku, .Name = "Produk " & index},
+                .Product = product,
                 .Quantity = 1, .Price = price, .PriceBeforeDiscount = price
             })
         Next
@@ -581,6 +593,7 @@ Public Class FormMain
     Private Async Sub btnPushSalesOrder_Click(sender As Object, e As EventArgs) Handles btnPushSalesOrder.Click
         Dim withoutMember = _allowWithoutMember.Checked OrElse _currentMember Is Nothing
         Dim calculateEstimatePoint = _calculateEstimatePoint.Checked
+        Dim withXlb = _withXlb.Checked
         Dim orderEndpoint = "/sales/order/?calculate_estimate_point=" & If(calculateEstimatePoint, "1", "0")
         Dim member = _currentMember
         'If Not withoutMember AndAlso member Is Nothing Then
@@ -605,6 +618,7 @@ Public Class FormMain
         btnPushSalesOrder.Enabled = False
         _allowWithoutMember.Enabled = False
         _calculateEstimatePoint.Enabled = False
+        _withXlb.Enabled = False
         txtOrderRawJson.Clear()
 
         Try
@@ -656,7 +670,7 @@ Public Class FormMain
                     .Uid = If(member Is Nothing, 0, member.Uid),
                     .MobileNo = If(member Is Nothing, Nothing, member.MobileNo)
                 }),
-                .Lines = CreateTestOrderLines(billTotal, providerRef),
+                .Lines = CreateTestOrderLinesWithXlb(billTotal, providerRef, withXlb),
                 .Payments = paymentItems
             }
 
@@ -672,6 +686,7 @@ Public Class FormMain
             txtOrderRawJson.Text &= "=== [1/2] RESPONSE JSON (POST " & orderEndpoint & ") ===" & Environment.NewLine & FormatJson(salesOrderResp.RawJson) & Environment.NewLine & Environment.NewLine
 
             Dim msgBuilder As New System.Text.StringBuilder()
+            msgBuilder.AppendLine("Dengan XLB: " & If(withXlb, "Ya", "Tidak"))
             msgBuilder.AppendLine($"HTTP: {salesOrderResp.StatusCode}; GoappApiLog: {salesOrderResp.ApiLogSaved}; GoappRedeemLog: {salesOrderResp.TransactionLogSaved}")
             If salesOrderResp.IsDuplicate Then msgBuilder.AppendLine("Transaksi sudah terkirim; POST tidak diulang.")
             If Not String.IsNullOrWhiteSpace(salesOrderResp.WarningMessage) Then msgBuilder.AppendLine(salesOrderResp.WarningMessage)
@@ -748,6 +763,7 @@ Public Class FormMain
             btnPushSalesOrder.Enabled = True
             _allowWithoutMember.Enabled = True
             _calculateEstimatePoint.Enabled = True
+            _withXlb.Enabled = True
         End Try
     End Sub
 

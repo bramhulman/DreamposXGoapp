@@ -1,0 +1,193 @@
+{
+  "SourceFile": "XLB_Dintaifung.xlsx",
+  "SourceSheet": "Sheet1",
+  "SourceSkuRange": "B3:B66",
+  "SourceSha256": "5b3b5ffb30329d8d7f93530f5c014eff3618cac6fdef3940bae3564f89d2d721",
+  "SourceRowCount": 64,
+  "Products": [
+    {
+      "Sku": "FDUM0001",
+      "Name": "XLB Kepiting & Ayam (4)"
+    },
+    {
+      "Sku": "FDUM0002",
+      "Name": "XLB Kepiting & Ayam (6)"
+    },
+    {
+      "Sku": "FDUM0003",
+      "Name": "XLB Kepiting & Ayam (10)"
+    },
+    {
+      "Sku": "FDUM0007",
+      "Name": "XLB Ayam (4)"
+    },
+    {
+      "Sku": "FDUM0008",
+      "Name": "XLB Ayam (6)"
+    },
+    {
+      "Sku": "FDUM0009",
+      "Name": "XLB Ayam (10)"
+    },
+    {
+      "Sku": "FDUM0013",
+      "Name": "XLB Ayam Mala (4)"
+    },
+    {
+      "Sku": "FDUM0014",
+      "Name": "XLB Ayam Mala (6)"
+    },
+    {
+      "Sku": "FDUM0015",
+      "Name": "XLB Ayam Mala (10)"
+    },
+    {
+      "Sku": "FHDS0015",
+      "Name": "XLB Oreo (4)"
+    },
+    {
+      "Sku": "FDUM0036",
+      "Name": "XLB Ayam Woku (10)"
+    },
+    {
+      "Sku": "FHDS0017",
+      "Name": "XLB Oreo (10)"
+    },
+    {
+      "Sku": "FHDS0016",
+      "Name": "XLB Oreo (6)"
+    },
+    {
+      "Sku": "FDUM0034",
+      "Name": "XLB Ayam Woku (4)"
+    },
+    {
+      "Sku": "FDUM0035",
+      "Name": "XLB Ayam Woku (6)"
+    },
+    {
+      "Sku": "FDUM0004",
+      "Name": "XLB Kepiting & Babi (4)"
+    },
+    {
+      "Sku": "FDUM0005",
+      "Name": "XLB Kepiting & Babi (6)"
+    },
+    {
+      "Sku": "FDUM0006",
+      "Name": "XLB Kepiting & Babi (10)"
+    },
+    {
+      "Sku": "FDUM0010",
+      "Name": "XLB Babi (4)"
+    },
+    {
+      "Sku": "FDUM0011",
+      "Name": "XLB Babi (6)"
+    },
+    {
+      "Sku": "FDUM0012",
+      "Name": "XLB Babi (10)"
+    },
+    {
+      "Sku": "FDUM0016",
+      "Name": "XLB Babi Mala (4)"
+    },
+    {
+      "Sku": "FDUM0017",
+      "Name": "XLB Babi Mala (6)"
+    },
+    {
+      "Sku": "FDUM0018",
+      "Name": "XLB Babi  Mala (10)"
+    },
+    {
+      "Sku": "FHDS0018",
+      "Name": "XLB Oreo (5)"
+    },
+    {
+      "Sku": "FHDS0023",
+      "Name": "XLB CokKurma(4)"
+    },
+    {
+      "Sku": "FHDS0024",
+      "Name": "XLB CokKurma(6)"
+    },
+    {
+      "Sku": "FHDS0025",
+      "Name": "XLB CokKurma(10"
+    },
+    {
+      "Sku": "FDUM0038",
+      "Name": "XLB Opor Ay (6)"
+    },
+    {
+      "Sku": "FDUM0039",
+      "Name": "XLB Opor Ay (10"
+    },
+    {
+      "Sku": "FDUM0037",
+      "Name": "XLB Opor Ay (4)"
+    },
+    {
+      "Sku": "FHDS0026",
+      "Name": "XLB Cok (4)"
+    },
+    {
+      "Sku": "FHDS0027",
+      "Name": "XLB Cok (6)"
+    },
+    {
+      "Sku": "FHDS0028",
+      "Name": "XLB Cok (10)"
+    },
+    {
+      "Sku": "FHDS0029",
+      "Name": "XLB Matcha (4)"
+    },
+    {
+      "Sku": "FHDS0030",
+      "Name": "XLB Matcha (6)"
+    },
+    {
+      "Sku": "FHDS0031",
+      "Name": "XLB Matcha (10)"
+    },
+    {
+      "Sku": "FDUM0041",
+      "Name": "XLB Kari Ay (6)"
+    },
+    {
+      "Sku": "FDUM0042",
+      "Name": "XLB Kari Ay (10"
+    },
+    {
+      "Sku": "FDUM0040",
+      "Name": "XLB Kari Ay (4)"
+    },
+    {
+      "Sku": "GRP-F-HDS-000026",
+      "Name": "XLB Cok (4)"
+    },
+    {
+      "Sku": "GRP-F-HDS-000027",
+      "Name": "XLB Cok (6)"
+    },
+    {
+      "Sku": "GRP-F-HDS-000028",
+      "Name": "XLB Cok (10)"
+    },
+    {
+      "Sku": "GRP-F-HDS-000029",
+      "Name": "XLB Matcha (4)"
+    },
+    {
+      "Sku": "GRP-F-HDS-000030",
+      "Name": "XLB Matcha (6)"
+    },
+    {
+      "Sku": "GRP-F-HDS-000031",
+      "Name": "XLB Matcha (10)"
+    }
+  ]
+}

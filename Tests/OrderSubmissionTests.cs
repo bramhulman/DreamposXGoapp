@@ -58,8 +58,45 @@ class OrderSubmissionTests {
         Check(lines.Sum(x=>x.Price*x.Quantity)==133333m,"generated SKU amounts equal transaction total including remainder");
         var sameLines=(List<OrderLineItem>)buildLines.Invoke(null,new object[]{133333m,"TEST-SKU"});
         Check(lines.Select(x=>x.Product.Sku).SequenceEqual(sameLines.Select(x=>x.Product.Sku)),"same transaction preserves generated SKUs for duplicate protection");
+        await XlbTests();
         await EstimateTests();
         await SqlTests();
+    }
+    static List<OrderLineItem> XlbLines(decimal total,string reference,bool include) {
+        return (List<OrderLineItem>)typeof(TryDreamposXGoapp.FormMain).GetMethod("CreateTestOrderLinesWithXlb",System.Reflection.BindingFlags.Static|System.Reflection.BindingFlags.NonPublic).Invoke(null,new object[]{total,reference,include});
+    }
+    static Dictionary<string,string> XlbCatalog() {
+        return JObject.Parse(File.ReadAllText("TryDreamposXGoapp/TestData/XlbProducts.json"))["Products"].ToDictionary(p=>(string)p["Sku"],p=>(string)p["Name"],StringComparer.OrdinalIgnoreCase);
+    }
+    static async Task XlbTests() {
+        var catalog=XlbCatalog();Check(catalog.Count==46,"Excel XLB snapshot contains all 46 unique SKUs");
+        using(var stream=typeof(TryDreamposXGoapp.FormMain).Assembly.GetManifestResourceStream("TryDreamposXGoapp.TestData.XlbProducts.json"))
+        using(var reader=new StreamReader(stream)) {
+            var embedded=new HashSet<string>(JObject.Parse(reader.ReadToEnd())["Products"].Select(p=>(string)p["Sku"]),StringComparer.OrdinalIgnoreCase);
+            Check(embedded.SetEquals(catalog.Keys),"Try executable embeds the complete Excel-derived SKU set without requiring Downloads at runtime");
+        }
+        bool excludes=true,includes=true,totals=true,stable=true,canonicalNames=true,distinct=true;var seen=new HashSet<string>(StringComparer.OrdinalIgnoreCase);var counts=new HashSet<int>();
+        foreach(decimal total in new[]{150000m,133333m,0.01m,2.5m,3m,100.01m}) for(int i=0;i<512;i++) {
+            string reference="XLB-CASE-"+i;var off=XlbLines(total,reference,false);var on=XlbLines(total,reference,true);int xlb=on.Count(x=>catalog.ContainsKey(x.Product.Sku));
+            excludes &= !off.Any(x=>catalog.ContainsKey(x.Product.Sku));includes &= xlb>=1 && xlb<=2 && (on.Count==1 || xlb<on.Count);
+            totals &= on.Sum(x=>x.Price*x.Quantity)==total && off.Sum(x=>x.Price*x.Quantity)==total && on.All(x=>x.Price>0);
+            stable &= Newtonsoft.Json.JsonConvert.SerializeObject(on)==Newtonsoft.Json.JsonConvert.SerializeObject(XlbLines(total,reference,true));
+            distinct &= on.Select(x=>x.Product.Sku).Distinct(StringComparer.OrdinalIgnoreCase).Count()==on.Count;
+            foreach(var line in on.Where(x=>catalog.ContainsKey(x.Product.Sku))) {canonicalNames &= catalog[line.Product.Sku]==line.Product.Name;seen.Add(line.Product.Sku);}
+            if(on.Count==3) counts.Add(xlb);
+        }
+        Check(excludes,"unchecked XLB never includes any spreadsheet SKU across 3072 total/reference cases");
+        Check(includes,"checked XLB always includes one or two source SKUs and mixes ordinary items where possible");
+        Check(totals,"XLB and non-XLB item totals remain exact including fractions and small amounts");
+        Check(stable && distinct,"XLB selection is stable for retries and never repeats a SKU in the same order");
+        Check(canonicalNames,"XLB product names match the first Excel row for each SKU");
+        Check(seen.SetEquals(catalog.Keys) && counts.SetEquals(new[]{1,2}),"reference variation covers all 46 Excel SKUs and both one/two XLB combinations");
+        var handler=new Fake();var client=new GoappApiClient(Config(),handler);var order=Order();order.Lines=XlbLines(order.TotalPaid,order.ProviderRef,true);
+        var result=await client.PushSalesOrderAsync(order,true);var body=JObject.Parse(handler.Body);
+        Check(result.IsSuccess && body["lines"].Any(x=>catalog.ContainsKey((string)x["product"]["sku"])),"HTTP sales payload contains actual XLB SKUs when checked");
+        Check(body["with_xlb"]==null && body["dengan_xlb"]==null,"XLB checkbox changes products only, without an invented API parameter");
+        order.Lines=XlbLines(order.TotalPaid,order.ProviderRef,false);var changed=await client.PushSalesOrderAsync(order,true);
+        Check(!changed.IsSuccess && changed.StatusCode==409 && handler.Posts==1,"changing XLB mode on a submitted reference never resends the transaction");
     }
     static string EstimateExample() {
         var collection=JObject.Parse(File.ReadAllText("Channel API.postman_collection21Okt2026.json"));
@@ -122,6 +159,13 @@ class OrderSubmissionTests {
                 using(var cmd=new SqlCommand("SELECT COUNT(*) FROM dbo."+redeem+" WHERE TransactionRef=@Ref AND NilaiPoint=7500 AND OrderResponseJson LIKE '%reward_summary%'",conn)) {cmd.Parameters.AddWithValue("@Ref",summaryOrder.ProviderRef);Check((int)await cmd.ExecuteScalarAsync()==1,"SQL journal stores raw reward_summary and its total rather than sum of summary plus reward");}
                 var replaySummaryClient=new GoappApiClient(Config(db),new Fake());replaySummaryClient.LogTableName=c.LogTableName;replaySummaryClient.RedeemRepo.TableName=c.RedeemRepo.TableName;
                 var summaryReplay=await replaySummaryClient.PushSalesOrderAsync(summaryOrder,false);Check(summaryReplay.IsDuplicate && summaryReplay.Data.TotalEarnedPoints==7500m,"summary survives SQL replay even when the flag is changed");
+                foreach(bool include in new[]{false,true}) {
+                    var mixedHandler=new Fake();var mixedClient=new GoappApiClient(Config(db),mixedHandler);mixedClient.LogTableName=c.LogTableName;mixedClient.RedeemRepo.TableName=c.RedeemRepo.TableName;
+                    var mixedOrder=Order();mixedOrder.Lines=XlbLines(mixedOrder.TotalPaid,mixedOrder.ProviderRef,include);var mixed=await mixedClient.PushSalesOrderAsync(mixedOrder,true);
+                    Check(mixed.IsSuccess && mixed.ApiLogSaved && mixed.TransactionLogSaved,"both SQL logs succeed for XLB mode "+include);
+                    using(var cmd=new SqlCommand("SELECT OrderRequestJson FROM dbo."+redeem+" WHERE TransactionRef=@Ref",conn)) {cmd.Parameters.AddWithValue("@Ref",mixedOrder.ProviderRef);var saved=JObject.Parse((string)await cmd.ExecuteScalarAsync());bool hasXlb=saved["lines"].Any(x=>XlbCatalog().ContainsKey((string)x["product"]["sku"]));Check(hasXlb==include,"SQL request journal preserves exact SKU mode "+include);}
+                }
+
 
 
             } finally {
@@ -188,7 +232,10 @@ class OrderSubmissionTests {
             form.ShowInTaskbar=false;form.Opacity=0;form.Show();form.PerformLayout();form.Refresh();
             var estimate=(System.Windows.Forms.CheckBox)type.GetField("_calculateEstimatePoint",flags).GetValue(form);
             Check(estimate.Checked && estimate.Right<=tabs.SelectedTab.ClientSize.Width,"main form estimate checkbox defaults on and fits existing transaction tab");
-            using(var image=new System.Drawing.Bitmap(form.Width,form.Height)) {form.DrawToBitmap(image,new System.Drawing.Rectangle(0,0,form.Width,form.Height));image.Save("Tests/estimate-form-preview.png");}
+            var xlb=(System.Windows.Forms.CheckBox)type.GetField("_withXlb",flags).GetValue(form);
+            Check(!xlb.Checked && xlb.Text=="dengan xlb" && xlb.Right<=tabs.SelectedTab.ClientSize.Width,"XLB checkbox is on the existing form and defaults off");
+            xlb.Checked=true;
+            using(var image=new System.Drawing.Bitmap(form.Width,form.Height)) {form.DrawToBitmap(image,new System.Drawing.Rectangle(0,0,form.Width,form.Height));image.Save("Tests/xlb-form-preview.png");}
         }
     }
     static async Task Preflight() {

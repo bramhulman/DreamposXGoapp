@@ -455,3 +455,15 @@ Test fixture berasal dari contoh **Calculate estimated points earned** di koleks
 - Dengan member uji: `TEST-EST-261021-100352-414314`, tiga SKU, Rp150.000, HTTP 201, order UID `158386296021064`. Rincian reward 5.000; reward_summary.amount 5.000; reward_summary.est_new_balance 29.800. Saldo sebelum 24.800, GET segera sesudah POST masih 24.800, lalu GET ulang menunjukkan 29.800 (+5.000), sesuai ringkasan. Jangan POST ulang hanya karena saldo aktual belum langsung berubah.
 - Masing-masing memakai query `calculate_estimate_point=1`, tersimpan di kedua tabel, dan hanya satu POST per referensi, termasuk ketika pemanggilan berikutnya mengubah flag.
 - Sebanyak 43 pemeriksaan otomatis (HTTP tiruan dan SQL terpisah) serta pemeriksaan render form lulus. Bukti JSON ada di `Tests/live-estimate-result.json` dan `Tests/live-guest-result.json`. Halaman PDF pembaruan dan form Try telah diperiksa secara visual.
+## Uji earning point dengan item XLB
+
+Pada tab **3. Transaksi POS**, checkbox **dengan xlb** tersedia di form Try yang sama dan default tidak dicentang:
+
+- Dicentang: generator memadukan satu atau dua SKU XLB dengan item biasa. SKU dan nama berasal dari 46 SKU unik di `XLB_Dintaifung.xlsx`, Sheet1 B3:C66 (64 baris; duplikasi SKU digabung dengan nama baris pertama).
+- Tidak dicentang: tidak ada SKU dari daftar Excel tersebut dalam item transaksi.
+- Data uji tetap memakai total nominal yang diisi. Excel hanya berisi SKU/nama, sehingga harga item uji dibagi dari total tersebut, bukan harga katalog. Nominal kecil yang hanya menghasilkan satu baris akan memakai satu SKU XLB bila dicentang.
+- Kombinasi stabil untuk nomor transaksi yang sama; tombol Transaksi baru menghasilkan referensi dan kombinasi baru. Mengubah mode pada nomor yang sudah terkirim tidak memicu POST ulang.
+
+Untuk membandingkan earning: pilih member yang sama, set burn point 0 dan nominal sama, aktifkan Hitung estimasi poin, lalu kirim masing-masing mode dengan **nomor transaksi berbeda** melalui tombol Transaksi baru. Periksa SKU pada raw request dan `reward_summary` pada respons. Perhitungan earning tetap dilakukan Goapp sesuai aturan SKU, bukan rumus baru pada aplikasi Try.
+
+Daftar SKU disertakan sebagai resource aplikasi Try agar aplikasi hasil build tidak bergantung pada folder Downloads atau instalasi Excel. Status Dengan XLB ditampilkan pada hasil; payload produk dan kedua log SQL mengikuti pola yang sudah ada. Build dan 58 pemeriksaan otomatis lulus, termasuk seluruh 46 SKU, 3.072 kombinasi nominal/referensi, total harga, pengecualian XLB, kestabilan retry, dan kedua log SQL. Checkbox juga telah diperiksa secara visual.

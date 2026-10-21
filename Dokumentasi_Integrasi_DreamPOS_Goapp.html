@@ -409,5 +409,15 @@ End If
 <li>Masing-masing memakai query <code>calculate_estimate_point=1</code>, tersimpan di kedua tabel, dan hanya satu POST per referensi, termasuk ketika pemanggilan berikutnya mengubah flag.</li>
 <li>Sebanyak 43 pemeriksaan otomatis (HTTP tiruan dan SQL terpisah) serta pemeriksaan render form lulus. Bukti JSON ada di <code>Tests/live-estimate-result.json</code> dan <code>Tests/live-guest-result.json</code>. Halaman PDF pembaruan dan form Try telah diperiksa secara visual.</li>
 </ul>
+<h2>Uji earning point dengan item XLB</h2>
+<p>Pada tab <strong>3. Transaksi POS</strong>, checkbox <strong>dengan xlb</strong> tersedia di form Try yang sama dan default tidak dicentang:</p>
+<ul>
+<li>Dicentang: generator memadukan satu atau dua SKU XLB dengan item biasa. SKU dan nama berasal dari 46 SKU unik di <code>XLB_Dintaifung.xlsx</code>, Sheet1 B3:C66 (64 baris; duplikasi SKU digabung dengan nama baris pertama).</li>
+<li>Tidak dicentang: tidak ada SKU dari daftar Excel tersebut dalam item transaksi.</li>
+<li>Data uji tetap memakai total nominal yang diisi. Excel hanya berisi SKU/nama, sehingga harga item uji dibagi dari total tersebut, bukan harga katalog. Nominal kecil yang hanya menghasilkan satu baris akan memakai satu SKU XLB bila dicentang.</li>
+<li>Kombinasi stabil untuk nomor transaksi yang sama; tombol Transaksi baru menghasilkan referensi dan kombinasi baru. Mengubah mode pada nomor yang sudah terkirim tidak memicu POST ulang.</li>
+</ul>
+<p>Untuk membandingkan earning: pilih member yang sama, set burn point 0 dan nominal sama, aktifkan Hitung estimasi poin, lalu kirim masing-masing mode dengan <strong>nomor transaksi berbeda</strong> melalui tombol Transaksi baru. Periksa SKU pada raw request dan <code>reward_summary</code> pada respons. Perhitungan earning tetap dilakukan Goapp sesuai aturan SKU, bukan rumus baru pada aplikasi Try.</p>
+<p>Daftar SKU disertakan sebagai resource aplikasi Try agar aplikasi hasil build tidak bergantung pada folder Downloads atau instalasi Excel. Status Dengan XLB ditampilkan pada hasil; payload produk dan kedua log SQL mengikuti pola yang sudah ada. Build dan 58 pemeriksaan otomatis lulus, termasuk seluruh 46 SKU, 3.072 kombinasi nominal/referensi, total harga, pengecualian XLB, kestabilan retry, dan kedua log SQL. Checkbox juga telah diperiksa secara visual.</p>
 </body>
 </html>
