@@ -1,0 +1,1293 @@
+﻿{
+    "started_at":  "2026-10-21T12:07:08.1428431+07:00",
+    "member_uid":  157689623681608,
+    "member_mobile":  "081588809090",
+    "member_name":  "Archen",
+    "excel_sha256":  "5b3b5ffb30329d8d7f93530f5c014eff3618cac6fdef3940bae3564f89d2d721",
+    "balance_before":  261100.00,
+    "total_each":  250000,
+    "results":  [
+                    {
+                        "case":  "Tanpa XLB",
+                        "provider_ref":  "TRX-b50bc01736ef4697a404d852a511430a",
+                        "skus":  [
+                                     "SKU-CONTROL-01",
+                                     "SKU-CONTROL-02",
+                                     "SKU-CONTROL-03"
+                                 ],
+                        "http":  201,
+                        "success":  true,
+                        "reward_amount":  10000,
+                        "reward_summary_amount":  10000.0,
+                        "ratio":  1.0,
+                        "api_log_saved":  true,
+                        "redeem_log_saved":  true,
+                        "sales_post_count":  1,
+                        "request":  {
+                                        "order_no":  "TRX-b50bc01736ef4697a404d852a511430a",
+                                        "provider_ref":  "TRX-b50bc01736ef4697a404d852a511430a",
+                                        "order_date":  "2026-10-21 12:07:08+07:00",
+                                        "member":  {
+                                                       "uid":  157689623681608
+                                                   },
+                                        "store":  {
+                                                      "uid":  138533231320136,
+                                                      "name":  "Go DimSum Bogor",
+                                                      "store_code":  "DS"
+                                                  },
+                                        "lines":  [
+                                                      {
+                                                          "product":  {
+                                                                          "sku":  "SKU-CONTROL-01",
+                                                                          "name":  "Produk 1"
+                                                                      },
+                                                          "quantity":  1,
+                                                          "price_before_discount":  83333.0,
+                                                          "price":  83333.0
+                                                      },
+                                                      {
+                                                          "product":  {
+                                                                          "sku":  "SKU-CONTROL-02",
+                                                                          "name":  "Produk 2"
+                                                                      },
+                                                          "quantity":  1,
+                                                          "price_before_discount":  83333.0,
+                                                          "price":  83333.0
+                                                      },
+                                                      {
+                                                          "product":  {
+                                                                          "sku":  "SKU-CONTROL-03",
+                                                                          "name":  "Produk 3"
+                                                                      },
+                                                          "quantity":  1,
+                                                          "price_before_discount":  83334.0,
+                                                          "price":  83334.0
+                                                      }
+                                                  ],
+                                        "lines_total":  250000.0,
+                                        "lines_tax":  0.0,
+                                        "total_incl_tax":  250000.0,
+                                        "total_paid":  250000.0,
+                                        "payments":  [
+                                                         {
+                                                             "payment_method_name":  "CASH",
+                                                             "payment_type":  "CASH",
+                                                             "amount":  250000.0
+                                                         }
+                                                     ],
+                                        "completed_at":  "2026-10-21 12:07:08+07:00",
+                                        "paid_at":  "2026-10-21 12:07:08+07:00"
+                                    },
+                        "response":  {
+                                         "id":  5658659,
+                                         "uid":  158390082760264,
+                                         "store":  {
+                                                       "uid":  138533231320136,
+                                                       "name":  "Go DimSum Bogor",
+                                                       "store_code":  "DS",
+                                                       "enabled":  true,
+                                                       "channel":  null,
+                                                       "channels":  [
+                                                                        {
+                                                                            "uid":  138350315235400,
+                                                                            "name":  "Dream POS Store",
+                                                                            "channel_type":  "offline",
+                                                                            "account_type":  null,
+                                                                            "address":  null,
+                                                                            "icon_url":  "https://static.goapp.co.id/directory/images/channel_offline.png",
+                                                                            "owner":  null
+                                                                        }
+                                                                    ],
+                                                       "business":  {
+                                                                        "uid":  135251387838536
+                                                                    },
+                                                       "map_url":  "https://maps.app.goo.gl/agm1mMEq1HHpzAyv5",
+                                                       "address":  "Jl. A. Yani No.100, RT.03/RW.03, Tanah Sareal, Kec. Tanah Sereal, Kota Bogor, Jawa Barat 16161"
+                                                   },
+                                         "contact":  {
+                                                         "uid":  157689623603272,
+                                                         "first_name":  "Archen",
+                                                         "last_name":  null,
+                                                         "email":  null,
+                                                         "mobile_no":  "081588809090",
+                                                         "external_app":  null,
+                                                         "external_id":  null,
+                                                         "business":  {
+                                                                          "uid":  135251387838536
+                                                                      }
+                                                     },
+                                         "ship_to":  {
+                                                         "address_type":  "",
+                                                         "first_name":  "",
+                                                         "last_name":  "",
+                                                         "phone_no":  "",
+                                                         "phone_ext_no":  "",
+                                                         "line1":  "",
+                                                         "line2":  "",
+                                                         "line3":  "",
+                                                         "line4":  "",
+                                                         "state":  "",
+                                                         "latitude":  null,
+                                                         "longitude":  null,
+                                                         "post_code":  "",
+                                                         "country_code":  "",
+                                                         "notes":  ""
+                                                     },
+                                         "requested_by":  null,
+                                         "requested_at":  null,
+                                         "order_no":  "SO-001033",
+                                         "order_date":  "2026-10-21T12:07:08+07:00",
+                                         "payment_term":  "MANUAL",
+                                         "shipping_method":  null,
+                                         "shipping_fee":  "0.00",
+                                         "shipping_discount":  "0.00",
+                                         "lines_total":  "250000.00",
+                                         "lines_discount":  "0.00",
+                                         "lines_tax":  "0.00",
+                                         "service_fee":  "0.00",
+                                         "service_discount":  "0.00",
+                                         "provider_fee":  "0.00",
+                                         "provider_discount":  "0.00",
+                                         "discounts":  [
+
+                                                       ],
+                                         "total_excl_tax":  "250000.00",
+                                         "total_incl_tax":  "250000.00",
+                                         "total_paid":  "250000.00",
+                                         "processing_date":  "2026-10-21T12:07:12.978053+07:00",
+                                         "completed_at":  "2026-10-21T12:07:08+07:00",
+                                         "cancel_reason":  null,
+                                         "status":  "Completed",
+                                         "status_code":  "completed",
+                                         "payments":  [
+
+                                                      ],
+                                         "provider_ref":  "TRX-b50bc01736ef4697a404d852a511430a",
+                                         "provider_data":  "{\"order_no\": \"TRX-b50bc01736ef4697a404d852a511430a\", \"provider_ref\": \"TRX-b50bc01736ef4697a404d852a511430a\", \"order_date\": \"2026-10-21 12:07:08+07:00\", \"member\": {\"uid\": 157689623681608}, \"store\": {\"uid\": 138533231320136, \"name\": \"Go DimSum Bogor\", \"store_code\": \"DS\"}, \"lines\": [{\"product\": {\"sku\": \"SKU-CONTROL-01\", \"name\": \"Produk 1\"}, \"quantity\": 1, \"price_before_discount\": 83333.0, \"price\": 83333.0}, {\"product\": {\"sku\": \"SKU-CONTROL-02\", \"name\": \"Produk 2\"}, \"quantity\": 1, \"price_before_discount\": 83333.0, \"price\": 83333.0}, {\"product\": {\"sku\": \"SKU-CONTROL-03\", \"name\": \"Produk 3\"}, \"quantity\": 1, \"price_before_discount\": 83334.0, \"price\": 83334.0}], \"lines_total\": 250000.0, \"lines_tax\": 0.0, \"total_incl_tax\": 250000.0, \"total_paid\": 250000.0, \"payments\": [{\"payment_method_name\": \"CASH\", \"payment_type\": \"CASH\", \"amount\": 250000.0}], \"completed_at\": \"2026-10-21 12:07:08+07:00\", \"paid_at\": \"2026-10-21 12:07:08+07:00\"}",
+                                         "provider_order_no":  null,
+                                         "note":  null,
+                                         "reward":  [
+                                                        {
+                                                            "account":  {
+                                                                            "uid":  157689623672904,
+                                                                            "account_type":  {
+                                                                                                 "name":  "Din Tai Fung Account",
+                                                                                                 "currency":  "Point",
+                                                                                                 "currency_label":  "Point"
+                                                                                             },
+                                                                            "balance":  "261100.00",
+                                                                            "contact":  {
+                                                                                            "uid":  157689623603272,
+                                                                                            "first_name":  "Archen",
+                                                                                            "last_name":  null,
+                                                                                            "email":  null,
+                                                                                            "mobile_no":  "081588809090"
+                                                                                        },
+                                                                            "referral_code":  "IGGOKZ"
+                                                                        },
+                                                            "member":  {
+                                                                           "uid":  157689623681608,
+                                                                           "scheme":  {
+                                                                                          "uid":  157557876240456,
+                                                                                          "name":  "Din Tai Fung"
+                                                                                      },
+                                                                           "level":  {
+                                                                                         "id":  73,
+                                                                                         "name":  "Silver",
+                                                                                         "level":  0
+                                                                                     },
+                                                                           "first_name":  "Archen",
+                                                                           "last_name":  null,
+                                                                           "email":  null,
+                                                                           "mobile_no":  "081588809090",
+                                                                           "referral_code":  "QKNBTC",
+                                                                           "valid_until":  null,
+                                                                           "status":  "active",
+                                                                           "is_active":  true,
+                                                                           "created_at":  "2026-10-05T16:05:46.254396+07:00",
+                                                                           "contact":  {
+                                                                                           "uid":  157689623603272
+                                                                                       }
+                                                                       },
+                                                            "amount":  10000,
+                                                            "est_new_balance":  271100.0
+                                                        }
+                                                    ],
+                                         "reward_summary":  {
+                                                                "amount":  10000.0,
+                                                                "est_new_balance":  271100.0
+                                                            },
+                                         "lines":  [
+                                                       {
+                                                           "product":  {
+                                                                           "uid":  158390033696328,
+                                                                           "key":  "produk-1-7",
+                                                                           "name":  "Produk 1",
+                                                                           "variant_name":  null,
+                                                                           "primary_image_url":  null,
+                                                                           "external_id":  null
+                                                                       },
+                                                           "product_channel_data":  null,
+                                                           "quantity":  1,
+                                                           "price_before_discount":  "83333.00",
+                                                           "price":  "83333.00"
+                                                       },
+                                                       {
+                                                           "product":  {
+                                                                           "uid":  158390033940552,
+                                                                           "key":  "produk-2-9",
+                                                                           "name":  "Produk 2",
+                                                                           "variant_name":  null,
+                                                                           "primary_image_url":  null,
+                                                                           "external_id":  null
+                                                                       },
+                                                           "product_channel_data":  null,
+                                                           "quantity":  1,
+                                                           "price_before_discount":  "83333.00",
+                                                           "price":  "83333.00"
+                                                       },
+                                                       {
+                                                           "product":  {
+                                                                           "uid":  158390034141256,
+                                                                           "key":  "produk-3-11",
+                                                                           "name":  "Produk 3",
+                                                                           "variant_name":  null,
+                                                                           "primary_image_url":  null,
+                                                                           "external_id":  null
+                                                                       },
+                                                           "product_channel_data":  null,
+                                                           "quantity":  1,
+                                                           "price_before_discount":  "83334.00",
+                                                           "price":  "83334.00"
+                                                       }
+                                                   ]
+                                     }
+                    },
+                    {
+                        "case":  "SKU contoh Postman + XLB ayam",
+                        "provider_ref":  "TRX-769d2ece0eb6418e84f86387c6e7d9c4",
+                        "skus":  [
+                                     "FDUM0007",
+                                     "FDUM0008",
+                                     "FDUM0009"
+                                 ],
+                        "http":  201,
+                        "success":  true,
+                        "reward_amount":  10000,
+                        "reward_summary_amount":  15000.0,
+                        "ratio":  1.5,
+                        "api_log_saved":  true,
+                        "redeem_log_saved":  true,
+                        "sales_post_count":  1,
+                        "request":  {
+                                        "order_no":  "TRX-769d2ece0eb6418e84f86387c6e7d9c4",
+                                        "provider_ref":  "TRX-769d2ece0eb6418e84f86387c6e7d9c4",
+                                        "order_date":  "2026-10-21 12:07:13+07:00",
+                                        "member":  {
+                                                       "uid":  157689623681608
+                                                   },
+                                        "store":  {
+                                                      "uid":  138533231320136,
+                                                      "name":  "Go DimSum Bogor",
+                                                      "store_code":  "DS"
+                                                  },
+                                        "lines":  [
+                                                      {
+                                                          "product":  {
+                                                                          "sku":  "FDUM0007",
+                                                                          "name":  "XLB Ayam (4)"
+                                                                      },
+                                                          "quantity":  1,
+                                                          "price_before_discount":  83333.0,
+                                                          "price":  83333.0
+                                                      },
+                                                      {
+                                                          "product":  {
+                                                                          "sku":  "FDUM0008",
+                                                                          "name":  "XLB Ayam (6)"
+                                                                      },
+                                                          "quantity":  1,
+                                                          "price_before_discount":  83333.0,
+                                                          "price":  83333.0
+                                                      },
+                                                      {
+                                                          "product":  {
+                                                                          "sku":  "FDUM0009",
+                                                                          "name":  "XLB Ayam (10)"
+                                                                      },
+                                                          "quantity":  1,
+                                                          "price_before_discount":  83334.0,
+                                                          "price":  83334.0
+                                                      }
+                                                  ],
+                                        "lines_total":  250000.0,
+                                        "lines_tax":  0.0,
+                                        "total_incl_tax":  250000.0,
+                                        "total_paid":  250000.0,
+                                        "payments":  [
+                                                         {
+                                                             "payment_method_name":  "CASH",
+                                                             "payment_type":  "CASH",
+                                                             "amount":  250000.0
+                                                         }
+                                                     ],
+                                        "completed_at":  "2026-10-21 12:07:13+07:00",
+                                        "paid_at":  "2026-10-21 12:07:13+07:00"
+                                    },
+                        "response":  {
+                                         "id":  5658661,
+                                         "uid":  158390084914248,
+                                         "store":  {
+                                                       "uid":  138533231320136,
+                                                       "name":  "Go DimSum Bogor",
+                                                       "store_code":  "DS",
+                                                       "enabled":  true,
+                                                       "channel":  null,
+                                                       "channels":  [
+                                                                        {
+                                                                            "uid":  138350315235400,
+                                                                            "name":  "Dream POS Store",
+                                                                            "channel_type":  "offline",
+                                                                            "account_type":  null,
+                                                                            "address":  null,
+                                                                            "icon_url":  "https://static.goapp.co.id/directory/images/channel_offline.png",
+                                                                            "owner":  null
+                                                                        }
+                                                                    ],
+                                                       "business":  {
+                                                                        "uid":  135251387838536
+                                                                    },
+                                                       "map_url":  "https://maps.app.goo.gl/agm1mMEq1HHpzAyv5",
+                                                       "address":  "Jl. A. Yani No.100, RT.03/RW.03, Tanah Sareal, Kec. Tanah Sereal, Kota Bogor, Jawa Barat 16161"
+                                                   },
+                                         "contact":  {
+                                                         "uid":  157689623603272,
+                                                         "first_name":  "Archen",
+                                                         "last_name":  null,
+                                                         "email":  null,
+                                                         "mobile_no":  "081588809090",
+                                                         "external_app":  null,
+                                                         "external_id":  null,
+                                                         "business":  {
+                                                                          "uid":  135251387838536
+                                                                      }
+                                                     },
+                                         "ship_to":  {
+                                                         "address_type":  "",
+                                                         "first_name":  "",
+                                                         "last_name":  "",
+                                                         "phone_no":  "",
+                                                         "phone_ext_no":  "",
+                                                         "line1":  "",
+                                                         "line2":  "",
+                                                         "line3":  "",
+                                                         "line4":  "",
+                                                         "state":  "",
+                                                         "latitude":  null,
+                                                         "longitude":  null,
+                                                         "post_code":  "",
+                                                         "country_code":  "",
+                                                         "notes":  ""
+                                                     },
+                                         "requested_by":  null,
+                                         "requested_at":  null,
+                                         "order_no":  "SO-001034",
+                                         "order_date":  "2026-10-21T12:07:13+07:00",
+                                         "payment_term":  "MANUAL",
+                                         "shipping_method":  null,
+                                         "shipping_fee":  "0.00",
+                                         "shipping_discount":  "0.00",
+                                         "lines_total":  "250000.00",
+                                         "lines_discount":  "0.00",
+                                         "lines_tax":  "0.00",
+                                         "service_fee":  "0.00",
+                                         "service_discount":  "0.00",
+                                         "provider_fee":  "0.00",
+                                         "provider_discount":  "0.00",
+                                         "discounts":  [
+
+                                                       ],
+                                         "total_excl_tax":  "250000.00",
+                                         "total_incl_tax":  "250000.00",
+                                         "total_paid":  "250000.00",
+                                         "processing_date":  "2026-10-21T12:07:15.991437+07:00",
+                                         "completed_at":  "2026-10-21T12:07:13+07:00",
+                                         "cancel_reason":  null,
+                                         "status":  "Completed",
+                                         "status_code":  "completed",
+                                         "payments":  [
+
+                                                      ],
+                                         "provider_ref":  "TRX-769d2ece0eb6418e84f86387c6e7d9c4",
+                                         "provider_data":  "{\"order_no\": \"TRX-769d2ece0eb6418e84f86387c6e7d9c4\", \"provider_ref\": \"TRX-769d2ece0eb6418e84f86387c6e7d9c4\", \"order_date\": \"2026-10-21 12:07:13+07:00\", \"member\": {\"uid\": 157689623681608}, \"store\": {\"uid\": 138533231320136, \"name\": \"Go DimSum Bogor\", \"store_code\": \"DS\"}, \"lines\": [{\"product\": {\"sku\": \"FDUM0007\", \"name\": \"XLB Ayam (4)\"}, \"quantity\": 1, \"price_before_discount\": 83333.0, \"price\": 83333.0}, {\"product\": {\"sku\": \"FDUM0008\", \"name\": \"XLB Ayam (6)\"}, \"quantity\": 1, \"price_before_discount\": 83333.0, \"price\": 83333.0}, {\"product\": {\"sku\": \"FDUM0009\", \"name\": \"XLB Ayam (10)\"}, \"quantity\": 1, \"price_before_discount\": 83334.0, \"price\": 83334.0}], \"lines_total\": 250000.0, \"lines_tax\": 0.0, \"total_incl_tax\": 250000.0, \"total_paid\": 250000.0, \"payments\": [{\"payment_method_name\": \"CASH\", \"payment_type\": \"CASH\", \"amount\": 250000.0}], \"completed_at\": \"2026-10-21 12:07:13+07:00\", \"paid_at\": \"2026-10-21 12:07:13+07:00\"}",
+                                         "provider_order_no":  null,
+                                         "note":  null,
+                                         "reward":  [
+                                                        {
+                                                            "account":  {
+                                                                            "uid":  157689623672904,
+                                                                            "account_type":  {
+                                                                                                 "name":  "Din Tai Fung Account",
+                                                                                                 "currency":  "Point",
+                                                                                                 "currency_label":  "Point"
+                                                                                             },
+                                                                            "balance":  "271100.00",
+                                                                            "contact":  {
+                                                                                            "uid":  157689623603272,
+                                                                                            "first_name":  "Archen",
+                                                                                            "last_name":  null,
+                                                                                            "email":  null,
+                                                                                            "mobile_no":  "081588809090"
+                                                                                        },
+                                                                            "referral_code":  "IGGOKZ"
+                                                                        },
+                                                            "member":  {
+                                                                           "uid":  157689623681608,
+                                                                           "scheme":  {
+                                                                                          "uid":  157557876240456,
+                                                                                          "name":  "Din Tai Fung"
+                                                                                      },
+                                                                           "level":  {
+                                                                                         "id":  73,
+                                                                                         "name":  "Silver",
+                                                                                         "level":  0
+                                                                                     },
+                                                                           "first_name":  "Archen",
+                                                                           "last_name":  null,
+                                                                           "email":  null,
+                                                                           "mobile_no":  "081588809090",
+                                                                           "referral_code":  "QKNBTC",
+                                                                           "valid_until":  null,
+                                                                           "status":  "active",
+                                                                           "is_active":  true,
+                                                                           "created_at":  "2026-10-05T16:05:46.254396+07:00",
+                                                                           "contact":  {
+                                                                                           "uid":  157689623603272
+                                                                                       }
+                                                                       },
+                                                            "amount":  10000,
+                                                            "est_new_balance":  281100.0
+                                                        }
+                                                    ],
+                                         "reward_summary":  {
+                                                                "amount":  15000.0,
+                                                                "est_new_balance":  276100.0
+                                                            },
+                                         "lines":  [
+                                                       {
+                                                           "product":  {
+                                                                           "uid":  158171038267976,
+                                                                           "key":  "xiao-long-bao-ayam",
+                                                                           "name":  "XLB Ayam (4)",
+                                                                           "variant_name":  null,
+                                                                           "primary_image_url":  null,
+                                                                           "external_id":  null
+                                                                       },
+                                                           "product_channel_data":  null,
+                                                           "quantity":  1,
+                                                           "price_before_discount":  "83333.00",
+                                                           "price":  "83333.00"
+                                                       },
+                                                       {
+                                                           "product":  {
+                                                                           "uid":  158390035898952,
+                                                                           "key":  "xlb-ayam-6",
+                                                                           "name":  "XLB Ayam (6)",
+                                                                           "variant_name":  null,
+                                                                           "primary_image_url":  null,
+                                                                           "external_id":  null
+                                                                       },
+                                                           "product_channel_data":  null,
+                                                           "quantity":  1,
+                                                           "price_before_discount":  "83333.00",
+                                                           "price":  "83333.00"
+                                                       },
+                                                       {
+                                                           "product":  {
+                                                                           "uid":  158390036079176,
+                                                                           "key":  "xlb-ayam-10",
+                                                                           "name":  "XLB Ayam (10)",
+                                                                           "variant_name":  null,
+                                                                           "primary_image_url":  null,
+                                                                           "external_id":  null
+                                                                       },
+                                                           "product_channel_data":  null,
+                                                           "quantity":  1,
+                                                           "price_before_discount":  "83334.00",
+                                                           "price":  "83334.00"
+                                                       }
+                                                   ]
+                                     }
+                    },
+                    {
+                        "case":  "XLB kepiting dan mala",
+                        "provider_ref":  "TRX-e118aab40dfe40f08b2770873e122970",
+                        "skus":  [
+                                     "FDUM0001",
+                                     "FDUM0004",
+                                     "FDUM0017"
+                                 ],
+                        "http":  201,
+                        "success":  true,
+                        "reward_amount":  10000,
+                        "reward_summary_amount":  10000.0,
+                        "ratio":  1.0,
+                        "api_log_saved":  true,
+                        "redeem_log_saved":  true,
+                        "sales_post_count":  1,
+                        "request":  {
+                                        "order_no":  "TRX-e118aab40dfe40f08b2770873e122970",
+                                        "provider_ref":  "TRX-e118aab40dfe40f08b2770873e122970",
+                                        "order_date":  "2026-10-21 12:07:16+07:00",
+                                        "member":  {
+                                                       "uid":  157689623681608
+                                                   },
+                                        "store":  {
+                                                      "uid":  138533231320136,
+                                                      "name":  "Go DimSum Bogor",
+                                                      "store_code":  "DS"
+                                                  },
+                                        "lines":  [
+                                                      {
+                                                          "product":  {
+                                                                          "sku":  "FDUM0001",
+                                                                          "name":  "XLB Kepiting \u0026 Ayam (4)"
+                                                                      },
+                                                          "quantity":  1,
+                                                          "price_before_discount":  83333.0,
+                                                          "price":  83333.0
+                                                      },
+                                                      {
+                                                          "product":  {
+                                                                          "sku":  "FDUM0004",
+                                                                          "name":  "XLB Kepiting \u0026 Babi (4)"
+                                                                      },
+                                                          "quantity":  1,
+                                                          "price_before_discount":  83333.0,
+                                                          "price":  83333.0
+                                                      },
+                                                      {
+                                                          "product":  {
+                                                                          "sku":  "FDUM0017",
+                                                                          "name":  "XLB Babi Mala (6)"
+                                                                      },
+                                                          "quantity":  1,
+                                                          "price_before_discount":  83334.0,
+                                                          "price":  83334.0
+                                                      }
+                                                  ],
+                                        "lines_total":  250000.0,
+                                        "lines_tax":  0.0,
+                                        "total_incl_tax":  250000.0,
+                                        "total_paid":  250000.0,
+                                        "payments":  [
+                                                         {
+                                                             "payment_method_name":  "CASH",
+                                                             "payment_type":  "CASH",
+                                                             "amount":  250000.0
+                                                         }
+                                                     ],
+                                        "completed_at":  "2026-10-21 12:07:16+07:00",
+                                        "paid_at":  "2026-10-21 12:07:16+07:00"
+                                    },
+                        "response":  {
+                                         "id":  5658664,
+                                         "uid":  158390086360648,
+                                         "store":  {
+                                                       "uid":  138533231320136,
+                                                       "name":  "Go DimSum Bogor",
+                                                       "store_code":  "DS",
+                                                       "enabled":  true,
+                                                       "channel":  null,
+                                                       "channels":  [
+                                                                        {
+                                                                            "uid":  138350315235400,
+                                                                            "name":  "Dream POS Store",
+                                                                            "channel_type":  "offline",
+                                                                            "account_type":  null,
+                                                                            "address":  null,
+                                                                            "icon_url":  "https://static.goapp.co.id/directory/images/channel_offline.png",
+                                                                            "owner":  null
+                                                                        }
+                                                                    ],
+                                                       "business":  {
+                                                                        "uid":  135251387838536
+                                                                    },
+                                                       "map_url":  "https://maps.app.goo.gl/agm1mMEq1HHpzAyv5",
+                                                       "address":  "Jl. A. Yani No.100, RT.03/RW.03, Tanah Sareal, Kec. Tanah Sereal, Kota Bogor, Jawa Barat 16161"
+                                                   },
+                                         "contact":  {
+                                                         "uid":  157689623603272,
+                                                         "first_name":  "Archen",
+                                                         "last_name":  null,
+                                                         "email":  null,
+                                                         "mobile_no":  "081588809090",
+                                                         "external_app":  null,
+                                                         "external_id":  null,
+                                                         "business":  {
+                                                                          "uid":  135251387838536
+                                                                      }
+                                                     },
+                                         "ship_to":  {
+                                                         "address_type":  "",
+                                                         "first_name":  "",
+                                                         "last_name":  "",
+                                                         "phone_no":  "",
+                                                         "phone_ext_no":  "",
+                                                         "line1":  "",
+                                                         "line2":  "",
+                                                         "line3":  "",
+                                                         "line4":  "",
+                                                         "state":  "",
+                                                         "latitude":  null,
+                                                         "longitude":  null,
+                                                         "post_code":  "",
+                                                         "country_code":  "",
+                                                         "notes":  ""
+                                                     },
+                                         "requested_by":  null,
+                                         "requested_at":  null,
+                                         "order_no":  "SO-001035",
+                                         "order_date":  "2026-10-21T12:07:16+07:00",
+                                         "payment_term":  "MANUAL",
+                                         "shipping_method":  null,
+                                         "shipping_fee":  "0.00",
+                                         "shipping_discount":  "0.00",
+                                         "lines_total":  "250000.00",
+                                         "lines_discount":  "0.00",
+                                         "lines_tax":  "0.00",
+                                         "service_fee":  "0.00",
+                                         "service_discount":  "0.00",
+                                         "provider_fee":  "0.00",
+                                         "provider_discount":  "0.00",
+                                         "discounts":  [
+
+                                                       ],
+                                         "total_excl_tax":  "250000.00",
+                                         "total_incl_tax":  "250000.00",
+                                         "total_paid":  "250000.00",
+                                         "processing_date":  "2026-10-21T12:07:18.685958+07:00",
+                                         "completed_at":  "2026-10-21T12:07:16+07:00",
+                                         "cancel_reason":  null,
+                                         "status":  "Completed",
+                                         "status_code":  "completed",
+                                         "payments":  [
+
+                                                      ],
+                                         "provider_ref":  "TRX-e118aab40dfe40f08b2770873e122970",
+                                         "provider_data":  "{\"order_no\": \"TRX-e118aab40dfe40f08b2770873e122970\", \"provider_ref\": \"TRX-e118aab40dfe40f08b2770873e122970\", \"order_date\": \"2026-10-21 12:07:16+07:00\", \"member\": {\"uid\": 157689623681608}, \"store\": {\"uid\": 138533231320136, \"name\": \"Go DimSum Bogor\", \"store_code\": \"DS\"}, \"lines\": [{\"product\": {\"sku\": \"FDUM0001\", \"name\": \"XLB Kepiting \u0026 Ayam (4)\"}, \"quantity\": 1, \"price_before_discount\": 83333.0, \"price\": 83333.0}, {\"product\": {\"sku\": \"FDUM0004\", \"name\": \"XLB Kepiting \u0026 Babi (4)\"}, \"quantity\": 1, \"price_before_discount\": 83333.0, \"price\": 83333.0}, {\"product\": {\"sku\": \"FDUM0017\", \"name\": \"XLB Babi Mala (6)\"}, \"quantity\": 1, \"price_before_discount\": 83334.0, \"price\": 83334.0}], \"lines_total\": 250000.0, \"lines_tax\": 0.0, \"total_incl_tax\": 250000.0, \"total_paid\": 250000.0, \"payments\": [{\"payment_method_name\": \"CASH\", \"payment_type\": \"CASH\", \"amount\": 250000.0}], \"completed_at\": \"2026-10-21 12:07:16+07:00\", \"paid_at\": \"2026-10-21 12:07:16+07:00\"}",
+                                         "provider_order_no":  null,
+                                         "note":  null,
+                                         "reward":  [
+                                                        {
+                                                            "account":  {
+                                                                            "uid":  157689623672904,
+                                                                            "account_type":  {
+                                                                                                 "name":  "Din Tai Fung Account",
+                                                                                                 "currency":  "Point",
+                                                                                                 "currency_label":  "Point"
+                                                                                             },
+                                                                            "balance":  "286100.00",
+                                                                            "contact":  {
+                                                                                            "uid":  157689623603272,
+                                                                                            "first_name":  "Archen",
+                                                                                            "last_name":  null,
+                                                                                            "email":  null,
+                                                                                            "mobile_no":  "081588809090"
+                                                                                        },
+                                                                            "referral_code":  "IGGOKZ"
+                                                                        },
+                                                            "member":  {
+                                                                           "uid":  157689623681608,
+                                                                           "scheme":  {
+                                                                                          "uid":  157557876240456,
+                                                                                          "name":  "Din Tai Fung"
+                                                                                      },
+                                                                           "level":  {
+                                                                                         "id":  73,
+                                                                                         "name":  "Silver",
+                                                                                         "level":  0
+                                                                                     },
+                                                                           "first_name":  "Archen",
+                                                                           "last_name":  null,
+                                                                           "email":  null,
+                                                                           "mobile_no":  "081588809090",
+                                                                           "referral_code":  "QKNBTC",
+                                                                           "valid_until":  null,
+                                                                           "status":  "active",
+                                                                           "is_active":  true,
+                                                                           "created_at":  "2026-10-05T16:05:46.254396+07:00",
+                                                                           "contact":  {
+                                                                                           "uid":  157689623603272
+                                                                                       }
+                                                                       },
+                                                            "amount":  10000,
+                                                            "est_new_balance":  296100.0
+                                                        }
+                                                    ],
+                                         "reward_summary":  {
+                                                                "amount":  10000.0,
+                                                                "est_new_balance":  281100.0
+                                                            },
+                                         "lines":  [
+                                                       {
+                                                           "product":  {
+                                                                           "uid":  158388862771784,
+                                                                           "key":  "xlb-kepiting-ayam-4",
+                                                                           "name":  "XLB Kepiting \u0026 Ayam (4)",
+                                                                           "variant_name":  null,
+                                                                           "primary_image_url":  null,
+                                                                           "external_id":  null
+                                                                       },
+                                                           "product_channel_data":  null,
+                                                           "quantity":  1,
+                                                           "price_before_discount":  "83333.00",
+                                                           "price":  "83333.00"
+                                                       },
+                                                       {
+                                                           "product":  {
+                                                                           "uid":  158388801727560,
+                                                                           "key":  "xlb-kepiting-babi-4",
+                                                                           "name":  "XLB Kepiting \u0026 Babi (4)",
+                                                                           "variant_name":  null,
+                                                                           "primary_image_url":  null,
+                                                                           "external_id":  null
+                                                                       },
+                                                           "product_channel_data":  null,
+                                                           "quantity":  1,
+                                                           "price_before_discount":  "83333.00",
+                                                           "price":  "83333.00"
+                                                       },
+                                                       {
+                                                           "product":  {
+                                                                           "uid":  158387078963784,
+                                                                           "key":  "xlb-babi-mala-6",
+                                                                           "name":  "XLB Babi Mala (6)",
+                                                                           "variant_name":  null,
+                                                                           "primary_image_url":  null,
+                                                                           "external_id":  null
+                                                                       },
+                                                           "product_channel_data":  null,
+                                                           "quantity":  1,
+                                                           "price_before_discount":  "83334.00",
+                                                           "price":  "83334.00"
+                                                       }
+                                                   ]
+                                     }
+                    },
+                    {
+                        "case":  "XLB dessert",
+                        "provider_ref":  "TRX-6ccb27e9dd9f47dfa3e9623d84e93599",
+                        "skus":  [
+                                     "FHDS0015",
+                                     "FHDS0017",
+                                     "FHDS0031"
+                                 ],
+                        "http":  201,
+                        "success":  true,
+                        "reward_amount":  10000,
+                        "reward_summary_amount":  10000.0,
+                        "ratio":  1.0,
+                        "api_log_saved":  true,
+                        "redeem_log_saved":  true,
+                        "sales_post_count":  1,
+                        "request":  {
+                                        "order_no":  "TRX-6ccb27e9dd9f47dfa3e9623d84e93599",
+                                        "provider_ref":  "TRX-6ccb27e9dd9f47dfa3e9623d84e93599",
+                                        "order_date":  "2026-10-21 12:07:18+07:00",
+                                        "member":  {
+                                                       "uid":  157689623681608
+                                                   },
+                                        "store":  {
+                                                      "uid":  138533231320136,
+                                                      "name":  "Go DimSum Bogor",
+                                                      "store_code":  "DS"
+                                                  },
+                                        "lines":  [
+                                                      {
+                                                          "product":  {
+                                                                          "sku":  "FHDS0015",
+                                                                          "name":  "XLB Oreo (4)"
+                                                                      },
+                                                          "quantity":  1,
+                                                          "price_before_discount":  83333.0,
+                                                          "price":  83333.0
+                                                      },
+                                                      {
+                                                          "product":  {
+                                                                          "sku":  "FHDS0017",
+                                                                          "name":  "XLB Oreo (10)"
+                                                                      },
+                                                          "quantity":  1,
+                                                          "price_before_discount":  83333.0,
+                                                          "price":  83333.0
+                                                      },
+                                                      {
+                                                          "product":  {
+                                                                          "sku":  "FHDS0031",
+                                                                          "name":  "XLB Matcha (10)"
+                                                                      },
+                                                          "quantity":  1,
+                                                          "price_before_discount":  83334.0,
+                                                          "price":  83334.0
+                                                      }
+                                                  ],
+                                        "lines_total":  250000.0,
+                                        "lines_tax":  0.0,
+                                        "total_incl_tax":  250000.0,
+                                        "total_paid":  250000.0,
+                                        "payments":  [
+                                                         {
+                                                             "payment_method_name":  "CASH",
+                                                             "payment_type":  "CASH",
+                                                             "amount":  250000.0
+                                                         }
+                                                     ],
+                                        "completed_at":  "2026-10-21 12:07:18+07:00",
+                                        "paid_at":  "2026-10-21 12:07:18+07:00"
+                                    },
+                        "response":  {
+                                         "id":  5658666,
+                                         "uid":  158390087499848,
+                                         "store":  {
+                                                       "uid":  138533231320136,
+                                                       "name":  "Go DimSum Bogor",
+                                                       "store_code":  "DS",
+                                                       "enabled":  true,
+                                                       "channel":  null,
+                                                       "channels":  [
+                                                                        {
+                                                                            "uid":  138350315235400,
+                                                                            "name":  "Dream POS Store",
+                                                                            "channel_type":  "offline",
+                                                                            "account_type":  null,
+                                                                            "address":  null,
+                                                                            "icon_url":  "https://static.goapp.co.id/directory/images/channel_offline.png",
+                                                                            "owner":  null
+                                                                        }
+                                                                    ],
+                                                       "business":  {
+                                                                        "uid":  135251387838536
+                                                                    },
+                                                       "map_url":  "https://maps.app.goo.gl/agm1mMEq1HHpzAyv5",
+                                                       "address":  "Jl. A. Yani No.100, RT.03/RW.03, Tanah Sareal, Kec. Tanah Sereal, Kota Bogor, Jawa Barat 16161"
+                                                   },
+                                         "contact":  {
+                                                         "uid":  157689623603272,
+                                                         "first_name":  "Archen",
+                                                         "last_name":  null,
+                                                         "email":  null,
+                                                         "mobile_no":  "081588809090",
+                                                         "external_app":  null,
+                                                         "external_id":  null,
+                                                         "business":  {
+                                                                          "uid":  135251387838536
+                                                                      }
+                                                     },
+                                         "ship_to":  {
+                                                         "address_type":  "",
+                                                         "first_name":  "",
+                                                         "last_name":  "",
+                                                         "phone_no":  "",
+                                                         "phone_ext_no":  "",
+                                                         "line1":  "",
+                                                         "line2":  "",
+                                                         "line3":  "",
+                                                         "line4":  "",
+                                                         "state":  "",
+                                                         "latitude":  null,
+                                                         "longitude":  null,
+                                                         "post_code":  "",
+                                                         "country_code":  "",
+                                                         "notes":  ""
+                                                     },
+                                         "requested_by":  null,
+                                         "requested_at":  null,
+                                         "order_no":  "SO-001036",
+                                         "order_date":  "2026-10-21T12:07:18+07:00",
+                                         "payment_term":  "MANUAL",
+                                         "shipping_method":  null,
+                                         "shipping_fee":  "0.00",
+                                         "shipping_discount":  "0.00",
+                                         "lines_total":  "250000.00",
+                                         "lines_discount":  "0.00",
+                                         "lines_tax":  "0.00",
+                                         "service_fee":  "0.00",
+                                         "service_discount":  "0.00",
+                                         "provider_fee":  "0.00",
+                                         "provider_discount":  "0.00",
+                                         "discounts":  [
+
+                                                       ],
+                                         "total_excl_tax":  "250000.00",
+                                         "total_incl_tax":  "250000.00",
+                                         "total_paid":  "250000.00",
+                                         "processing_date":  "2026-10-21T12:07:21.064720+07:00",
+                                         "completed_at":  "2026-10-21T12:07:18+07:00",
+                                         "cancel_reason":  null,
+                                         "status":  "Completed",
+                                         "status_code":  "completed",
+                                         "payments":  [
+
+                                                      ],
+                                         "provider_ref":  "TRX-6ccb27e9dd9f47dfa3e9623d84e93599",
+                                         "provider_data":  "{\"order_no\": \"TRX-6ccb27e9dd9f47dfa3e9623d84e93599\", \"provider_ref\": \"TRX-6ccb27e9dd9f47dfa3e9623d84e93599\", \"order_date\": \"2026-10-21 12:07:18+07:00\", \"member\": {\"uid\": 157689623681608}, \"store\": {\"uid\": 138533231320136, \"name\": \"Go DimSum Bogor\", \"store_code\": \"DS\"}, \"lines\": [{\"product\": {\"sku\": \"FHDS0015\", \"name\": \"XLB Oreo (4)\"}, \"quantity\": 1, \"price_before_discount\": 83333.0, \"price\": 83333.0}, {\"product\": {\"sku\": \"FHDS0017\", \"name\": \"XLB Oreo (10)\"}, \"quantity\": 1, \"price_before_discount\": 83333.0, \"price\": 83333.0}, {\"product\": {\"sku\": \"FHDS0031\", \"name\": \"XLB Matcha (10)\"}, \"quantity\": 1, \"price_before_discount\": 83334.0, \"price\": 83334.0}], \"lines_total\": 250000.0, \"lines_tax\": 0.0, \"total_incl_tax\": 250000.0, \"total_paid\": 250000.0, \"payments\": [{\"payment_method_name\": \"CASH\", \"payment_type\": \"CASH\", \"amount\": 250000.0}], \"completed_at\": \"2026-10-21 12:07:18+07:00\", \"paid_at\": \"2026-10-21 12:07:18+07:00\"}",
+                                         "provider_order_no":  null,
+                                         "note":  null,
+                                         "reward":  [
+                                                        {
+                                                            "account":  {
+                                                                            "uid":  157689623672904,
+                                                                            "account_type":  {
+                                                                                                 "name":  "Din Tai Fung Account",
+                                                                                                 "currency":  "Point",
+                                                                                                 "currency_label":  "Point"
+                                                                                             },
+                                                                            "balance":  "296100.00",
+                                                                            "contact":  {
+                                                                                            "uid":  157689623603272,
+                                                                                            "first_name":  "Archen",
+                                                                                            "last_name":  null,
+                                                                                            "email":  null,
+                                                                                            "mobile_no":  "081588809090"
+                                                                                        },
+                                                                            "referral_code":  "IGGOKZ"
+                                                                        },
+                                                            "member":  {
+                                                                           "uid":  157689623681608,
+                                                                           "scheme":  {
+                                                                                          "uid":  157557876240456,
+                                                                                          "name":  "Din Tai Fung"
+                                                                                      },
+                                                                           "level":  {
+                                                                                         "id":  73,
+                                                                                         "name":  "Silver",
+                                                                                         "level":  0
+                                                                                     },
+                                                                           "first_name":  "Archen",
+                                                                           "last_name":  null,
+                                                                           "email":  null,
+                                                                           "mobile_no":  "081588809090",
+                                                                           "referral_code":  "QKNBTC",
+                                                                           "valid_until":  null,
+                                                                           "status":  "active",
+                                                                           "is_active":  true,
+                                                                           "created_at":  "2026-10-05T16:05:46.254396+07:00",
+                                                                           "contact":  {
+                                                                                           "uid":  157689623603272
+                                                                                       }
+                                                                       },
+                                                            "amount":  10000,
+                                                            "est_new_balance":  306100.0
+                                                        }
+                                                    ],
+                                         "reward_summary":  {
+                                                                "amount":  10000.0,
+                                                                "est_new_balance":  296100.0
+                                                            },
+                                         "lines":  [
+                                                       {
+                                                           "product":  {
+                                                                           "uid":  158390038391880,
+                                                                           "key":  "xlb-oreo-4",
+                                                                           "name":  "XLB Oreo (4)",
+                                                                           "variant_name":  null,
+                                                                           "primary_image_url":  null,
+                                                                           "external_id":  null
+                                                                       },
+                                                           "product_channel_data":  null,
+                                                           "quantity":  1,
+                                                           "price_before_discount":  "83333.00",
+                                                           "price":  "83333.00"
+                                                       },
+                                                       {
+                                                           "product":  {
+                                                                           "uid":  158390038747720,
+                                                                           "key":  "xlb-oreo-10",
+                                                                           "name":  "XLB Oreo (10)",
+                                                                           "variant_name":  null,
+                                                                           "primary_image_url":  null,
+                                                                           "external_id":  null
+                                                                       },
+                                                           "product_channel_data":  null,
+                                                           "quantity":  1,
+                                                           "price_before_discount":  "83333.00",
+                                                           "price":  "83333.00"
+                                                       },
+                                                       {
+                                                           "product":  {
+                                                                           "uid":  158389742094920,
+                                                                           "key":  "xlb-matcha-10-2",
+                                                                           "name":  "XLB Matcha (10)",
+                                                                           "variant_name":  null,
+                                                                           "primary_image_url":  null,
+                                                                           "external_id":  null
+                                                                       },
+                                                           "product_channel_data":  null,
+                                                           "quantity":  1,
+                                                           "price_before_discount":  "83334.00",
+                                                           "price":  "83334.00"
+                                                       }
+                                                   ]
+                                     }
+                    },
+                    {
+                        "case":  "XLB ayam + dessert + biasa",
+                        "provider_ref":  "TRX-a2fd3014c01a4e80995e62f8936ceb5c",
+                        "skus":  [
+                                     "FDUM0007",
+                                     "FHDS0031",
+                                     "SKU-CONTROL-03"
+                                 ],
+                        "http":  201,
+                        "success":  true,
+                        "reward_amount":  10000,
+                        "reward_summary_amount":  15000.0,
+                        "ratio":  1.5,
+                        "api_log_saved":  true,
+                        "redeem_log_saved":  true,
+                        "sales_post_count":  1,
+                        "request":  {
+                                        "order_no":  "TRX-a2fd3014c01a4e80995e62f8936ceb5c",
+                                        "provider_ref":  "TRX-a2fd3014c01a4e80995e62f8936ceb5c",
+                                        "order_date":  "2026-10-21 12:07:20+07:00",
+                                        "member":  {
+                                                       "uid":  157689623681608
+                                                   },
+                                        "store":  {
+                                                      "uid":  138533231320136,
+                                                      "name":  "Go DimSum Bogor",
+                                                      "store_code":  "DS"
+                                                  },
+                                        "lines":  [
+                                                      {
+                                                          "product":  {
+                                                                          "sku":  "FDUM0007",
+                                                                          "name":  "XLB Ayam (4)"
+                                                                      },
+                                                          "quantity":  1,
+                                                          "price_before_discount":  83333.0,
+                                                          "price":  83333.0
+                                                      },
+                                                      {
+                                                          "product":  {
+                                                                          "sku":  "FHDS0031",
+                                                                          "name":  "XLB Matcha (10)"
+                                                                      },
+                                                          "quantity":  1,
+                                                          "price_before_discount":  83333.0,
+                                                          "price":  83333.0
+                                                      },
+                                                      {
+                                                          "product":  {
+                                                                          "sku":  "SKU-CONTROL-03",
+                                                                          "name":  "Produk 3"
+                                                                      },
+                                                          "quantity":  1,
+                                                          "price_before_discount":  83334.0,
+                                                          "price":  83334.0
+                                                      }
+                                                  ],
+                                        "lines_total":  250000.0,
+                                        "lines_tax":  0.0,
+                                        "total_incl_tax":  250000.0,
+                                        "total_paid":  250000.0,
+                                        "payments":  [
+                                                         {
+                                                             "payment_method_name":  "CASH",
+                                                             "payment_type":  "CASH",
+                                                             "amount":  250000.0
+                                                         }
+                                                     ],
+                                        "completed_at":  "2026-10-21 12:07:20+07:00",
+                                        "paid_at":  "2026-10-21 12:07:20+07:00"
+                                    },
+                        "response":  {
+                                         "id":  5658668,
+                                         "uid":  158390088760392,
+                                         "store":  {
+                                                       "uid":  138533231320136,
+                                                       "name":  "Go DimSum Bogor",
+                                                       "store_code":  "DS",
+                                                       "enabled":  true,
+                                                       "channel":  null,
+                                                       "channels":  [
+                                                                        {
+                                                                            "uid":  138350315235400,
+                                                                            "name":  "Dream POS Store",
+                                                                            "channel_type":  "offline",
+                                                                            "account_type":  null,
+                                                                            "address":  null,
+                                                                            "icon_url":  "https://static.goapp.co.id/directory/images/channel_offline.png",
+                                                                            "owner":  null
+                                                                        }
+                                                                    ],
+                                                       "business":  {
+                                                                        "uid":  135251387838536
+                                                                    },
+                                                       "map_url":  "https://maps.app.goo.gl/agm1mMEq1HHpzAyv5",
+                                                       "address":  "Jl. A. Yani No.100, RT.03/RW.03, Tanah Sareal, Kec. Tanah Sereal, Kota Bogor, Jawa Barat 16161"
+                                                   },
+                                         "contact":  {
+                                                         "uid":  157689623603272,
+                                                         "first_name":  "Archen",
+                                                         "last_name":  null,
+                                                         "email":  null,
+                                                         "mobile_no":  "081588809090",
+                                                         "external_app":  null,
+                                                         "external_id":  null,
+                                                         "business":  {
+                                                                          "uid":  135251387838536
+                                                                      }
+                                                     },
+                                         "ship_to":  {
+                                                         "address_type":  "",
+                                                         "first_name":  "",
+                                                         "last_name":  "",
+                                                         "phone_no":  "",
+                                                         "phone_ext_no":  "",
+                                                         "line1":  "",
+                                                         "line2":  "",
+                                                         "line3":  "",
+                                                         "line4":  "",
+                                                         "state":  "",
+                                                         "latitude":  null,
+                                                         "longitude":  null,
+                                                         "post_code":  "",
+                                                         "country_code":  "",
+                                                         "notes":  ""
+                                                     },
+                                         "requested_by":  null,
+                                         "requested_at":  null,
+                                         "order_no":  "SO-001037",
+                                         "order_date":  "2026-10-21T12:07:20+07:00",
+                                         "payment_term":  "MANUAL",
+                                         "shipping_method":  null,
+                                         "shipping_fee":  "0.00",
+                                         "shipping_discount":  "0.00",
+                                         "lines_total":  "250000.00",
+                                         "lines_discount":  "0.00",
+                                         "lines_tax":  "0.00",
+                                         "service_fee":  "0.00",
+                                         "service_discount":  "0.00",
+                                         "provider_fee":  "0.00",
+                                         "provider_discount":  "0.00",
+                                         "discounts":  [
+
+                                                       ],
+                                         "total_excl_tax":  "250000.00",
+                                         "total_incl_tax":  "250000.00",
+                                         "total_paid":  "250000.00",
+                                         "processing_date":  "2026-10-21T12:07:23.524733+07:00",
+                                         "completed_at":  "2026-10-21T12:07:20+07:00",
+                                         "cancel_reason":  null,
+                                         "status":  "Completed",
+                                         "status_code":  "completed",
+                                         "payments":  [
+
+                                                      ],
+                                         "provider_ref":  "TRX-a2fd3014c01a4e80995e62f8936ceb5c",
+                                         "provider_data":  "{\"order_no\": \"TRX-a2fd3014c01a4e80995e62f8936ceb5c\", \"provider_ref\": \"TRX-a2fd3014c01a4e80995e62f8936ceb5c\", \"order_date\": \"2026-10-21 12:07:20+07:00\", \"member\": {\"uid\": 157689623681608}, \"store\": {\"uid\": 138533231320136, \"name\": \"Go DimSum Bogor\", \"store_code\": \"DS\"}, \"lines\": [{\"product\": {\"sku\": \"FDUM0007\", \"name\": \"XLB Ayam (4)\"}, \"quantity\": 1, \"price_before_discount\": 83333.0, \"price\": 83333.0}, {\"product\": {\"sku\": \"FHDS0031\", \"name\": \"XLB Matcha (10)\"}, \"quantity\": 1, \"price_before_discount\": 83333.0, \"price\": 83333.0}, {\"product\": {\"sku\": \"SKU-CONTROL-03\", \"name\": \"Produk 3\"}, \"quantity\": 1, \"price_before_discount\": 83334.0, \"price\": 83334.0}], \"lines_total\": 250000.0, \"lines_tax\": 0.0, \"total_incl_tax\": 250000.0, \"total_paid\": 250000.0, \"payments\": [{\"payment_method_name\": \"CASH\", \"payment_type\": \"CASH\", \"amount\": 250000.0}], \"completed_at\": \"2026-10-21 12:07:20+07:00\", \"paid_at\": \"2026-10-21 12:07:20+07:00\"}",
+                                         "provider_order_no":  null,
+                                         "note":  null,
+                                         "reward":  [
+                                                        {
+                                                            "account":  {
+                                                                            "uid":  157689623672904,
+                                                                            "account_type":  {
+                                                                                                 "name":  "Din Tai Fung Account",
+                                                                                                 "currency":  "Point",
+                                                                                                 "currency_label":  "Point"
+                                                                                             },
+                                                                            "balance":  "306100.00",
+                                                                            "contact":  {
+                                                                                            "uid":  157689623603272,
+                                                                                            "first_name":  "Archen",
+                                                                                            "last_name":  null,
+                                                                                            "email":  null,
+                                                                                            "mobile_no":  "081588809090"
+                                                                                        },
+                                                                            "referral_code":  "IGGOKZ"
+                                                                        },
+                                                            "member":  {
+                                                                           "uid":  157689623681608,
+                                                                           "scheme":  {
+                                                                                          "uid":  157557876240456,
+                                                                                          "name":  "Din Tai Fung"
+                                                                                      },
+                                                                           "level":  {
+                                                                                         "id":  73,
+                                                                                         "name":  "Silver",
+                                                                                         "level":  0
+                                                                                     },
+                                                                           "first_name":  "Archen",
+                                                                           "last_name":  null,
+                                                                           "email":  null,
+                                                                           "mobile_no":  "081588809090",
+                                                                           "referral_code":  "QKNBTC",
+                                                                           "valid_until":  null,
+                                                                           "status":  "active",
+                                                                           "is_active":  true,
+                                                                           "created_at":  "2026-10-05T16:05:46.254396+07:00",
+                                                                           "contact":  {
+                                                                                           "uid":  157689623603272
+                                                                                       }
+                                                                       },
+                                                            "amount":  10000,
+                                                            "est_new_balance":  316100.0
+                                                        }
+                                                    ],
+                                         "reward_summary":  {
+                                                                "amount":  15000.0,
+                                                                "est_new_balance":  311100.0
+                                                            },
+                                         "lines":  [
+                                                       {
+                                                           "product":  {
+                                                                           "uid":  158171038267976,
+                                                                           "key":  "xiao-long-bao-ayam",
+                                                                           "name":  "XLB Ayam (4)",
+                                                                           "variant_name":  null,
+                                                                           "primary_image_url":  null,
+                                                                           "external_id":  null
+                                                                       },
+                                                           "product_channel_data":  null,
+                                                           "quantity":  1,
+                                                           "price_before_discount":  "83333.00",
+                                                           "price":  "83333.00"
+                                                       },
+                                                       {
+                                                           "product":  {
+                                                                           "uid":  158389742094920,
+                                                                           "key":  "xlb-matcha-10-2",
+                                                                           "name":  "XLB Matcha (10)",
+                                                                           "variant_name":  null,
+                                                                           "primary_image_url":  null,
+                                                                           "external_id":  null
+                                                                       },
+                                                           "product_channel_data":  null,
+                                                           "quantity":  1,
+                                                           "price_before_discount":  "83333.00",
+                                                           "price":  "83333.00"
+                                                       },
+                                                       {
+                                                           "product":  {
+                                                                           "uid":  158390034141256,
+                                                                           "key":  "produk-3-11",
+                                                                           "name":  "Produk 3",
+                                                                           "variant_name":  null,
+                                                                           "primary_image_url":  null,
+                                                                           "external_id":  null
+                                                                       },
+                                                           "product_channel_data":  null,
+                                                           "quantity":  1,
+                                                           "price_before_discount":  "83334.00",
+                                                           "price":  "83334.00"
+                                                       }
+                                                   ]
+                                     }
+                    }
+                ],
+    "balance_after_immediate":  306100.00,
+    "completed_at":  "2026-10-21T12:07:23.9375873+07:00"
+}
