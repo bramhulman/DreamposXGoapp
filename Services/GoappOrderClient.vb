@@ -100,7 +100,7 @@ Namespace Services
                 result.RequiresReconciliation = True
                 result.WarningMessage = "Goapp menerima HTTP request tetapi tidak mengembalikan detail transaksi; periksa log sebelum mengirim ulang."
             End If
-            If guest AndAlso result.Data IsNot Nothing AndAlso result.Data.TotalEarnedPoints <> 0 Then
+            If guest AndAlso result.Data IsNot Nothing AndAlso (result.Data.TotalEarnedPoints <> 0 OrElse result.Data.TotalRewardDetailPoints <> 0) Then
                 result.WarningMessage = "Goapp mengembalikan reward pada transaksi tanpa member. Periksa konfigurasi server; jangan kirim ulang."
                 result.RequiresReconciliation = True
             End If
@@ -130,7 +130,7 @@ Namespace Services
         Private Shared Sub AddRewardSummaryWarning(result As ApiResponse(Of PushOrderResponse), requested As Boolean, guest As Boolean)
             If Not requested OrElse guest OrElse Not result.IsSuccess OrElse result.Data Is Nothing Then Return
             If result.Data.RewardSummary IsNot Nothing AndAlso result.Data.RewardSummary.Amount.HasValue Then Return
-            Dim warning = "reward_summary tidak tersedia; total poin memakai rincian reward."
+            Dim warning = "reward_summary.amount tidak tersedia; Earning Point tidak tersedia. Nilai reward tidak digunakan sebagai pengganti."
             If result.IsDuplicate Then warning &= " Respons tersimpan dipakai tanpa POST ulang."
             result.WarningMessage = (If(result.WarningMessage, "") & " " & warning).Trim()
         End Sub

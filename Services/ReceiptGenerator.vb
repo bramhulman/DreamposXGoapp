@@ -22,6 +22,28 @@ Namespace Services
             paidTotal As Decimal,
             surveyUrlBase As String) As String
 
+            Dim balance As Decimal? = If(member Is Nothing, CType(Nothing, Decimal?), member.AvailablePoints + earnedPoints - burnedPoints)
+            Return GenerateReceiptCore(storeName, orderNo, cashierName, member, earnedPoints, burnedPoints, orderTotal, paidTotal, surveyUrlBase, balance, False)
+        End Function
+
+        ''' <summary>Preview struk memakai amount dan est_new_balance hanya dari reward_summary.</summary>
+        Public Shared Function GenerateReceiptText(
+            storeName As String, orderNo As String, cashierName As String, member As MemberResponse,
+            orderResponse As PushOrderResponse, burnedPoints As Decimal, orderTotal As Decimal,
+            paidTotal As Decimal, surveyUrlBase As String) As String
+            Dim earned As Decimal? = Nothing
+            Dim balance As Decimal? = Nothing
+            If orderResponse IsNot Nothing Then
+                If orderResponse.HasEarningPointSummary Then earned = orderResponse.RewardSummary.Amount
+                balance = orderResponse.EstimatedNewBalance
+            End If
+            Return GenerateReceiptCore(storeName, orderNo, cashierName, member, earned, burnedPoints, orderTotal, paidTotal, surveyUrlBase, balance, True)
+        End Function
+
+        Private Shared Function GenerateReceiptCore(
+            storeName As String, orderNo As String, cashierName As String, member As MemberResponse,
+            earnedPoints As Decimal?, burnedPoints As Decimal, orderTotal As Decimal, paidTotal As Decimal,
+            surveyUrlBase As String, finalBalance As Decimal?, fromSummary As Boolean) As String
             Dim sb As New StringBuilder()
             Dim lineSeparator = New String("-"c, 40)
             Dim doubleSeparator = New String("="c, 40)
@@ -49,13 +71,14 @@ Namespace Services
                 sb.AppendLine($"No HP    : {member.MobileNo}")
                 sb.AppendLine($"Level    : {If(member.Level IsNot Nothing, member.Level.Name, "Standard")}")
                 sb.AppendLine(lineSeparator)
-                sb.AppendLine(PadRow("Poin Diperoleh (Earn)", $"+{earnedPoints:N0} Pts"))
+                sb.AppendLine(PadRow("Poin Diperoleh (Earn)", If(earnedPoints.HasValue, $"+{earnedPoints.GetValueOrDefault():N0} Pts", "Tidak tersedia")))
                 If burnedPoints > 0 Then
                     sb.AppendLine(PadRow("Poin Digunakan (Burn)", $"-{burnedPoints:N0} Pts"))
                 End If
-                Dim finalBalance = member.AvailablePoints + earnedPoints - burnedPoints
-                sb.AppendLine(PadRow("SISA SALDO POIN", $"{finalBalance:N0} Pts"))
-                sb.AppendLine(PadRow("NILAI RUPIAH POIN", $"Rp {finalBalance * 1000:N0}"))
+                sb.AppendLine(PadRow(If(fromSummary, "ESTIMASI SALDO POIN", "SISA SALDO POIN"), If(finalBalance.HasValue, $"{finalBalance.GetValueOrDefault():N0} Pts", "Tidak tersedia")))
+                If Not fromSummary AndAlso finalBalance.HasValue Then
+                    sb.AppendLine(PadRow("NILAI RUPIAH POIN", $"Rp {finalBalance.Value * 1000:N0}"))
+                End If
                 sb.AppendLine(lineSeparator)
             End If
 

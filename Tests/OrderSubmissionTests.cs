@@ -26,7 +26,11 @@ class OrderSubmissionTests {
             if (UnauthorizedOnce && n==1) return Json(401,"{\"detail\":\"expired\"}");
             if (ResponseOverride!=null) return Json(Status,ResponseOverride);
             bool guest=JObject.Parse(Body)["member"]==null;
-            return Json(Status,Malformed ? "{broken" : Status>=400 ? "{\"detail\":\"test failure\"}" : "{\"uid\":123,\"order_no\":\"TEST\",\"reward\":"+(guest && !RewardOnGuest ? "[]" : "[{\"amount\":5000},{\"amount\":7500}]")+"}");
+            if(Malformed) return Json(Status,"{broken");
+            if(Status>=400) return Json(Status,"{\"detail\":\"test failure\"}");
+            var response=new JObject { ["uid"]=123,["order_no"]="TEST",["reward"]=JArray.Parse(guest && !RewardOnGuest ? "[]" : "[{\"amount\":5000},{\"amount\":7500}]") };
+            if(request.RequestUri.Query.Contains("calculate_estimate_point=1")) response["reward_summary"]=new JObject { ["amount"]=guest && !RewardOnGuest ? 0 : 12500,["est_new_balance"]=22500 };
+            return Json(Status,response.ToString());
         }
         static HttpResponseMessage Json(int status,string json) { return new HttpResponseMessage((HttpStatusCode)status) { Content=new StringContent(json) }; }
     }
@@ -38,7 +42,7 @@ class OrderSubmissionTests {
     }
     static async Task Run() {
         var h=new Fake();var c=new GoappApiClient(Config(),h);var o=Order();var r=await c.PushSalesOrderAsync(o);
-        Check(r.IsSuccess && r.Data.TotalEarnedPoints==12500,"sum every returned reward, not only first item");
+        Check(r.IsSuccess && r.Data.TotalEarnedPoints==12500,"earning points come from returned reward_summary");
         var repeated=await c.PushSalesOrderAsync(o);Check(repeated.IsSuccess && repeated.IsDuplicate && h.Posts==1,"same order is replayed locally without another POST");
         o.TotalPaid=160000;var changed=await c.PushSalesOrderAsync(o);Check(!changed.IsSuccess && h.Posts==1,"same reference with altered payload is blocked");
         Check(o.Store==null && o.OrderNo==null,"caller request remains unchanged");
@@ -102,6 +106,9 @@ class OrderSubmissionTests {
         var collection=JObject.Parse(File.ReadAllText("Channel API.postman_collection21Okt2026.json"));
         return collection["item"].First(x=>(string)x["name"]=="Post sales order")["response"].First(x=>(string)x["name"]=="Calculate estimated points earned")["body"].ToString();
     }
+    static string UserEarningExample() {
+        return "{\"reward\":[{\"amount\":10000,\"est_new_balance\":241100.0}],\"reward_summary\":{\"amount\":15000.0,\"est_new_balance\":246100.0}}";
+    }
     static async Task EstimateTests() {
         var h=new Fake {ResponseOverride=EstimateExample()};var c=new GoappApiClient(Config(),h);var o=Order();var r=await c.PushSalesOrderAsync(o);
         Check(h.Url.EndsWith("/sales/order/?calculate_estimate_point=1"),"default DLL method requests calculate_estimate_point=1");
@@ -110,7 +117,7 @@ class OrderSubmissionTests {
         Check(r.Data.EstimatedNewBalance==216100m,"real collection fixture exposes summary estimated balance");
         var repeat=await c.PushSalesOrderAsync(o,false);Check(repeat.IsSuccess && repeat.IsDuplicate && h.Posts==1 && repeat.Data.TotalEarnedPoints==7500m,"toggling estimate flag never sends same order again");
         h=new Fake();var config=Config();config.CalculateEstimatePoint=false;c=new GoappApiClient(config,h);r=await c.PushSalesOrderAsync(Order());
-        Check(h.Url.EndsWith("calculate_estimate_point=0") && r.Data.TotalEarnedPoints==12500m,"config can disable summary and legacy reward totals still work");
+        Check(h.Url.EndsWith("calculate_estimate_point=0") && r.Data.TotalEarnedPoints==0m && !r.Data.HasEarningPointSummary && !r.Data.EstimatedNewBalance.HasValue,"disabling summary never substitutes legacy reward values as earning or estimated balance");
         h=new Fake();c=new GoappApiClient(Config(),h);o=Order();r=await c.PushSalesOrderAsync(o,false);var cached=await c.PushSalesOrderAsync(o,true);
         Check(cached.IsDuplicate && h.Posts==1 && !string.IsNullOrEmpty(cached.WarningMessage),"enabling estimate for a saved legacy result does not create another transaction");
         h=new Fake {UnauthorizedOnce=true};c=new GoappApiClient(Config(),h);r=await c.PushSalesOrderAsync(Order(),true);
@@ -119,10 +126,20 @@ class OrderSubmissionTests {
         Check(zero.TotalEarnedPoints==0 && zero.EstimatedNewBalance==0,"explicit zero summary values are preserved rather than replaced by detail rewards");
         foreach(string value in new[]{"null","{}","{\"amount\":null}"}) {
             var fallback=Newtonsoft.Json.JsonConvert.DeserializeObject<PushOrderResponse>("{\"reward_summary\":"+value+",\"reward\":[{\"amount\":5000,\"est_new_balance\":6000}]}");
-            Check(fallback.TotalEarnedPoints==5000m && fallback.EstimatedNewBalance==6000m,"missing/null summary fields fall back safely: "+value);
+            Check(fallback.TotalEarnedPoints==0m && !fallback.HasEarningPointSummary && !fallback.EstimatedNewBalance.HasValue,"missing/null summary never falls back to reward fields: "+value);
         }
         var strings=Newtonsoft.Json.JsonConvert.DeserializeObject<PushOrderResponse>("{\"reward_summary\":{\"amount\":\"7500.00\",\"est_new_balance\":\"216100.00\"}}");
         Check(strings.TotalEarnedPoints==7500m && strings.EstimatedNewBalance==216100m,"summary decimal values also parse when encoded as JSON strings");
+        h=new Fake {ResponseOverride=UserEarningExample()};c=new GoappApiClient(Config(),h);var summary=await c.PushSalesOrderAsync(Order(),true);
+        Check(summary.IsSuccess && summary.Data.TotalEarnedPoints==15000m && summary.Data.EstimatedNewBalance==246100m,"user example reads 15000 earning and 246100 balance from summary rather than 10000/241100 reward");
+        var member=new MemberResponse {Account=new MemberAccount {Balance="246100"}};
+        var receipt=ReceiptGenerator.GenerateReceiptText("Test","TEST-SUMMARY","Test",member,summary.Data,0,150000,150000,"https://survey.invalid");
+        Check(receipt.Contains("+"+15000m.ToString("N0")+" Pts") && receipt.Contains(246100m.ToString("N0")+" Pts"),"receipt uses summary earning and summary ending balance");
+        Check(!receipt.Contains(261100m.ToString("N0")) && !receipt.Contains(241100m.ToString("N0")),"receipt never adds earning again to refreshed member balance or uses reward estimate");
+        var unavailable=Newtonsoft.Json.JsonConvert.DeserializeObject<PushOrderResponse>("{\"reward\":[{\"amount\":10000,\"est_new_balance\":241100}]}" );
+        var emptyReceipt=ReceiptGenerator.GenerateReceiptText("Test","TEST-NONE","Test",member,unavailable,0,150000,150000,"https://survey.invalid");
+        Check(emptyReceipt.Contains("Tidak tersedia") && !emptyReceipt.Contains("+"+10000m.ToString("N0")),"receipt displays unavailable for missing summary instead of legacy reward");
+
     }
     static async Task SqlTests() {
         var xml=XDocument.Load("TryDreamposXGoapp/App.config");string db=xml.Descendants("connectionStrings").Elements("add").First(x=>(string)x.Attribute("name")=="POSDatabase").Attribute("connectionString").Value;
@@ -159,6 +176,12 @@ class OrderSubmissionTests {
                 using(var cmd=new SqlCommand("SELECT COUNT(*) FROM dbo."+redeem+" WHERE TransactionRef=@Ref AND NilaiPoint=7500 AND OrderResponseJson LIKE '%reward_summary%'",conn)) {cmd.Parameters.AddWithValue("@Ref",summaryOrder.ProviderRef);Check((int)await cmd.ExecuteScalarAsync()==1,"SQL journal stores raw reward_summary and its total rather than sum of summary plus reward");}
                 var replaySummaryClient=new GoappApiClient(Config(db),new Fake());replaySummaryClient.LogTableName=c.LogTableName;replaySummaryClient.RedeemRepo.TableName=c.RedeemRepo.TableName;
                 var summaryReplay=await replaySummaryClient.PushSalesOrderAsync(summaryOrder,false);Check(summaryReplay.IsDuplicate && summaryReplay.Data.TotalEarnedPoints==7500m,"summary survives SQL replay even when the flag is changed");
+                var userHandler=new Fake{ResponseOverride=UserEarningExample()};var userClient=new GoappApiClient(Config(db),userHandler);userClient.LogTableName=c.LogTableName;userClient.RedeemRepo.TableName=c.RedeemRepo.TableName;
+                var userOrder=Order();var userResult=await userClient.PushSalesOrderAsync(userOrder,true);
+                Check(userResult.IsSuccess && userResult.ApiLogSaved && userResult.TransactionLogSaved && userResult.Data.TotalEarnedPoints==15000m && userResult.Data.EstimatedNewBalance==246100m,"DLL and both SQL logs accept user sample as 15000/246100");
+                using(var cmd=new SqlCommand("SELECT NilaiPoint FROM dbo."+redeem+" WHERE TransactionRef=@Ref",conn)) {cmd.Parameters.AddWithValue("@Ref",userOrder.ProviderRef);Check(Convert.ToDecimal(await cmd.ExecuteScalarAsync())==15000m,"SQL earning records summary 15000 rather than reward 10000");}
+                var userReplay=await replaySummaryClient.PushSalesOrderAsync(userOrder,true);Check(userReplay.IsDuplicate && userReplay.Data.TotalEarnedPoints==15000m && userReplay.Data.EstimatedNewBalance==246100m,"SQL replay preserves both user summary fields");
+
                 foreach(bool include in new[]{false,true}) {
                     var mixedHandler=new Fake();var mixedClient=new GoappApiClient(Config(db),mixedHandler);mixedClient.LogTableName=c.LogTableName;mixedClient.RedeemRepo.TableName=c.RedeemRepo.TableName;
                     var mixedOrder=Order();mixedOrder.Lines=XlbLines(mixedOrder.TotalPaid,mixedOrder.ProviderRef,include);var mixed=await mixedClient.PushSalesOrderAsync(mixedOrder,true);

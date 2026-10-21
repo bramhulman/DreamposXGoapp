@@ -13,6 +13,9 @@ Public Class FormMain
     Private _client As GoappApiClient
     Private _currentMember As MemberResponse
     Private _lastPaymentRef As String = String.Empty
+    Private _lastSalesResponse As PushOrderResponse
+    Private _lastSalesRequest As PushOrderRequest
+    Private _lastSalesMember As MemberResponse
     Private ReadOnly _salesRef As New TextBox With {.Location = New Point(450, 22), .Size = New Size(250, 27), .MaxLength = 50}
     Private ReadOnly _allowWithoutMember As New CheckBox With {.Text = "Ijinkan tanpa member", .Location = New Point(440, 153), .AutoSize = True}
     Private ReadOnly _calculateEstimatePoint As New CheckBox With {.Name = "chkCalculateEstimatePoint", .Text = "Hitung estimasi poin", .Location = New Point(665, 153), .AutoSize = True, .Checked = True}
@@ -48,20 +51,23 @@ Public Class FormMain
         tabTransaction.Controls.Add(_salesRef)
         Dim newSales As New Button With {.Text = "Transaksi baru", .Location = New Point(715, 20), .Size = New Size(180, 30)}
         AddHandler newSales.Click, Sub()
-                                      _salesRef.Text = "TRX-" & Guid.NewGuid().ToString("N")
-                                      _salesOrderTime = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:sszzz")
-                                  End Sub
+                                       _salesRef.Text = "TRX-" & Guid.NewGuid().ToString("N")
+                                       _salesOrderTime = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:sszzz")
+                                       _lastSalesResponse = Nothing
+                                       _lastSalesRequest = Nothing
+                                       _lastSalesMember = Nothing
+                                   End Sub
         tabTransaction.Controls.Add(newSales)
         tabTransaction.Controls.Add(_allowWithoutMember)
         tabTransaction.Controls.Add(_calculateEstimatePoint)
         tabTransaction.Controls.Add(_withXlb)
         _calculateEstimatePoint.Checked = _config.CalculateEstimatePoint
         AddHandler _allowWithoutMember.CheckedChanged, Sub()
-                                                         txtBurnPoint.Enabled = Not _allowWithoutMember.Checked
-                                                         txtBurnAuthCode.Enabled = Not _allowWithoutMember.Checked
-                                                         btnBurnPoint.Enabled = Not _allowWithoutMember.Checked
-                                                         btnCancelBurnPoint.Enabled = Not _allowWithoutMember.Checked
-                                                     End Sub
+                                                           txtBurnPoint.Enabled = Not _allowWithoutMember.Checked
+                                                           txtBurnAuthCode.Enabled = Not _allowWithoutMember.Checked
+                                                           btnBurnPoint.Enabled = Not _allowWithoutMember.Checked
+                                                           btnCancelBurnPoint.Enabled = Not _allowWithoutMember.Checked
+                                                       End Sub
         btnPushSalesOrder.Text = "Kirim Transaksi Selesai"
     End Sub
 
@@ -258,7 +264,7 @@ Public Class FormMain
                 ' Promo logic removed
 
                 ' Tampilkan raw JSON response di box sebelah kanan
-                                ' Load Member Deal Codes
+                ' Load Member Deal Codes
                 lstMemberPromos.Items.Clear()
                 Dim dealResp = Await _client.GetMemberDealCodesAsync(txtInputMember.Text)
                 If dealResp.IsSuccess AndAlso dealResp.Data IsNot Nothing AndAlso dealResp.Data.Count > 0 Then
@@ -373,7 +379,7 @@ Public Class FormMain
             Dim memberUid As Long? = If(_currentMember IsNot Nothing, _currentMember.Uid, CType(Nothing, Long?))
             Dim resp = Await _client.ValidateVoucherAsync(code, memberUid)
 
-                        If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
+            If resp.IsSuccess AndAlso resp.Data IsNot Nothing Then
                 Dim v = resp.Data
                 Dim desc = If(String.IsNullOrEmpty(v.Description), "-", v.Description)
                 Dim rd = v.RewardData
@@ -699,10 +705,18 @@ Public Class FormMain
                 If linesDiscountTotal > 0 Then
                     msgBuilder.AppendLine($"Diskon Poin/Lines: Rp {linesDiscountTotal:N0}")
                 End If
-                msgBuilder.AppendLine($"Rincian reward: {salesOrderResp.Data.TotalRewardDetailPoints:N0} Pts")
-                msgBuilder.AppendLine($"Total Poin ({If(salesOrderResp.Data.RewardSummary IsNot Nothing AndAlso salesOrderResp.Data.RewardSummary.Amount.HasValue, "reward_summary", "reward")}): {earnedPts:N0} Pts")
+                _lastSalesResponse = salesOrderResp.Data
+                _lastSalesRequest = orderReq
+                _lastSalesMember = If(withoutMember, Nothing, member)
+                If salesOrderResp.Data.HasEarningPointSummary Then
+                    msgBuilder.AppendLine($"Earning Point (reward_summary): {earnedPts:N0} Pts")
+                Else
+                    msgBuilder.AppendLine("Earning Point (reward_summary): tidak tersedia")
+                End If
                 If salesOrderResp.Data.EstimatedNewBalance.HasValue Then
-                    msgBuilder.AppendLine($"Estimasi Saldo Baru: {salesOrderResp.Data.EstimatedNewBalance.Value:N0} Pts")
+                    msgBuilder.AppendLine($"Estimasi Saldo Baru (reward_summary): {salesOrderResp.Data.EstimatedNewBalance.Value:N0} Pts")
+                Else
+                    msgBuilder.AppendLine("Estimasi Saldo Baru (reward_summary): tidak tersedia")
                 End If
             Else
                 msgBuilder.AppendLine($"Transaksi /sales/order/ Gagal: {salesOrderResp.Message}")
@@ -746,13 +760,14 @@ Public Class FormMain
             Dim memberAfter = Await _client.GetMemberAsync(member.Uid.ToString())
             If memberBefore.IsSuccess AndAlso memberBefore.Data IsNot Nothing AndAlso memberAfter.IsSuccess AndAlso memberAfter.Data IsNot Nothing Then
                 Dim delta = memberAfter.Data.AvailablePoints - memberBefore.Data.AvailablePoints
-                Dim expectedEarn = If(salesOrderResp.Data Is Nothing, 0D, salesOrderResp.Data.TotalEarnedPoints)
-                Dim detail = $"[AUDIT POIN] Ref={providerRef}; Sebelum={memberBefore.Data.AvailablePoints}; Sesudah={memberAfter.Data.AvailablePoints}; Selisih aktual={delta}; Total poin respons={expectedEarn}; Burn diminta={burnPoint}; Duplicate={salesOrderResp.IsDuplicate}"
+                Dim expectedEarn As Decimal? = Nothing
+                If salesOrderResp.Data IsNot Nothing AndAlso salesOrderResp.Data.HasEarningPointSummary Then expectedEarn = salesOrderResp.Data.TotalEarnedPoints
+                Dim detail = $"[AUDIT POIN] Ref={providerRef}; Sebelum={memberBefore.Data.AvailablePoints}; Sesudah={memberAfter.Data.AvailablePoints}; Selisih aktual={delta}; Total poin respons={If(expectedEarn.HasValue, expectedEarn.GetValueOrDefault().ToString(), "tidak tersedia")}; Burn diminta={burnPoint}; Duplicate={salesOrderResp.IsDuplicate}"
                 txtOrderRawJson.AppendText(Environment.NewLine & detail)
                 AppendLog(detail)
                 _currentMember = memberAfter.Data
                 lblMemberPoints.Text = $"Sisa Poin : {_currentMember.AvailablePoints:N0} Pts"
-                If burnPoint = 0 AndAlso salesOrderResp.IsSuccess AndAlso Not salesOrderResp.IsDuplicate AndAlso delta <> expectedEarn Then
+                If burnPoint = 0 AndAlso salesOrderResp.IsSuccess AndAlso Not salesOrderResp.IsDuplicate AndAlso expectedEarn.HasValue AndAlso delta <> expectedEarn.Value Then
                     MessageBox.Show(detail & Environment.NewLine & "Saldo GET saat ini berbeda dari total poin respons. Pemrosesan saldo Goapp dapat berlangsung asinkron; periksa GET member kembali. Jangan kirim ulang transaksi.", "Selisih Poin", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                 End If
             End If
@@ -772,25 +787,22 @@ Public Class FormMain
 #Region "5. Struk POS & Survey QR Preview"
 
     Private Sub btnGenerateReceipt_Click(sender As Object, e As EventArgs) Handles btnGenerateReceipt.Click
-        Dim orderNo = "STRUK-" & DateTime.Now.ToString("yyMMdd-HHmmss")
-        Dim billTotal As Decimal
-        Dim burnPt As Decimal
-        Decimal.TryParse(txtBillTotal.Text, billTotal)
-        Decimal.TryParse(txtBurnPoint.Text, burnPt)
-        If billTotal <= 0 Then billTotal = 50000D
-
-        Dim paidTotal = billTotal - (burnPt * 1000D)
-        If paidTotal < 0 Then paidTotal = 0
-
+        If _lastSalesResponse Is Nothing OrElse _lastSalesRequest Is Nothing Then
+            MessageBox.Show("Kirim transaksi terlebih dahulu agar struk memakai reward_summary dari respons Goapp.", "Preview Struk", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Return
+        End If
+        Dim orderNo = _lastSalesRequest.ProviderRef
+        Dim receiptMember = _lastSalesMember
+        Dim burnPt = _lastSalesRequest.Payments.Where(Function(payment) payment.PaymentType = "POINT").Sum(Function(payment) payment.Amount)
         Dim receiptContent = ReceiptGenerator.GenerateReceiptText(
             storeName:="DREAMPOS STORE JAKARTA",
             orderNo:=orderNo,
             cashierName:="Kasir 01",
-            member:=_currentMember,
-            earnedPoints:=Math.Floor(billTotal / 10000D),
+            member:=receiptMember,
+            orderResponse:=_lastSalesResponse,
             burnedPoints:=burnPt,
-            orderTotal:=billTotal,
-            paidTotal:=paidTotal,
+            orderTotal:=_lastSalesRequest.TotalInclTax,
+            paidTotal:=_lastSalesRequest.TotalPaid,
             surveyUrlBase:="https://survey.goapp.co.id"
         )
 
@@ -799,8 +811,8 @@ Public Class FormMain
 
         ' Reconstruct URL to generate QR preview
         Dim surveyUrl As String = $"https://survey.goapp.co.id/?ref={orderNo}"
-        If _currentMember IsNot Nothing Then
-            surveyUrl &= $"&member_uid={_currentMember.Uid}&mobile={_currentMember.MobileNo}"
+        If receiptMember IsNot Nothing Then
+            surveyUrl &= $"&member_uid={receiptMember.Uid}&mobile={receiptMember.MobileNo}"
         End If
 
         Try

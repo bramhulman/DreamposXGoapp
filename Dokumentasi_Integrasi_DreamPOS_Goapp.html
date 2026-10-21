@@ -371,9 +371,9 @@ Proses transaksi pada form utama menggunakan referensi umum TRX dan pembayaran C
 <ul>
 <li><code>PushOrderResponse.RewardSummary.Amount</code>: total estimasi poin dari server, pada contoh 7.500.</li>
 <li><code>PushOrderResponse.RewardSummary.EstNewBalance</code>: estimasi saldo baru dari server, pada contoh 216.100.</li>
-<li><code>TotalEarnedPoints</code>: memakai <code>reward_summary.amount</code> jika nilainya tersedia; fallback ke jumlah rincian <code>reward[].amount</code> untuk respons lama. Nilai ringkasan 0 tetap 0.</li>
+<li><code>TotalEarnedPoints</code>: hanya memakai <code>reward_summary.amount</code>. Nilai ringkasan 0 tetap 0. Jika tidak tersedia, properti numerik mengembalikan 0 untuk kompatibilitas; periksa <code>HasEarningPointSummary</code> untuk membedakannya dari earning 0 yang valid. Form menampilkan tidak tersedia, bukan mengambil nilai dari <code>reward</code>.</li>
 <li><code>TotalRewardDetailPoints</code>: jumlah rincian reward, pada contoh 5.000. <strong>Jangan menjumlahkan reward 5.000 dengan ringkasan 7.500.</strong></li>
-<li><code>EstimatedNewBalance</code>: memakai saldo ringkasan jika tersedia; fallback ke <code>est_new_balance</code> jika respons lama berisi tepat satu item reward. Saldo aktual tetap dapat diperiksa melalui GET member.</li>
+<li><code>EstimatedNewBalance</code>: hanya memakai <code>reward_summary.est_new_balance</code> dan bernilai Nothing bila tidak tersedia. Tidak ada fallback ke <code>reward[].est_new_balance</code>. Saldo aktual tetap diperiksa melalui GET member.</li>
 </ul>
 <h3>Pemanggilan DLL</h3>
 <p>Method lama satu parameter tetap tersedia. Default <code>GoappConfig.CalculateEstimatePoint = True</code>; aplikasi pemanggil dapat mengubah default melalui konfigurasi yang dioper ke DLL, atau memilih per request melalui overload baru:</p>
@@ -393,15 +393,15 @@ If result.IsSuccess AndAlso result.Data IsNot Nothing Then
     Dim saldoEstimasi As Decimal? = result.Data.EstimatedNewBalance
 End If
 </code></pre>
-<p>Gunakan data/nomor struk berbeda hanya untuk transaksi yang memang berbeda. Mengubah flag estimasi pada nomor transaksi yang sudah terkirim <strong>tidak</strong> membuat POST ulang: hasil sebelumnya dikembalikan dari jurnal/cache. Jika respons tersimpan belum berisi ringkasan, DLL memberi warning dan memakai fallback, bukan mengirim ulang demi mendapatkan ringkasan baru.</p>
+<p>Gunakan data/nomor struk berbeda hanya untuk transaksi yang memang berbeda. Mengubah flag estimasi pada nomor transaksi yang sudah terkirim <strong>tidak</strong> membuat POST ulang: hasil sebelumnya dikembalikan dari jurnal/cache. Jika respons tersimpan belum berisi ringkasan, DLL memberi warning dan menandai earning tidak tersedia, bukan mengambil reward atau mengirim ulang demi mendapatkan ringkasan baru.</p>
 <h3>Form Try dan konfigurasi</h3>
-<p>Di tab <strong>3. Transaksi POS</strong>, pilihan <strong>Hitung estimasi poin</strong> ditambahkan pada form yang sama, berdampingan dengan <strong>Ijinkan tanpa member</strong>. Default aktif; lepas centang untuk mengirim query <code>0</code>. Request/response panel menampilkan URL lengkap termasuk query. Pesan hasil menampilkan rincian reward, total dari ringkasan atau fallback, serta estimasi saldo baru.</p>
+<p>Di tab <strong>3. Transaksi POS</strong>, pilihan <strong>Hitung estimasi poin</strong> ditambahkan pada form yang sama, berdampingan dengan <strong>Ijinkan tanpa member</strong>. Default aktif; lepas centang untuk mengirim query <code>0</code>. Request/response panel menampilkan URL lengkap termasuk query. Pesan hasil hanya menampilkan Earning Point dan estimasi saldo baru dari reward_summary. Rincian reward tetap berada pada raw JSON untuk audit, bukan sebagai nilai earning.</p>
 <p>Aplikasi Try membaca pengaturan berikut dari App.config, lalu meneruskannya ke GoappConfig. DLL tetap tidak membaca App.config sendiri:</p>
 <pre><code class="language-xml">&lt;add key=&quot;Goapp.CalculateEstimatePoint&quot; value=&quot;true&quot; /&gt;
 </code></pre>
 <p>URL lengkap dan raw respons termasuk <code>reward_summary</code> disimpan pada <code>GoappApiLog</code>. <code>GoappRedeemLog.OrderResponseJson</code> menyimpan respons lengkap dan <code>NilaiPoint</code> memakai <code>TotalEarnedPoints</code>, sehingga mengikuti ringkasan bila tersedia. Tidak ada tabel atau migrasi SQL baru untuk pembaruan ini; retensi 3 bulan serta perlindungan kirim ganda tetap berlaku.</p>
 <h3>Pengujian</h3>
-<p>Test fixture berasal dari contoh <strong>Calculate estimated points earned</strong> di koleksi 21 Oktober, termasuk angka 5.000/7.500/216.100. Pengujian memeriksa query 1/0, kedua overload, null/0/string decimal, fallback respons lama, flag saat retry 401, penyimpanan SQL, dan replay transaksi dengan perubahan flag tanpa POST tambahan. Jalankan <code>Tests/OrderSubmissionTests.exe</code> setelah build proyek test. Pengujian langsung Goapp dilakukan terpisah dengan referensi uji baru dan dicatat pada laporan analisis.</p>
+<p>Test fixture berasal dari contoh <strong>Calculate estimated points earned</strong> di koleksi 21 Oktober, termasuk angka 5.000/7.500/216.100. Pengujian memeriksa query 1/0, kedua overload, null/0/string decimal, larangan fallback ke reward, flag saat retry 401, penyimpanan SQL, dan replay transaksi dengan perubahan flag tanpa POST tambahan. Jalankan <code>Tests/OrderSubmissionTests.exe</code> setelah build proyek test. Pengujian langsung Goapp dilakukan terpisah dengan referensi uji baru dan dicatat pada laporan analisis.</p>
 <h3>Bukti uji langsung 21 Oktober 2026</h3>
 <ul>
 <li>Tanpa member: <code>TEST-TRX-261021-100341-13fc3e</code>, tiga SKU, Rp150.000, HTTP 201, order UID <code>158386291108424</code>, poin 0. Kedua log SQL tersimpan dan pengulangan dicegah.</li>
@@ -419,5 +419,27 @@ End If
 </ul>
 <p>Untuk membandingkan earning: pilih member yang sama, set burn point 0 dan nominal sama, aktifkan Hitung estimasi poin, lalu kirim masing-masing mode dengan <strong>nomor transaksi berbeda</strong> melalui tombol Transaksi baru. Periksa SKU pada raw request dan <code>reward_summary</code> pada respons. Perhitungan earning tetap dilakukan Goapp sesuai aturan SKU, bukan rumus baru pada aplikasi Try.</p>
 <p>Daftar SKU disertakan sebagai resource aplikasi Try agar aplikasi hasil build tidak bergantung pada folder Downloads atau instalasi Excel. Status Dengan XLB ditampilkan pada hasil; payload produk dan kedua log SQL mengikuti pola yang sudah ada. Build dan 58 pemeriksaan otomatis lulus, termasuk seluruh 46 SKU, 3.072 kombinasi nominal/referensi, total harga, pengecualian XLB, kestabilan retry, dan kedua log SQL. Checkbox juga telah diperiksa secara visual.</p>
+<h2>Sumber tunggal Earning Point: reward_summary</h2>
+<p>DLL dan form Try memakai <strong>hanya</strong> dua field berikut untuk informasi earning:</p>
+<pre><code class="language-json">{
+  &quot;reward_summary&quot;: {
+    &quot;amount&quot;: 15000.0,
+    &quot;est_new_balance&quot;: 246100.0
+  }
+}
+</code></pre>
+<p>Jika respons yang sama juga memiliki <code>reward[].amount = 10000</code> dan <code>reward[].est_new_balance = 241100</code>, tampilan tetap <strong>Earning Point 15.000</strong> dan <strong>Estimasi Saldo Baru 246.100</strong>. Nilai <code>reward</code> tidak dipakai untuk mengganti, menambah, atau menghitung ulang kedua angka tersebut.</p>
+<pre><code class="language-vb">If result.IsSuccess AndAlso result.Data IsNot Nothing Then
+    If result.Data.HasEarningPointSummary Then
+        Dim earning As Decimal = result.Data.RewardSummary.Amount.Value
+    End If
+    Dim saldoEstimasi As Decimal? = result.Data.EstimatedNewBalance
+End If
+</code></pre>
+<p>Jika ringkasan/field kosong atau null, form menunjukkan <strong>tidak tersedia</strong>. Aktifkan Hitung estimasi poin agar POST meminta ringkasan. <code>TotalRewardDetailPoints</code> masih tersedia untuk audit teknis dan pemeriksaan keamanan transaksi tanpa member; bukan sumber Earning Point.</p>
+<p>Preview struk Try menggunakan respons transaksi sukses terakhir, beserta nomor struk, total, pembayaran, dan member transaksi itu. Earning dan estimasi saldo langsung memakai ringkasan; tidak ada rumus estimasi earning dari nominal atau penambahan earning sekali lagi ke saldo member yang sudah diperbarui. Setelah Transaksi baru, kirim transaksi tersebut sebelum membuat preview. Overload DLL <code>ReceiptGenerator.GenerateReceiptText(..., orderResponse:=result.Data, ...)</code> mendukung perilaku ini; overload numerik lama tetap tersedia untuk kompatibilitas pemanggil lama.</p>
+<p><code>GoappRedeemLog.NilaiPoint</code> mengikuti <code>TotalEarnedPoints</code> dari ringkasan. Jika ringkasan tidak ada, raw response menyimpan kondisi tersebut dan properti numerik/log memakai 0; periksa HasEarningPointSummary atau raw <code>OrderResponseJson</code> sebelum menganggap angka itu sebagai earning 0 yang dikonfirmasi. Pencatatan tetap pada dua tabel yang sama dan tidak ada POST tambahan untuk mendapatkan ringkasan pada transaksi yang sudah terkirim.</p>
+<p>Pengujian mencocokkan contoh koleksi 21 Oktober (rincian 5.000, ringkasan 7.500, saldo ringkasan 216.100) serta contoh pengguna (rincian 10.000, ringkasan 15.000, saldo ringkasan 246.100). Pengujian juga memastikan nilai ringkasan tidak dijumlahkan dengan reward, struk memakai saldo ringkasan langsung, dan data kosong tidak diisi dari reward.</p>
+<p>Validasi pembaruan sumber earning: build Release berhasil dan 65 pemeriksaan otomatis lulus, mencakup koleksi resmi, contoh pengguna, penyimpanan NilaiPoint=15000, replay saldo 246100, serta preview struk. Pengujian menggunakan HTTP tiruan dan tabel SQL uji terpisah; tidak membuat transaksi Goapp baru.</p>
 </body>
 </html>

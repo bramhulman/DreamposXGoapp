@@ -37,7 +37,7 @@ Temuan lain di form lama: menekan Burn Point secara terpisah lalu Push Transaksi
 - `GoappApiLog` ditunggu selesai sebelum method HTTP mengembalikan respons, termasuk audit attempt 401 sebelum retry. HTTP status asli dipertahankan bila parsing JSON gagal. Tidak ada retry otomatis untuk timeout/5xx.
 - `GoappRedeemLog` mendapatkan kolom tambahan `OrderSubmissionKey`, `OrderSubmissionState`, `OrderRequestJson`, `OrderResponseJson`, `OrderHttpStatus`, `OrderApiLogSaved`, dan unique filtered index `UX_OrderSubmissionKey`. Migrasi idempoten berjalan pada penggunaan pertama. Akun SQL perlu izin ALTER/CREATE INDEX serta akses tabel; jika reservasi SQL gagal, POST tidak dilakukan.
 - Transaksi tanpa member dicatat sebagai `Jenis=SalesOrder`, `MemberUid=NULL`, `NilaiPoint=0` pada hasil normal, dan `StatusPos=1`, sehingga tidak muncul sebagai redeem aktif yang dapat dibatalkan. Sales member dicatat sebagai `Jenis=SalesOrder`.
-- `TotalEarnedPoints` menjumlahkan seluruh item reward respons. Form transaksi member menampilkan saldo sebelum/sesudah, selisih aktual, dan reward server. Nilai reward dari server tidak diubah atau dipaksakan oleh DLL.
+- `TotalEarnedPoints` kini hanya membaca reward_summary.amount; rincian reward disimpan sebagai audit terpisah. Form transaksi member menampilkan saldo sebelum/sesudah, selisih aktual, dan reward server. Nilai reward dari server tidak diubah atau dipaksakan oleh DLL.
 - Jika server mengembalikan reward pada transaksi guest, respons diberi warning dan `RequiresReconciliation=True`; DLL tidak mengirim ulang dan tidak berpura-pura menghapus reward server.
 
 ## Bukti uji langsung Goapp
@@ -103,7 +103,7 @@ Uji langsung berikutnya menggunakan generator tiga SKU yang sama dengan form uta
 
 ## Pembaruan 21 Oktober 2026: calculate_estimate_point
 
-Koleksi baru menambahkan query `calculate_estimate_point=1` dan `reward_summary` pada POST sales order yang tetap menyimpan transaksi. Contoh koleksi: rincian reward 5.000, ringkasan total 7.500, estimasi saldo ringkasan 216.100. Implementasi baru memakai ringkasan sebagai total jika tersedia, tanpa menambahkannya ke rincian reward; respons lama tetap didukung melalui fallback.
+Koleksi baru menambahkan query `calculate_estimate_point=1` dan `reward_summary` pada POST sales order yang tetap menyimpan transaksi. Contoh koleksi: rincian reward 5.000, ringkasan total 7.500, estimasi saldo ringkasan 216.100. Implementasi baru memakai ringkasan sebagai total jika tersedia, tanpa menambahkannya ke rincian reward; respons tanpa ringkasan kini ditandai tidak tersedia, tanpa fallback ke reward.
 
 Default DLL meminta query 1, overload Boolean dan checkbox Hitung estimasi poin pada form Try dapat memilih query 0. Perubahan flag pada referensi yang sudah tersimpan tidak mengirim order lagi. URL lengkap dan ringkasan respons mengikuti kedua log SQL yang sudah ada. Ini memperbaiki cara membaca total respons baru; tidak membuktikan bahwa penyebab selisih saldo historis tanggal 16 Oktober sudah diperbaiki di server Goapp.
 
@@ -113,3 +113,9 @@ Default DLL meminta query 1, overload Boolean dan checkbox Hitung estimasi poin 
 - Dengan member uji: `TEST-EST-261021-100352-414314`, tiga SKU, Rp150.000, HTTP 201, order UID `158386296021064`. Rincian reward 5.000; reward_summary.amount 5.000; reward_summary.est_new_balance 29.800. Saldo sebelum 24.800, GET segera sesudah POST masih 24.800, lalu GET ulang menunjukkan 29.800 (+5.000), sesuai ringkasan. Jangan POST ulang hanya karena saldo aktual belum langsung berubah.
 - Masing-masing memakai query `calculate_estimate_point=1`, tersimpan di kedua tabel, dan hanya satu POST per referensi, termasuk ketika pemanggilan berikutnya mengubah flag.
 - Sebanyak 43 pemeriksaan otomatis (HTTP tiruan dan SQL terpisah) serta pemeriksaan render form lulus. Bukti JSON ada di `Tests/live-estimate-result.json` dan `Tests/live-guest-result.json`. Halaman PDF pembaruan dan form Try telah diperiksa secara visual.
+
+## Koreksi sumber Earning Point
+
+DLL dan form Try kini hanya menggunakan reward_summary.amount untuk earning serta reward_summary.est_new_balance untuk estimasi saldo baru. Fallback ke reward dihapus. Contoh pengguna dengan reward 10.000/241.100 dan reward_summary 15.000/246.100 harus menghasilkan earning 15.000 serta estimasi saldo 246.100. Preview struk juga memakai ringkasan transaksi sukses terakhir, bukan rumus dari nominal atau saldo member yang ditambah earning lagi. Nilai kosong ditampilkan tidak tersedia; properti HasEarningPointSummary membedakan data kosong dari earning 0 yang valid. Perubahan parsing ini tidak membuat POST Goapp tambahan.
+
+Validasi pembaruan sumber earning: build Release berhasil dan 65 pemeriksaan otomatis lulus, mencakup koleksi resmi, contoh pengguna, penyimpanan NilaiPoint=15000, replay saldo 246100, serta preview struk. Pengujian menggunakan HTTP tiruan dan tabel SQL uji terpisah; tidak membuat transaksi Goapp baru.

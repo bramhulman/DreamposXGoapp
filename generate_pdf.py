@@ -499,7 +499,7 @@ End If"""
         '"reward": [{"amount": 5000, "est_new_balance": 213600}],',
         '"reward_summary": {"amount": 7500, "est_new_balance": 216100}'
     ]))
-    pdf.body_p("TotalEarnedPoints memakai reward_summary.amount jika tersedia, termasuk nilai 0. Pada contoh, total adalah 7.500, bukan 12.500. TotalRewardDetailPoints tetap menampilkan rincian 5.000. Jangan menjumlahkan rincian dengan ringkasan. EstimatedNewBalance memakai saldo ringkasan; untuk respons lama fallback hanya jika ada satu item reward.")
+    pdf.body_p("Earning Point hanya dari reward_summary.amount; EstimatedNewBalance hanya dari reward_summary.est_new_balance. Pada contoh koleksi, earning 7.500 dan estimasi saldo 216.100. Jangan gunakan atau jumlahkan rincian reward. Jika ringkasan kosong, form menampilkan tidak tersedia; HasEarningPointSummary=False membedakan kondisi ini dari earning 0 yang valid.")
     pdf.section_title("Pemanggilan DLL dan konfigurasi")
     pdf.code_block('\n'.join([
         'Dim result = Await client.PushSalesOrderAsync(order)',
@@ -509,11 +509,32 @@ End If"""
     ]))
     pdf.body_p("Method satu parameter tetap tersedia, dengan default GoappConfig.CalculateEstimatePoint=True. Overload Boolean memilih query 1 atau 0 per request. App.config dibaca aplikasi Try lalu diteruskan ke DLL, mengikuti pola konfigurasi yang sudah ada.")
     pdf.section_title("Form Try, logging, dan anti-duplikat")
-    pdf.body_p("Pada tab 3. Transaksi POS, checkbox Hitung estimasi poin berada di form yang sama dengan Ijinkan tanpa member. Panel JSON menampilkan URL dengan query; hasil menampilkan rincian, total ringkasan, dan estimasi saldo. GoappApiLog mencatat URL lengkap dan respons; GoappRedeemLog menyimpan respons lengkap serta total ringkasan pada NilaiPoint. Tidak ada migrasi baru.")
-    pdf.body_p("Mengubah flag pada provider_ref yang sudah terkirim tidak melakukan POST ulang. Hasil tersimpan digunakan; bila belum ada ringkasan, gunakan fallback dengan warning. Retensi tiga bulan dan perlindungan pengiriman ganda tetap berlaku. Pengujian menggunakan fixture koleksi baru serta integrasi SQL; bukti uji langsung ada pada laporan analisis.")
+    pdf.body_p("Pada tab 3. Transaksi POS, checkbox Hitung estimasi poin berada di form yang sama dengan Ijinkan tanpa member. Panel JSON menampilkan URL dengan query; hasil menampilkan earning serta estimasi saldo hanya dari reward_summary. GoappApiLog mencatat URL lengkap dan respons; GoappRedeemLog menyimpan respons lengkap serta total ringkasan pada NilaiPoint. Tidak ada migrasi baru.")
+    pdf.body_p("Mengubah flag pada provider_ref yang sudah terkirim tidak melakukan POST ulang. Hasil tersimpan digunakan; bila belum ada ringkasan, tampilkan tidak tersedia dengan warning tanpa mengambil reward. Retensi tiga bulan dan perlindungan pengiriman ganda tetap berlaku. Pengujian menggunakan fixture koleksi baru serta integrasi SQL; bukti uji langsung ada pada laporan analisis.")
 
     pdf.section_title("Bukti uji langsung 21 Oktober 2026")
     pdf.body_p("Member dan tanpa member diterima HTTP 201 dengan query 1, tiga SKU, dan kedua log SQL tersimpan. Pada uji member Rp150.000, reward_summary.amount=5.000 dan estimasi saldo=29.800. Saldo sebelum 24.800, GET segera sesudah POST masih 24.800, kemudian GET ulang menjadi 29.800 (+5.000). Hanya satu POST per referensi; perubahan flag tidak mengirim ulang. Sebanyak 43 pemeriksaan otomatis serta pemeriksaan visual form lulus.")
+
+    pdf.add_page()
+    pdf.chapter_title("9", "Sumber Earning Point: reward_summary")
+    pdf.body_p("Pengambilan Earning Point pada DLL, form Try, dan preview struk memakai hanya objek reward_summary. Objek reward tetap disimpan pada raw JSON untuk audit, bukan sebagai nilai pengganti earning atau estimasi saldo.")
+    pdf.code_block('\n'.join([
+        '"reward": [{"amount": 10000, "est_new_balance": 241100.0}],',
+        '"reward_summary": {"amount": 15000.0, "est_new_balance": 246100.0}'
+    ]))
+    pdf.body_p("Hasil yang benar untuk contoh di atas: Earning Point 15.000 dan Estimasi Saldo Baru 246.100. Jangan memakai earning 10.000/saldo 241.100 dari reward; jangan menjumlahkan kedua objek.")
+    pdf.section_title("Pemanggilan dan data kosong")
+    pdf.code_block('\n'.join([
+        'If result.Data.HasEarningPointSummary Then',
+        '    Dim earning = result.Data.RewardSummary.Amount.Value',
+        'End If',
+        'Dim saldoEstimasi As Decimal? = result.Data.EstimatedNewBalance'
+    ]))
+    pdf.body_p("TotalEarnedPoints hanya membaca summary.amount. Jika tidak ada, properti numerik tetap 0 untuk kompatibilitas; HasEarningPointSummary=False menandakan nilai belum tersedia. EstimatedNewBalance menjadi Nothing jika summary.est_new_balance tidak ada. Form menampilkan tidak tersedia, bukan fallback ke reward. Nilai summary 0 tetap dipertahankan sebagai 0 yang valid.")
+    pdf.section_title("Form Try dan preview struk")
+    pdf.body_p("Aktifkan Hitung estimasi poin. Form menampilkan Earning Point (reward_summary) dan Estimasi Saldo Baru (reward_summary). Preview struk memerlukan transaksi yang sudah berhasil dikirim; memakai nomor struk, total, pembayaran, dan member transaksi itu. Gunakan overload GenerateReceiptText dengan orderResponse. Struk tidak menghitung earning dari nominal dan tidak menambahkan earning lagi ke saldo yang sudah diperbarui.")
+    pdf.section_title("SQL dan validasi")
+    pdf.body_p("GoappApiLog dan GoappRedeemLog tetap menyimpan raw response lengkap. NilaiPoint memakai total ringkasan. Jika ringkasan hilang, nilai numerik 0 perlu dibedakan dari earning 0 yang dikonfirmasi dengan memeriksa HasEarningPointSummary atau raw JSON. Tidak ada perubahan schema SQL atau POST tambahan. Sebanyak 65 pemeriksaan otomatis lulus, mencocokkan koleksi 21 Oktober, contoh 15.000/246.100, nilai null/0, larangan fallback, struk, dan jurnal SQL. Pengujian ini memakai HTTP tiruan dan SQL uji terpisah, tanpa membuat transaksi Goapp baru.")
 
     pdf.output(output_path)
     print("PDF Generated successfully at:", output_path)

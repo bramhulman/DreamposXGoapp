@@ -835,12 +835,19 @@ Namespace Models
         <JsonProperty("reward_summary")>
         Public Property RewardSummary As OrderRewardSummary
 
-        ''' <summary>Total dari reward_summary; fallback rincian reward untuk respons lama. Jangan dijumlahkan keduanya.</summary>
+        ''' <summary>Earning point hanya dari reward_summary.amount. Gunakan HasEarningPointSummary untuk memeriksa ketersediaan.</summary>
         <JsonIgnore>
         Public ReadOnly Property TotalEarnedPoints As Decimal
             Get
                 If RewardSummary IsNot Nothing AndAlso RewardSummary.Amount.HasValue Then Return RewardSummary.Amount.Value
-                Return TotalRewardDetailPoints
+                Return 0D
+            End Get
+        End Property
+
+        <JsonIgnore>
+        Public ReadOnly Property HasEarningPointSummary As Boolean
+            Get
+                Return RewardSummary IsNot Nothing AndAlso RewardSummary.Amount.HasValue
             End Get
         End Property
 
@@ -856,7 +863,6 @@ Namespace Models
         Public ReadOnly Property EstimatedNewBalance As Decimal?
             Get
                 If RewardSummary IsNot Nothing AndAlso RewardSummary.EstNewBalance.HasValue Then Return RewardSummary.EstNewBalance
-                If Reward IsNot Nothing AndAlso Reward.Count = 1 AndAlso Reward(0) IsNot Nothing Then Return Reward(0).EstNewBalance
                 Return Nothing
             End Get
         End Property
