@@ -20,6 +20,8 @@ Public Class FormMain
     Private ReadOnly _allowWithoutMember As New CheckBox With {.Text = "Ijinkan tanpa member", .Location = New Point(440, 153), .AutoSize = True}
     Private ReadOnly _calculateEstimatePoint As New CheckBox With {.Name = "chkCalculateEstimatePoint", .Text = "Hitung estimasi poin", .Location = New Point(665, 153), .AutoSize = True, .Checked = True}
     Private ReadOnly _withXlb As New CheckBox With {.Name = "chkWithXlb", .Text = "dengan xlb", .Location = New Point(335, 65), .AutoSize = True}
+    Private ReadOnly _lblSourceName As New Label With {.Text = "Source:", .Location = New Point(440, 65), .AutoSize = True}
+    Private ReadOnly _cmbSourceName As New ComboBox With {.Name = "cmbSourceName", .Location = New Point(495, 62), .Size = New Size(140, 26), .DropDownStyle = ComboBoxStyle.DropDown}
     Private _salesOrderTime As String = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:sszzz")
 
     Private Class SchemeComboItem
@@ -61,6 +63,10 @@ Public Class FormMain
         tabTransaction.Controls.Add(_allowWithoutMember)
         tabTransaction.Controls.Add(_calculateEstimatePoint)
         tabTransaction.Controls.Add(_withXlb)
+        _cmbSourceName.Items.AddRange(New Object() {"", "dine_in", "take_away", "grabfood", "gofood", "shopeefood"})
+        _cmbSourceName.SelectedIndex = 0
+        tabTransaction.Controls.Add(_lblSourceName)
+        tabTransaction.Controls.Add(_cmbSourceName)
         _calculateEstimatePoint.Checked = _config.CalculateEstimatePoint
         AddHandler _allowWithoutMember.CheckedChanged, Sub()
                                                            txtBurnPoint.Enabled = Not _allowWithoutMember.Checked
@@ -676,6 +682,7 @@ Public Class FormMain
                     .Uid = If(member Is Nothing, 0, member.Uid),
                     .MobileNo = If(member Is Nothing, Nothing, member.MobileNo)
                 }),
+                .SourceName = If(String.IsNullOrWhiteSpace(_cmbSourceName.Text), Nothing, _cmbSourceName.Text.Trim()),
                 .Lines = CreateTestOrderLinesWithXlb(billTotal, providerRef, withXlb),
                 .Payments = paymentItems
             }

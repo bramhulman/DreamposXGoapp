@@ -745,6 +745,9 @@ Namespace Models
 
         <JsonProperty("cancel_reason", NullValueHandling:=NullValueHandling.Ignore)>
         Public Property CancelReason As String
+
+        <JsonProperty("source_name", NullValueHandling:=NullValueHandling.Ignore)>
+        Public Property SourceName As String
     End Class
 
     Public Class OrderMemberRef

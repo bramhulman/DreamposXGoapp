@@ -266,6 +266,33 @@ End If
 ### E. Alur Push Transaksi POS (Sales Order & Burn Point)
 Alur pengiriman transaksi penjualan dari kasir DreamPOS ke Goapp diatur dengan ketentuan:
 
+0. **Penggunaan Properti `SourceName` (`source_name`):**
+   - Properti `SourceName` pada `PushOrderRequest` digunakan untuk mencatat asal/kanal pesanan pelanggan (misal: pesanan offline kasir maupun online food delivery).
+   - Nilai yang didukung meliputi: `"dine_in"`, `"take_away"`, `"grabfood"`, `"gofood"`, `"shopeefood"`, atau dibiarkan kosong/`Nothing` untuk pesanan standar.
+   - Jika diisi, field `"source_name"` otomatis disertakan pada payload JSON POST `/sales/order/`. Jika `Nothing` atau kosong, field tidak dikirimkan.
+
+   ```vb
+   Dim order As New PushOrderRequest With {
+       .OrderNo = "TRX-20261028-001",
+       .ProviderRef = "TRX-20261028-001",
+       .OrderDate = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:sszzz"),
+       .LinesTotal = 100000,
+       .TotalInclTax = 100000,
+       .TotalPaid = 100000,
+       .SourceName = "grabfood", ' <-- Isi nama channel: grabfood, gofood, shopeefood, dine_in, dll
+       .Store = New OrderStoreRef With {
+           .Uid = config.StoreUid,
+           .Name = config.StoreName,
+           .StoreCode = config.StoreCode
+       },
+       .Lines = lineItems,
+       .Payments = paymentItems
+   }
+
+   ' Kirim ke Goapp CRM via DLL:
+   Dim response = Await client.PushSalesOrderAsync(order)
+   ```
+
 1. **Seluruh Transaksi Penjualan Dikirim ke `POST {{CHANNEL_API_BASE_URL}}/sales/order/?calculate_estimate_point=1` (default terbaru):**
    - Berfungsi untuk mencatat pesanan penjualan dan penambahan poin (**Earning Points**).
    - Seluruh nilai pembayaran disatukan menjadi **1 baris payment saja** (`payment_method_name: "Total Paid"`, `amount: billTotal`) tanpa memecah rincian metode pembayaran lain.
