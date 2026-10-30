@@ -266,6 +266,16 @@ End If
 ### E. Alur Push Transaksi POS (Sales Order & Burn Point)
 Alur pengiriman transaksi penjualan dari kasir DreamPOS ke Goapp diatur dengan ketentuan:
 
+**Parameter `ServiceFee` (`service_fee`):** Aplikasi POS mengisi `PushOrderRequest.ServiceFee` dengan nilai `cld_salesmaster.service` dari transaksi yang sedang dikirim. DLL meneruskan nilai tersebut pada Push Sales Order member maupun tanpa member. Nilai `Nothing` tidak disertakan dalam JSON, sedangkan `0` tetap dikirim. Pembacaan database dilakukan oleh aplikasi POS pemanggil.
+
+```vb
+' salesMasterRow adalah DataRow transaksi cld_salesmaster yang dipilih oleh POS.
+order.ServiceFee = If(salesMasterRow.IsNull("service"), CType(Nothing, Decimal?), Convert.ToDecimal(salesMasterRow("service")))
+Dim response = Await client.PushSalesOrderAsync(order)
+```
+
+Untuk pengujian di `TryDreamposXGoapp`, isi kontrol **Service fee** pada tab transaksi lalu klik **Kirim Transaksi Selesai**. Nilainya muncul sebagai `service_fee` pada REQUEST JSON. Input ini tidak otomatis mengubah total transaksi; isi total tagihan yang sesuai untuk skenario pengujian.
+
 0. **Penggunaan Properti `SourceName` (`source_name`):**
    - Properti `SourceName` pada `PushOrderRequest` digunakan untuk mencatat asal/kanal pesanan pelanggan (misal: pesanan offline kasir maupun online food delivery).
    - Nilai yang didukung meliputi: `"dine_in"`, `"take_away"`, `"grabfood"`, `"gofood"`, `"shopeefood"`, atau dibiarkan kosong/`Nothing` untuk pesanan standar.

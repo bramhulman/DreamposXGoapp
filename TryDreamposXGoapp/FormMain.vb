@@ -23,6 +23,7 @@ Public Class FormMain
     Private ReadOnly _lblSourceName As New Label With {.Text = "Source:", .Location = New Point(440, 65), .AutoSize = True}
     Private ReadOnly _cmbSourceName As New ComboBox With {.Name = "cmbSourceName", .Location = New Point(495, 62), .Size = New Size(140, 26), .DropDownStyle = ComboBoxStyle.DropDown}
     Private _salesOrderTime As String = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:sszzz")
+    Private ReadOnly _serviceFee As New NumericUpDown With {.Name = "numServiceFee", .Location = New Point(755, 62), .Size = New Size(140, 27), .DecimalPlaces = 2, .Maximum = 999999999999D, .Minimum = 0D, .ThousandsSeparator = True}
 
     Private Class SchemeComboItem
         Public Property Uid As Long
@@ -67,6 +68,8 @@ Public Class FormMain
         _cmbSourceName.SelectedIndex = 0
         tabTransaction.Controls.Add(_lblSourceName)
         tabTransaction.Controls.Add(_cmbSourceName)
+        tabTransaction.Controls.Add(New Label With {.Text = "Service fee:", .Location = New Point(650, 65), .AutoSize = True})
+        tabTransaction.Controls.Add(_serviceFee)
         _calculateEstimatePoint.Checked = _config.CalculateEstimatePoint
         AddHandler _allowWithoutMember.CheckedChanged, Sub()
                                                            txtBurnPoint.Enabled = Not _allowWithoutMember.Checked
@@ -606,6 +609,7 @@ Public Class FormMain
         Dim withoutMember = _allowWithoutMember.Checked OrElse _currentMember Is Nothing
         Dim calculateEstimatePoint = _calculateEstimatePoint.Checked
         Dim withXlb = _withXlb.Checked
+        Dim serviceFee = _serviceFee.Value
         Dim orderEndpoint = "/sales/order/?calculate_estimate_point=" & If(calculateEstimatePoint, "1", "0")
         Dim member = _currentMember
         'If Not withoutMember AndAlso member Is Nothing Then
@@ -676,7 +680,7 @@ Public Class FormMain
                 .TotalPaid = cashPaid,
                 .PaidAt = _salesOrderTime,
                 .CompletedAt = _salesOrderTime,
-                .ServiceFee = 0,
+                .ServiceFee = serviceFee,
                 .LinesDiscount = If(linesDiscountTotal > 0, linesDiscountTotal, CType(Nothing, Decimal?)),
                 .Member = If(withoutMember, Nothing, New OrderMemberRef With {
                     .Uid = If(member Is Nothing, 0, member.Uid),

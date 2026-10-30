@@ -728,8 +728,9 @@ Namespace Models
         <JsonProperty("payments")>
         Public Property Payments As List(Of OrderPaymentItem) = New List(Of OrderPaymentItem)()
 
+        ''' <summary>Nilai cld_salesmaster.service dari aplikasi POS pemanggil. Nothing tidak dikirim; 0 dikirim sebagai nol.</summary>
         <JsonProperty("service_fee", NullValueHandling:=NullValueHandling.Ignore)>
-        Public Property ServiceFee As Decimal? ' Total Tax + Service fee
+        Public Property ServiceFee As Decimal?
 
         <JsonProperty("lines_discount", NullValueHandling:=NullValueHandling.Ignore)>
         Public Property LinesDiscount As Decimal? ' Total poin yang digunakan + voucher diskon ke total order
