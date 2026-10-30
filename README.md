@@ -274,7 +274,9 @@ order.ServiceFee = If(salesMasterRow.IsNull("service"), CType(Nothing, Decimal?)
 Dim response = Await client.PushSalesOrderAsync(order)
 ```
 
-Untuk pengujian di `TryDreamposXGoapp`, isi kontrol **Service fee** pada tab transaksi lalu klik **Kirim Transaksi Selesai**. Nilainya muncul sebagai `service_fee` pada REQUEST JSON. Input ini tidak otomatis mengubah total transaksi; isi total tagihan yang sesuai untuk skenario pengujian.
+Untuk pengujian di `TryDreamposXGoapp`, isi kontrol **Service fee** pada tab transaksi lalu klik **Kirim Transaksi Selesai**. Nilainya muncul sebagai `service_fee` pada REQUEST JSON. Form menghitung **Tax 10%** dari nilai total tagihan (sebelum service fee), dibulatkan ke dua desimal, dan mengirim nominalnya melalui parameter DLL `PushOrderRequest.LinesTax` (`lines_tax`). POS dapat mengisi `LinesTax` sesuai nominal pajak transaksi; DLL meneruskan nominal yang diberikan.
+
+Pada form Try: `TotalInclTax = total tagihan + ServiceFee + LinesTax`, sedangkan `TotalPaid` dan pembayaran CASH adalah total tersebut dikurangi poin yang digunakan (minimal nol). Contoh: tagihan 100.000, service 5.000, pajak 10.000 menghasilkan total bayar 115.000 tanpa pemakaian poin. Aplikasi POS pemanggil mengisi total akhir yang sudah mencakup service dan pajak; DLL tidak menambahkannya lagi.
 
 0. **Penggunaan Properti `SourceName` (`source_name`):**
    - Properti `SourceName` pada `PushOrderRequest` digunakan untuk mencatat asal/kanal pesanan pelanggan (misal: pesanan offline kasir maupun online food delivery).

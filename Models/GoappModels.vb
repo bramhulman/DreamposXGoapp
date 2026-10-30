@@ -716,6 +716,7 @@ Namespace Models
         <JsonProperty("lines_total")>
         Public Property LinesTotal As Decimal
 
+        ''' <summary>Nominal pajak transaksi dari POS (bukan persentase). Sertakan dalam TotalInclTax dan TotalPaid sesuai pembayaran.</summary>
         <JsonProperty("lines_tax")>
         Public Property LinesTax As Decimal = 0D
 

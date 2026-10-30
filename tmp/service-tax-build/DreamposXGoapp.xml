@@ -1,0 +1,567 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+DreamposXGoapp
+</name>
+</assembly>
+<members>
+<member name="T:DreamposXGoapp.My.Resources.Resources">
+<summary>
+  A strongly-typed resource class, for looking up localized strings, etc.
+</summary>
+</member>
+<member name="P:DreamposXGoapp.My.Resources.Resources.ResourceManager">
+<summary>
+  Returns the cached ResourceManager instance used by this class.
+</summary>
+</member>
+<member name="P:DreamposXGoapp.My.Resources.Resources.Culture">
+<summary>
+  Overrides the current thread's CurrentUICulture property for all
+  resource lookups using this strongly typed resource class.
+</summary>
+</member>
+<member name="T:DreamposXGoapp.Models.GoappConfig">
+ <summary>
+ Konfigurasi integrasi API Goapp CRM.
+ WAJIB diisi oleh aplikasi pemanggil (POS) sebelum instansiasi GoappApiClient.
+ Jangan pernah menyimpan ApiKey/ApiSecret langsung di source code — baca dari
+ file konfigurasi terenkripsi, environment variable, atau Windows Credential Store.
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Models.GoappConfig.ApiKey">
+ <summary>API Key channel (Channel UID dari dashboard Goapp CRM). WAJIB diisi.</summary>
+</member>
+<member name="P:DreamposXGoapp.Models.GoappConfig.ApiSecret">
+ <summary>API Secret channel. WAJIB diisi. Jaga kerahasiaan nilai ini.</summary>
+</member>
+<member name="P:DreamposXGoapp.Models.GoappConfig.ChannelUid">
+ <summary>UID numerik channel — biasanya sama dengan ApiKey. WAJIB diisi.</summary>
+</member>
+<member name="P:DreamposXGoapp.Models.GoappConfig.AuthBaseUrl">
+ <summary>Base URL server autentikasi Goapp. Default: production Goapp.</summary>
+</member>
+<member name="P:DreamposXGoapp.Models.GoappConfig.ChannelBaseUrl">
+ <summary>Base URL Channel API Goapp. Default: production Goapp.</summary>
+</member>
+<member name="P:DreamposXGoapp.Models.GoappConfig.StoreUid">
+ <summary>Store UID untuk transaksi yang butuh Toko (misal Burn Point).</summary>
+</member>
+<member name="P:DreamposXGoapp.Models.GoappConfig.StoreName">
+ <summary>Nama Store.</summary>
+</member>
+<member name="P:DreamposXGoapp.Models.GoappConfig.StoreCode">
+ <summary>Store Code (opsional, tapi kadang wajib untuk transaksi tertentu).</summary>
+</member>
+<member name="P:DreamposXGoapp.Models.GoappConfig.TimeoutSeconds">
+ <summary>Timeout HTTP request dalam detik.</summary>
+</member>
+<member name="P:DreamposXGoapp.Models.GoappConfig.CalculateEstimatePoint">
+ <summary>Minta reward_summary pada POST sales order (calculate_estimate_point=1).</summary>
+</member>
+<member name="P:DreamposXGoapp.Models.GoappConfig.MaxRetryAttempts">
+ <summary>Jumlah maksimal percobaan ulang saat request gagal.</summary>
+</member>
+<member name="P:DreamposXGoapp.Models.GoappConfig.RetryDelayMilliseconds">
+ <summary>Jeda antar percobaan ulang dalam milidetik.</summary>
+</member>
+<member name="P:DreamposXGoapp.Models.GoappConfig.DbConnectionString">
+ <summary>
+ Connection string database SQL Server untuk logging request/response API.
+ Dioper dari konfigurasi aplikasi pemanggil (App.config / form runner).
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Models.GoappConfig.LogTableName">
+ <summary>
+ Nama tabel SQL Server untuk log API. Default: "[dbo].[GoappApiLog]".
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Models.GoappConfig.Validate">
+ <summary>
+ Validasi bahwa semua field wajib sudah diisi sebelum digunakan.
+ Lemparkan InvalidOperationException jika ada yang kosong/nol.
+ </summary>
+</member>
+<member name="T:DreamposXGoapp.Models.ApiResponse`1">
+ <summary>
+ Generic API Response Wrapper untuk DreamPOS
+ </summary>
+</member>
+<member name="T:DreamposXGoapp.Models.AuthTokenResponse">
+ <summary>
+ Response autentikasi token Goapp
+ </summary>
+</member>
+<member name="T:DreamposXGoapp.Models.ChannelInfoResponse">
+ <summary>
+ Detail channel toko / POS
+ </summary>
+</member>
+<member name="T:DreamposXGoapp.Models.MemberResponse">
+ <summary>
+ Detail informasi member CRM Goapp
+ </summary>
+</member>
+<member name="T:DreamposXGoapp.Models.CreateMemberRequest">
+ <summary>
+ Model untuk pendaftaran / simpan member baru dari POS
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Models.RewardDataInfo.GetDetailLines">
+ <summary>
+ Menghasilkan daftar detail setiap variable di dalam objek reward_data secara lengkap
+ </summary>
+</member>
+<member name="T:DreamposXGoapp.Models.VoucherValidateRequest">
+ <summary>
+ Voucher Validation and Use Models
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Models.VoucherResult.RewardData">
+ <summary>
+ Objek reward_data utama milik voucher (dari Deal.RewardData)
+ </summary>
+</member>
+<member name="T:DreamposXGoapp.Models.PaymentTransactionRequest">
+ <summary>
+ Point Payment (Burn Point) Models
+ </summary>
+</member>
+<member name="T:DreamposXGoapp.Models.PushOrderRequest">
+ <summary>
+ Sales Order Push (Earning Point) Models
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Models.PushOrderRequest.LinesTax">
+ <summary>Nominal pajak transaksi dari POS (bukan persentase). Sertakan dalam TotalInclTax dan TotalPaid sesuai pembayaran.</summary>
+</member>
+<member name="P:DreamposXGoapp.Models.PushOrderRequest.ServiceFee">
+ <summary>Nilai cld_salesmaster.service dari aplikasi POS pemanggil. Nothing tidak dikirim; 0 dikirim sebagai nol.</summary>
+</member>
+<member name="P:DreamposXGoapp.Models.PushOrderResponse.TotalEarnedPoints">
+ <summary>Earning point hanya dari reward_summary.amount. Gunakan HasEarningPointSummary untuk memeriksa ketersediaan.</summary>
+</member>
+<member name="M:DreamposXGoapp.DatabaseLogger.EnsureTableExists(System.String)">
+ <summary>
+ Memastikan tabel [dbo].[GoappApiLog] telah terbuat di database SQL Server secara sinkron.
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.DatabaseLogger.EnsureTableExistsAsync(System.String)">
+ <summary>
+ Memastikan tabel [dbo].[GoappApiLog] telah terbuat di database SQL Server secara asinkron.
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.DatabaseLogger.LogApiAsync(System.String,System.String,System.String,System.String,System.Int32,System.Boolean,System.String,System.Int32,System.String)">
+ <summary>
+ Mencatat request dan response API ke database SQL Server secara asynchronous.
+ Connection string dapat dioper secara eksplisit via parameter customConnectionString (misal dari aplikasi POS),
+ atau otomatis fallback ke properti Me.ConnectionString.
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.DatabaseLogger.TestConnectionAsync(System.String)">
+ <summary>
+ Menguji apakah koneksi database SQL Server dapat dibuka dengan baik.
+ Mengembalikan Tuple(Of Boolean, String) berisi (Status Sukses, Pesan).
+ </summary>
+</member>
+<member name="T:DreamposXGoapp.Services.GoappRedeemLogItem">
+ <summary>
+ Model data untuk entitas tabel [dbo].[GoappRedeemLog]
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappRedeemRepository.EnsureTableExists(System.String)">
+ <summary>
+ Memastikan tabel [dbo].[GoappRedeemLog] telah terbuat di database SQL Server POS secara sinkron.
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappRedeemRepository.InsertRedeemLog(DreamposXGoapp.Services.GoappRedeemLogItem,System.String)">
+ <summary>
+ Menyimpan pencatatan baru secara sinkron.
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappRedeemRepository.GetActiveLogsByTxRef(System.String,System.String)">
+ <summary>
+ Mengambil daftar transaksi redeem voucher / burn point yang berstatus AKTIF dan BELUM masuk ke POS (StatusPos = 0, Status = 0)
+ secara sinkron (100% aman dipanggil langsung di UI thread POS).
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappRedeemRepository.UpdateStatusCancel(System.String,System.String,System.String)">
+ <summary>
+ Membatalkan status penggunaan voucher/poin di database: Status = 1 (Cancel) secara sinkron.
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappRedeemRepository.UpdateStatusPos(System.String,System.String,System.String)">
+ <summary>
+ Mengunci status voucher/poin setelah berhasil ditarik dan diterapkan ke POS: StatusPos = 1 secara sinkron.
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappRedeemRepository.EnsureTableExistsAsync(System.String)">
+ <summary>
+ Memastikan tabel [dbo].[GoappRedeemLog] telah terbuat di database SQL Server POS secara asinkron.
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappRedeemRepository.InsertRedeemLogAsync(DreamposXGoapp.Services.GoappRedeemLogItem,System.String)">
+ <summary>
+ Menyimpan pencatatan baru secara asinkron.
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappRedeemRepository.GetActiveLogsByTxRefAsync(System.String,System.String)">
+ <summary>
+ Mengambil daftar transaksi redeem voucher / burn point yang berstatus AKTIF dan BELUM masuk ke POS (StatusPos = 0, Status = 0)
+ untuk nomor transaksi/bill tertentu secara asinkron.
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappRedeemRepository.UpdateStatusCancelAsync(System.String,System.String,System.String)">
+ <summary>
+ Membatalkan status penggunaan voucher/poin di database: Status = 1 (Cancel) secara asinkron.
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappRedeemRepository.UpdateStatusPosAsync(System.String,System.String,System.String)">
+ <summary>
+ Mengunci status voucher/poin setelah berhasil ditarik dan diterapkan ke POS: StatusPos = 1 secara asinkron.
+ </summary>
+</member>
+<member name="T:DreamposXGoapp.Services.GoappApiClient">
+ <summary>
+ Client Integrasi API Goapp CRM untuk DreamPOS.
+ Menangani autentikasi otomatis, caching token, auto-retry, pencarian member,
+ push transaksi, burn point, dan voucher.
+ </summary>
+</member>
+<member name="E:DreamposXGoapp.Services.GoappApiClient.OnLog">
+ <summary>
+ Event logger untuk monitoring transaksi POS
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Services.GoappApiClient.DbConnectionString">
+ <summary>
+ Connection string database SQL Server untuk logging API.
+ Dapat diisi atau diubah kapan saja secara dinamis oleh aplikasi POS tanpa bergantung pada App.config.
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Services.GoappApiClient.LogTableName">
+ <summary>
+ Nama tabel database untuk logging API (Default: [dbo].[GoappApiLog]).
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Services.GoappApiClient.Logger">
+ <summary>
+ Instance DatabaseLogger yang digunakan untuk pencatatan log API ke SQL Server.
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Services.GoappApiClient.Config">
+ <summary>
+ Konfigurasi API Goapp yang sedang aktif
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappApiClient.GetValidTokenAsync(System.Boolean)">
+ <summary>
+ Mendapatkan token aktif dari cache atau melakukan request baru ke Goapp Auth API
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappApiClient.GetChannelDirectoryAsync">
+ <summary>
+ Memeriksa informasi channel/toko yang terdaftar pada kredensial saat ini
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappApiClient.GetMemberAsync(System.String)">
+ <summary>
+ Mencari dan memvalidasi member Goapp berdasarkan Nomor Handphone atau Member ID
+ </summary>
+ <param name="mobileNoOrMemberId">Nomor HP (misal: 08123456789) atau Member ID</param>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappApiClient.RegisterMemberAsync(System.String,System.String,System.String,System.String,System.Int64,System.String)">
+ <summary>
+ Mendaftarkan (Save/Set) data member baru langsung dari kasir POS ke Goapp CRM
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappApiClient.GetMemberSchemesAsync">
+ <summary>
+ Mengambil daftar Tier/Scheme Member CRM yang aktif
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappApiClient.GetAvailableDealsAsync">
+ <summary>
+ Menampilkan daftar seluruh voucher promo (Deals) yang sedang aktif di channel toko ini
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappApiClient.GetMemberDealCodesAsync(System.String)">
+ <summary>
+ Mengambil daftar voucher/deal code aktif milik spesifik member
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappApiClient.ValidateVoucherAsync(System.String,System.Nullable{System.Int64})">
+ <summary>
+ Validasi voucher Goapp sebelum digunakan pada transaksi POS
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappApiClient.UseVoucherWithRetryAsync(System.String,System.String,System.Nullable{System.Int64},System.Int32,System.String)">
+ <summary>
+ Menggunakan voucher dengan mekanisme Auto-Retry jika terjadi kendala jaringan / server busy
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappApiClient.CancelVoucherAsync(System.String,System.String,System.Nullable{System.Int64})">
+ <summary>
+ Membatalkan penggunaan voucher pada suatu transaksi POS (Void / Cancel Voucher)
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappApiClient.CreateDealAsync(System.String,System.String,System.DateTime,System.DateTime,System.String,System.Decimal,System.Decimal,System.String)">
+ <summary>
+ Mencoba membuat Master Voucher / Promo Deal baru via API
+ Catatan: Master deal umumnya dikonfigurasi melalui Web Dashboard CRM.
+ Bila melalui API, reward_sku harus merupakan SKU yang valid di master catalog.
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappApiClient.CreatePointPaymentAsync(System.Int64,System.Decimal,System.Decimal,System.String,System.String,System.String,System.String,System.Nullable{System.Decimal})">
+ <summary>
+ Melakukan pemotongan (Burn) poin member untuk pembayaran transaksi POS
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappApiClient.CancelPointPaymentAsync(System.String,System.String)">
+ <summary>
+ Membatalkan transaksi pemotongan poin jika POS membatalkan transaksi / kasir void
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappApiClient.PushSalesOrderAsync(DreamposXGoapp.Models.PushOrderRequest)">
+ <summary>
+ Mengirim data transaksi selesai ke Goapp untuk proses penambahan poin (Earning Point)
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappApiClient.PushSalesOrderAsync(DreamposXGoapp.Models.PushOrderRequest,System.Boolean)">
+ <summary>Mengirim transaksi dengan pilihan calculate_estimate_point (1 atau 0).</summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappApiClient.PushGuestSalesOrderAsync(DreamposXGoapp.Models.PushOrderRequest)">
+ <summary>
+ Kirim transaksi tanpa member. Memerlukan SQL log; tidak memanggil API burn point.
+ Identitas member harus kosong; Goapp menentukan dukungan claim dan reward pada server.
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.GoappApiClient.PushGuestSalesOrderAsync(DreamposXGoapp.Models.PushOrderRequest,System.Boolean)">
+ <summary>Mengirim transaksi tanpa member dengan pilihan ringkasan estimasi poin.</summary>
+</member>
+<member name="T:DreamposXGoapp.Services.ReceiptGenerator">
+ <summary>
+ Generator format teks struk POS yang memuat informasi CRM Goapp
+ (Saldo poin dan Link/QR Survey kepuasan pelanggan)
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.ReceiptGenerator.GenerateReceiptText(System.String,System.String,System.String,DreamposXGoapp.Models.MemberResponse,System.Decimal,System.Decimal,System.Decimal,System.Decimal,System.String)">
+ <summary>
+ Menghasilkan teks struk POS standar 40-kolom siap cetak thermal printer
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Services.ReceiptGenerator.GenerateReceiptText(System.String,System.String,System.String,DreamposXGoapp.Models.MemberResponse,DreamposXGoapp.Models.PushOrderResponse,System.Decimal,System.Decimal,System.Decimal,System.String)">
+ <summary>Preview struk memakai amount dan est_new_balance hanya dari reward_summary.</summary>
+</member>
+<member name="T:DreamposXGoapp.Forms.MemberDataEventArgs">
+ <summary>
+ Data event yang dikirimkan ke aplikasi POS saat kasir memilih member di FormSearchMember.
+ </summary>
+</member>
+<member name="T:DreamposXGoapp.Forms.FormSearchMember">
+ <summary>
+ Form visual untuk pencarian dan validasi member Goapp CRM langsung dari DLL DreamposXGoapp.
+ Dilengkapi touchscreen keypad numerik (0-9, Clear, Hapus), tampilan info member dan daftar benefit,
+ serta mengembalikan data ke aplikasi POS via RaiseEvent sendMemberData.
+ </summary>
+</member>
+<member name="E:DreamposXGoapp.Forms.FormSearchMember.sendMemberData">
+ <summary>
+ Event yang ditembakkan ke aplikasi POS pemanggil saat kasir memilih member.
+ POS dapat menangkapnya via: AddHandler g_frmLoyal.sendMemberData, AddressOf GetLoyalID_MemberData
+ </summary>
+</member>
+<member name="E:DreamposXGoapp.Forms.FormSearchMember.ItemCancelled">
+ <summary>
+ Event yang ditembakkan ke aplikasi POS saat kasir membatalkan voucher/poin terpakai dari daftar.
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormSearchMember.SelectedMember">
+ <summary>
+ Data member terpilih (jika POS ingin membaca langsung dari properti)
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormSearchMember.SelectedDeals">
+ <summary>
+ Daftar benefit / promo aktif milik member terpilih
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormSearchMember.TransactionRef">
+ <summary>
+ Nomor transaksi POS yang dipassing dari FPaymentLatest
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormSearchMember.TotalTransaction">
+ <summary>
+ Total transaksi POS (m_colSM.Total) yang dipassing dari FPaymentLatest
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormSearchMember.StoreName">
+ <summary>
+ Nama toko / cabang POS
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormSearchMember.StoreCode">
+ <summary>
+ Kode toko / outlet POS
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormSearchMember.RedeemedVoucher">
+ <summary>
+ Voucher yang berhasil diredeem (jika kasir menggunakan voucher pada form ini)
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormSearchMember.RedeemedPoint">
+ <summary>
+ Poin yang berhasil diredeem (jika kasir menggunakan burn point pada form ini)
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormSearchMember.InitialPhoneNumber">
+ <summary>
+ Nomor HP member awal untuk langsung dicari saat form dimuat (misal jika member sudah terpasang di POS)
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Forms.FormSearchMember.#ctor(DreamposXGoapp.Services.GoappApiClient)">
+ <summary>
+ Inisialisasi FormSearchMember dengan passing instance GoappApiClient dari POS
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Forms.FormSearchMember.#ctor(DreamposXGoapp.Models.GoappConfig)">
+ <summary>
+ Inisialisasi FormSearchMember dengan passing konfigurasi GoappConfig dari POS
+ </summary>
+</member>
+<member name="T:DreamposXGoapp.Forms.FormRedeemVoucher">
+ <summary>
+ Form dialog modal visual untuk memvalidasi dan menggunakan voucher Goapp CRM.
+ Mendukung input manual / scan barcode QR serta pemilihan langsung dari daftar voucher member.
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormRedeemVoucher.RedeemedResult">
+ <summary>
+ Data hasil redeem voucher yang berhasil digunakan (untuk dipassing ke POS)
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormRedeemVoucher.TransactionRef">
+ <summary>
+ Nomor referensi transaksi dari POS (misal: nomor order / SM_Number)
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormRedeemVoucher.MemberUid">
+ <summary>
+ UID member Goapp yang sedang aktif (jika ada)
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormRedeemVoucher.MemberName">
+ <summary>
+ Nama member Goapp yang sedang aktif (jika ada)
+ </summary>
+</member>
+<member name="T:DreamposXGoapp.Forms.FormRedeemPoint">
+ <summary>
+ Form dialog modal visual untuk menginput jumlah poin yang ingin dibakar (Burn Point)
+ dengan batasan saldo poin member dan total transaksi POS.
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormRedeemPoint.RedeemedResult">
+ <summary>
+ Data hasil redeem point yang berhasil dibakar untuk dipassing ke POS
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormRedeemPoint.MemberUid">
+ <summary>
+ UID member Goapp yang sedang aktif
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormRedeemPoint.MemberNameText">
+ <summary>
+ Nama lengkap member aktif
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormRedeemPoint.AvailablePoints">
+ <summary>
+ Saldo poin yang dimiliki member
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormRedeemPoint.CurrentTotalTransaction">
+ <summary>
+ Total transaksi POS (m_colSM.Total)
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormRedeemPoint.TransactionRef">
+ <summary>
+ Nomor referensi transaksi dari POS (misal: SM_Number)
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormRedeemPoint.StoreName">
+ <summary>
+ Nama toko / outlet POS
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormRedeemPoint.StoreCode">
+ <summary>
+ Kode toko / outlet POS
+ </summary>
+</member>
+<member name="P:DreamposXGoapp.Forms.FormRedeemPoint.MaxAllowedPoints">
+ <summary>
+ Batas maksimal poin yang boleh digunakan: Nilai minimum antara Saldo Poin dan Total Transaksi
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Forms.FormRedeemPoint.#ctor(DreamposXGoapp.Services.GoappApiClient,System.Int64,System.String,System.Decimal,System.Decimal,System.String,System.String,System.String)">
+ <summary>
+ Inisialisasi FormRedeemPoint
+ </summary>
+ <param name="client">Instance GoappApiClient</param>
+ <param name="memberUid">UID member aktif</param>
+ <param name="memberName">Nama member</param>
+ <param name="availablePoints">Saldo poin yang dimiliki member</param>
+ <param name="totalTx">Total transaksi POS (m_colSM.Total)</param>
+ <param name="txRef">Nomor transaksi POS</param>
+ <param name="storeName">Nama toko</param>
+ <param name="storeCode">Kode toko</param>
+</member>
+<member name="T:DreamposXGoapp.Forms.FormMessageBox">
+ <summary>
+ Form modal dialog pengganti MessageBox standar Windows yang dirancang khusus untuk layar sentuh POS (Touch Screen).
+ Dilengkapi tombol-tombol berukuran besar, warna header yang jelas, dan font yang mudah dibaca.
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Forms.FormMessageBox.Show(System.Windows.Forms.IWin32Window,System.String,System.String,System.Windows.Forms.MessageBoxButtons,System.Windows.Forms.MessageBoxIcon)">
+ <summary>
+ Menampilkan pesan modal dialog layar sentuh dengan parent window tertentu.
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Forms.FormMessageBox.Show(System.String,System.String,System.Windows.Forms.MessageBoxButtons,System.Windows.Forms.MessageBoxIcon)">
+ <summary>
+ Menampilkan pesan modal dialog layar sentuh.
+ </summary>
+</member>
+<member name="T:DreamposXGoapp.Forms.FormActiveRedeem">
+ <summary>
+ Form modal touch screen untuk melihat daftar voucher dan poin yang baru saja di-redeem
+ pada sesi transaksi saat itu, serta memberikan aksi pembatalan (Cancel) selama belum masuk ke POS (StatusPos = 0).
+ </summary>
+</member>
+<member name="E:DreamposXGoapp.Forms.FormActiveRedeem.ItemCancelled">
+ <summary>
+ Event yang ditembakkan saat sebuah voucher atau poin berhasil dibatalkan,
+ agar form induk dapat mengupdate state lokalnya (misal: membersihkan RedeemedVoucher / RedeemedPoint).
+ </summary>
+</member>
+<member name="M:DreamposXGoapp.Forms.FormActiveRedeem.#ctor(DreamposXGoapp.Services.GoappApiClient,System.String,System.Nullable{System.Int64})">
+ <summary>
+ Inisialisasi FormActiveRedeem
+ </summary>
+ <param name="client">Instance GoappApiClient</param>
+ <param name="transactionRef">Nomor referensi transaksi POS</param>
+ <param name="memberUid">UID member Goapp aktif</param>
+</member>
+<member name="M:DreamposXGoapp.Forms.FormActiveRedeem.LoadActiveRedeemsAsync">
+ <summary>
+ Memuat daftar item redeem yang aktif (Status = 0) dan belum masuk ke POS (StatusPos = 0)
+ </summary>
+</member>
+</members>
+</doc>

@@ -23,6 +23,7 @@ Public Class FormMain
     Private ReadOnly _lblSourceName As New Label With {.Text = "Source:", .Location = New Point(440, 65), .AutoSize = True}
     Private ReadOnly _cmbSourceName As New ComboBox With {.Name = "cmbSourceName", .Location = New Point(495, 62), .Size = New Size(140, 26), .DropDownStyle = ComboBoxStyle.DropDown}
     Private _salesOrderTime As String = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:sszzz")
+    Private ReadOnly _taxAmount As New TextBox With {.Name = "txtTaxAmount", .Location = New Point(795, 102), .Size = New Size(100, 27), .ReadOnly = True, .Text = "0.00"}
     Private ReadOnly _serviceFee As New NumericUpDown With {.Name = "numServiceFee", .Location = New Point(755, 62), .Size = New Size(140, 27), .DecimalPlaces = 2, .Maximum = 999999999999D, .Minimum = 0D, .ThousandsSeparator = True}
 
     Private Class SchemeComboItem
@@ -70,6 +71,16 @@ Public Class FormMain
         tabTransaction.Controls.Add(_cmbSourceName)
         tabTransaction.Controls.Add(New Label With {.Text = "Service fee:", .Location = New Point(650, 65), .AutoSize = True})
         tabTransaction.Controls.Add(_serviceFee)
+        tabTransaction.Controls.Add(New Label With {.Text = "Tax 10%:", .Location = New Point(705, 105), .AutoSize = True})
+        tabTransaction.Controls.Add(_taxAmount)
+        AddHandler txtBillTotal.TextChanged, Sub()
+                                                Dim total As Decimal
+                                                Decimal.TryParse(txtBillTotal.Text, total)
+                                                _taxAmount.Text = Decimal.Round(total * 0.1D, 2, MidpointRounding.AwayFromZero).ToString("N2")
+                                            End Sub
+        Dim initialTotal As Decimal
+        Decimal.TryParse(txtBillTotal.Text, initialTotal)
+        _taxAmount.Text = Decimal.Round(initialTotal * 0.1D, 2, MidpointRounding.AwayFromZero).ToString("N2")
         _calculateEstimatePoint.Checked = _config.CalculateEstimatePoint
         AddHandler _allowWithoutMember.CheckedChanged, Sub()
                                                            txtBurnPoint.Enabled = Not _allowWithoutMember.Checked
@@ -526,6 +537,7 @@ Public Class FormMain
         Decimal.TryParse(txtBillTotal.Text, billTotal)
 
         ' Cek saldo poin member
+        billTotal += _serviceFee.Value + Decimal.Round(billTotal * 0.1D, 2, MidpointRounding.AwayFromZero)
         If burnPt > _currentMember.AvailablePoints Then
             MessageBox.Show($"Poin member ({_currentMember.AvailablePoints:N0}) tidak cukup untuk membakar {burnPt:N0} poin!", "Saldo Kurang", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Return
@@ -624,6 +636,9 @@ Public Class FormMain
             Return
         End If
 
+        Dim taxAmount = Decimal.Round(billTotal * 0.1D, 2, MidpointRounding.AwayFromZero)
+        Dim totalInclTax = billTotal + serviceFee + taxAmount
+
         Dim burnPoint As Decimal = 0
         If Not withoutMember Then Decimal.TryParse(txtBurnPoint.Text, burnPoint)
 
@@ -646,7 +661,7 @@ Public Class FormMain
             Dim linesDiscountTotal = pointDiscount ' Jika ada voucher diskon total order, ditambahkan ke sini
 
             ' Hitung total bayar kasir (bersih setelah dipotong poin)
-            Dim cashPaid = billTotal - pointDiscount
+            Dim cashPaid = totalInclTax - pointDiscount
             If cashPaid < 0 Then cashPaid = 0
 
             Dim paymentItems As New List(Of OrderPaymentItem)()
@@ -675,8 +690,8 @@ Public Class FormMain
                 .ProviderRef = providerRef,
                 .OrderDate = _salesOrderTime,
                 .LinesTotal = billTotal,
-                .LinesTax = 0,
-                .TotalInclTax = billTotal,
+                .LinesTax = taxAmount,
+                .TotalInclTax = totalInclTax,
                 .TotalPaid = cashPaid,
                 .PaidAt = _salesOrderTime,
                 .CompletedAt = _salesOrderTime,
@@ -740,7 +755,7 @@ Public Class FormMain
                     .Member = New PaymentMemberRef With {.Uid = member.Uid},
                     .Amount = burnPoint,
                     .OrderAmount = burnPoint,
-                    .TotalOrderAmount = billTotal,
+                    .TotalOrderAmount = totalInclTax,
                     .OrderCurrency = "idr",
                     .ProviderRef = providerRef,
                     .AuthorizationCode = If(String.IsNullOrWhiteSpace(authCode), Nothing, authCode)
@@ -749,7 +764,7 @@ Public Class FormMain
                 Dim payReqJson = Newtonsoft.Json.JsonConvert.SerializeObject(paymentReqObj, Newtonsoft.Json.Formatting.Indented, New Newtonsoft.Json.JsonSerializerSettings With {.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore})
                 txtOrderRawJson.Text &= "=== [2/2] REQUEST JSON (POST /member/payment/) ===" & Environment.NewLine & payReqJson & Environment.NewLine & Environment.NewLine
 
-                Dim payResp = Await _client.CreatePointPaymentAsync(member.Uid, burnPoint, burnPoint, providerRef, authorizationCode:=authCode, totalOrderAmount:=billTotal)
+                Dim payResp = Await _client.CreatePointPaymentAsync(member.Uid, burnPoint, burnPoint, providerRef, authorizationCode:=authCode, totalOrderAmount:=totalInclTax)
                 txtOrderRawJson.Text &= "=== [2/2] RESPONSE JSON (POST /member/payment/) ===" & Environment.NewLine & FormatJson(payResp.RawJson) & Environment.NewLine
 
                 msgBuilder.AppendLine()
